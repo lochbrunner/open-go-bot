@@ -23,7 +23,7 @@ namespace BoardHover {
     export interface Props {
         physicalSize: Size2d;
         boardSize: Size2d;
-        playersTurn: Player;
+        game: Game;
 
         gameActions: typeof gameActions;
     }
@@ -43,10 +43,10 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
     }
 
     private onClick(event: any) {
-        const e = event as React.MouseEvent<HTMLButtonElement>
+        const e = event as React.MouseEvent<HTMLButtonElement>;
         this.props.gameActions.setStone({
             fieldWidth: this.props.boardSize.width,
-            player: this.props.playersTurn,
+            player: this.props.game.turn,
             pos: this.state
         });
     }
@@ -73,28 +73,31 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
 
     render() : JSX.Element{
 
-        const x = this.state.x;
-        const y = this.state.y;
+        const {x, y} = this.state;
 
         const blackColor = "rgba(0,0,0,0.5)";
         const whiteColor = "rgba(255,255,255, 0.5)";
-
         
-        const {physicalSize, boardSize, playersTurn} = this.props;
-        const color = playersTurn === 'white' ? whiteColor : blackColor;
+        const {physicalSize, boardSize, game} = this.props;
+        const {turn} = game;
+        const color = turn === 'white' ? whiteColor : blackColor;
 
         const d = physicalSize.width / (2 + boardSize.width);
         const padding = d*1.5;
         const radius = d / 2 / 1.1;
+        const {width} = boardSize;
 
-        let stone :JSX.Element = null;
-        if(x>-1 && x<boardSize.width && y>-1 && y<boardSize.height)
-            stone = <circle r={radius} cx={padding + x*d} cy={padding + y*d} stroke={'rgba(0,0,0,0.5)'} strokeWidth="2" fill={color}/>;
+        if(x>-1 && x<boardSize.width && y>-1 && y<boardSize.height && (game as any).getIn(['field',x+y*width]).stone === 'empty') 
+            return (
+                <g onClick={this.onClick} onMouseMove={this.onMouseMove} ref="main">
+                    <rect x="0" y="0" width={this.props.physicalSize.width} height={this.props.physicalSize.height} strokeWidth="0" fill="rgba(0,0,0,0.0)" />
+                    <circle r={radius} cx={padding + x*d} cy={padding + y*d} stroke={'rgba(0,0,0,0.5)'} strokeWidth="2" fill={color}/>;
+                </g>
+            );
 
         return (
-            <g onClick={this.onClick} onMouseMove={this.onMouseMove} ref="main">
+            <g onClick={()=>{}} onMouseMove={this.onMouseMove} ref="main">
                 <rect x="0" y="0" width={this.props.physicalSize.width} height={this.props.physicalSize.height} strokeWidth="0" fill="rgba(0,0,0,0.0)" />
-                {stone}
             </g>
         );
     }
@@ -189,7 +192,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
                     {textBottom}
                     {blackStones}
                     {whitheStones}
-                    <BoardHover gameActions={this.props.gameActions} playersTurn={this.props.game.turn} boardSize={boardSize} physicalSize={{width: boardWidth, height: boardHeight}} />
+                    <BoardHover gameActions={this.props.gameActions} game={this.props.game} boardSize={boardSize} physicalSize={{width: boardWidth, height: boardHeight}} />
                 </svg>
             </div>
         );
