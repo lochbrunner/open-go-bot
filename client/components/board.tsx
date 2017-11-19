@@ -77,11 +77,11 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
         const y = this.state.y;
 
         const blackColor = "rgba(0,0,0,0.5)";
-        const whiteColor = "rgba(1,1,1,0.5)";
+        const whiteColor = "rgba(255,255,255, 0.5)";
 
         
         const {physicalSize, boardSize, playersTurn} = this.props;
-        const stroke = playersTurn === 'white' ? whiteColor : blackColor;
+        const color = playersTurn === 'white' ? whiteColor : blackColor;
 
         const d = physicalSize.width / (2 + boardSize.width);
         const padding = d*1.5;
@@ -89,7 +89,7 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
 
         let stone :JSX.Element = null;
         if(x>-1 && x<boardSize.width && y>-1 && y<boardSize.height)
-            stone = <circle r={radius} cx={padding + x*d} cy={padding + y*d} stroke={stroke} strokeWidth="2" fill={playersTurn === 'black'? blackColor : whiteColor}/>;
+            stone = <circle r={radius} cx={padding + x*d} cy={padding + y*d} stroke={'rgba(0,0,0,0.5)'} strokeWidth="2" fill={color}/>;
 
         return (
             <g onClick={this.onClick} onMouseMove={this.onMouseMove} ref="main">
