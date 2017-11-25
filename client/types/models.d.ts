@@ -6,10 +6,15 @@ declare interface Settings {
     boardSize: {width: number, height: number};
 }
 
+declare interface DisplaySettings {
+    showLiberties: boolean;
+}
+
 declare type Player = 'black' | 'white';
 
 declare interface Cell {
     stone: Player | 'empty';
+    liberties: number; // 0 means empty field
     forbidden: boolean;
 }
 
@@ -24,4 +29,6 @@ declare interface RootState
     settings: Settings
 
     game: Game;
+
+    displaySettings: DisplaySettings;
 }

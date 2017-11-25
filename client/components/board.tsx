@@ -12,6 +12,8 @@ export namespace Board {
         boardSize: Size2d;
         game: Game;
 
+        displaySettings: DisplaySettings;
+
         gameActions: typeof gameActions;
     }
 
@@ -61,7 +63,7 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
         const padding = d*1.5;
 
         const e = event as MouseEvent;
-        const m = this.refs["main"] as any;
+        const m = this.refs['main'] as any;
         const r =  m.getBoundingClientRect() as ClientRect;
         const x = Math.floor((e.clientX-r.left-d) /d);
         const y = Math.floor((e.clientY-r.top-d) /d);
@@ -75,8 +77,8 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
 
         const {x, y} = this.state;
 
-        const blackColor = "rgba(0,0,0,0.5)";
-        const whiteColor = "rgba(255,255,255, 0.5)";
+        const blackColor = 'rgba(0,0,0,0.5)';
+        const whiteColor = 'rgba(255,255,255, 0.5)';
         
         const {physicalSize, boardSize, game} = this.props;
         const {turn} = game;
@@ -89,15 +91,15 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
 
         if(x>-1 && x<boardSize.width && y>-1 && y<boardSize.height && (game as any).getIn(['field',x+y*width]).stone === 'empty') 
             return (
-                <g onClick={this.onClick} onMouseMove={this.onMouseMove} ref="main">
-                    <rect x="0" y="0" width={this.props.physicalSize.width} height={this.props.physicalSize.height} strokeWidth="0" fill="rgba(0,0,0,0.0)" />
-                    <circle r={radius} cx={padding + x*d} cy={padding + y*d} stroke={'rgba(0,0,0,0.5)'} strokeWidth="2" fill={color}/>;
+                <g onClick={this.onClick} onMouseMove={this.onMouseMove} ref='main'>
+                    <rect x='0' y='0' width={this.props.physicalSize.width} height={this.props.physicalSize.height} strokeWidth='0' fill='rgba(0,0,0,0.0)' />
+                    <circle r={radius} cx={padding + x*d} cy={padding + y*d} stroke={'rgba(0,0,0,0.5)'} strokeWidth='2' fill={color}/>;
                 </g>
             );
 
         return (
-            <g onClick={()=>{}} onMouseMove={this.onMouseMove} ref="main">
-                <rect x="0" y="0" width={this.props.physicalSize.width} height={this.props.physicalSize.height} strokeWidth="0" fill="rgba(0,0,0,0.0)" />
+            <g onClick={()=>{}} onMouseMove={this.onMouseMove} ref='main'>
+                <rect x='0' y='0' width={this.props.physicalSize.width} height={this.props.physicalSize.height} strokeWidth='0' fill='rgba(0,0,0,0.0)' />
             </g>
         );
     }
@@ -112,15 +114,24 @@ export class Board extends React.Component<Board.Props, Board.State>{
     render() {
         // Styles
         const lineStyle = {
-            stroke: "rgb(120,120,120)",
+            stroke: 'rgb(120,120,120)',
             strokeWidth: 2
-        }
+        };
 
         const textStyle = {
-            fontFamily: "sans-serif"
-        }
+            fontFamily: 'sans-serif'
+        };
 
-        const {boardSize} = this.props;
+        const componentStyle = {
+            display: 'inline-block'
+        };
+
+        const greenTextStyle = {
+            fontFamily: "sans-serif",
+            fill: "rgb(0,192, 0)"
+        };
+
+        const {boardSize, displaySettings} = this.props;
         const {width, height} = boardSize;
 
         const legendNumbers = _.range(1, height+1);
@@ -145,23 +156,23 @@ export class Board extends React.Component<Board.Props, Board.State>{
 
         // Legend
         const textLeft = legendNumbers.map((n, i)=>{
-            return <text key={i} x="7" y={boardHeight-padding-d*i+5} textAnchor="middle" style={textStyle}>{n}</text>
+            return <text key={i} x='7' y={boardHeight-padding-d*i+5} textAnchor='middle' style={textStyle}>{n}</text>
         });
         const textRight = legendNumbers.map((n, i)=>{
-            return <text key={i} x="615" y={boardHeight-padding-d*i+5} textAnchor="middle" style={textStyle}>{n}</text>
+            return <text key={i} x={boardWidth - 15} y={boardHeight-padding-d*i+5} textAnchor='middle' style={textStyle}>{n}</text>
         });
 
         const textTop = legendLetters.map((c,i)=>{
-            return <text key={i} y="20" x={padding+i*d} textAnchor="middle" style={textStyle} >{c}</text>
+            return <text key={i} y='20' x={padding+i*d} textAnchor='middle' style={textStyle} >{c}</text>
         });
 
         const textBottom = legendLetters.map((c,i)=>{
-            return <text key={i} y="625" x={padding+i*d} textAnchor="middle" style={textStyle} >{c}</text>
+            return <text key={i} y={boardHeight - 5} x={padding+i*d} textAnchor='middle' style={textStyle} >{c}</text>
         });
 
         const whiteStonePositions = (this.props.game as any).get('field').map((v,i)=>{
             if(v.stone === 'white')
-            return i;
+                return i;
         }).filter(isFinite);
 
         const blackStonePositions = (this.props.game as any).get('field').map((v,i)=>{
@@ -172,17 +183,28 @@ export class Board extends React.Component<Board.Props, Board.State>{
         const whitheStones = whiteStonePositions.map(i=>{
             var x = i%width;
             var y = Math.floor(i/height);
-            return <circle key={i} r={radius} cx={padding + x*d} cy={padding + y*d} stroke="rgb(0,0,0)" strokeWidth="2" fill="rgba(255,255,255,0.9)"/>
+            return <circle key={i} r={radius} cx={padding + x*d} cy={padding + y*d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(255,255,255,0.9)'/>
         });
 
         const blackStones = blackStonePositions.map(i=>{
             var x = i%width;
             var y = Math.floor(i/height);
-            return <circle key={i} r={radius} cx={padding + x*d} cy={padding + y*d} stroke="rgb(0,0,0)" strokeWidth="2" fill="rgba(0,0,0,0.9)"/>
+            return <circle key={i} r={radius} cx={padding + x*d} cy={padding + y*d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(0,0,0,0.9)'/>
         });
 
+        const liberties = [];
+        if((displaySettings as any).get('showLiberties')) {
+            const whiteStoneLiberties = (this.props.game as any).get('field').forEach((v,i)=>{
+                if(v.stone !== 'empty') {
+                    var x = i%width;
+                    var y = Math.floor(i/height);
+                    liberties.push(<text  key={i} x={padding+x*d} y={padding+5+y*d} textAnchor="middle" style={greenTextStyle} >{v.liberties}</text>);
+                }
+            });
+        }
+
         return (
-            <div>
+            <div style={componentStyle}>
                 <svg width={boardWidth} height={boardHeight}>
                     {linesH}
                     {linesW}
@@ -192,6 +214,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
                     {textBottom}
                     {blackStones}
                     {whitheStones}
+                    {liberties}
                     <BoardHover gameActions={this.props.gameActions} game={this.props.game} boardSize={boardSize} physicalSize={{width: boardWidth, height: boardHeight}} />
                 </svg>
             </div>
