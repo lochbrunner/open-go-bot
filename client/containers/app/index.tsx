@@ -22,7 +22,7 @@ export namespace App {
         actions: {
             game: typeof GameActions;
             displaySettings: typeof DisplayActions;
-        }
+        };
     }
 
     export interface State {
@@ -40,11 +40,11 @@ export class App extends React.Component<App.Props, App.State> {
             margin: 'auto'
         };
         const displaySettings = {
-            display: 'inline-block', 
-            float: 'right', 
+            display: 'inline-block',
+            float: 'right',
             margin:'20px'
         };
-        
+
         return (
             <div style={appStyle}>
                 <Board gameActions={actions.game} boardSize={(state.settings as any).get('board')} game={state.game} displaySettings={state.displaySettings} />

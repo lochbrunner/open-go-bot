@@ -5,8 +5,8 @@ require('../../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap.scss');
 export namespace CheckButton {
 
     export interface Props extends React.HTMLProps<HTMLButtonElement> {
-        onSwitched?(payload: {nextValue: boolean}): any;
         checked: boolean;
+        onSwitched?(payload: {nextValue: boolean}): any;
     }
 
     export interface State {
@@ -28,7 +28,7 @@ export class CheckButton extends React.Component<CheckButton.Props, CheckButton.
     }
 
     render(): JSX.Element {
-        var className = "btn " + (this.props.checked ? "btn-primary" : "btn-default");
-        return <button className={className} onClick={this.onSwitched} >{this.props.children} </button>
+        const className = "btn " + (this.props.checked ? "btn-primary" : "btn-default");
+        return <button className={className} onClick={this.onSwitched} >{this.props.children} </button>;
     }
 }

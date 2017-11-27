@@ -5,7 +5,7 @@
   "scripts": {
     "start": "webpack-dev-server --debug --devtool cheap-module-source-map --output-pathinfo --history-api-fallback --hot --inline --progress --colors --port 3000 --open",
     "build": "webpack -p",
-    "lint": "tslint ./client/**/*.ts"
+    "lint": "tslint ./client/**/*.{ts,tsx}"
   },
   "author": "Matthias Lochbrunner",
   "license": "MIT",

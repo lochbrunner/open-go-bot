@@ -41,7 +41,7 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
         super(props, context);
         this.onMouseMove = this.onMouseMove.bind(this);
 
-        this.onClick = this.onClick.bind(this); 
+        this.onClick = this.onClick.bind(this);
     }
 
     private onClick(event: any) {
@@ -68,8 +68,8 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
         const x = Math.floor((e.clientX-r.left-d) /d);
         const y = Math.floor((e.clientY-r.top-d) /d);
 
-        if(x != this.state.x || y != this.state.y){
-            this.setState({x,y})
+        if(x !== this.state.x || y !== this.state.y){
+            this.setState({x,y});
         }
     }
 
@@ -79,7 +79,7 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
 
         const blackColor = 'rgba(0,0,0,0.5)';
         const whiteColor = 'rgba(255,255,255, 0.5)';
-        
+
         const {physicalSize, boardSize, game} = this.props;
         const {turn} = game;
         const color = turn === 'white' ? whiteColor : blackColor;
@@ -89,7 +89,7 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
         const radius = d / 2 / 1.1;
         const {width} = boardSize;
 
-        if(x>-1 && x<boardSize.width && y>-1 && y<boardSize.height && (game as any).getIn(['field',x+y*width]).stone === 'empty') 
+        if(x>-1 && x<boardSize.width && y>-1 && y<boardSize.height && (game as any).getIn(['field',x+y*width]).stone === 'empty')
             return (
                 <g onClick={this.onClick} onMouseMove={this.onMouseMove} ref='main'>
                     <rect x='0' y='0' width={this.props.physicalSize.width} height={this.props.physicalSize.height} strokeWidth='0' fill='rgba(0,0,0,0.0)' />
@@ -140,34 +140,33 @@ export class Board extends React.Component<Board.Props, Board.State>{
         const boardWidth = 630;
         const boardHeight = 630;
 
-
         const d = boardWidth / (2 + width);
         const padding = d*1.5;
         const radius = d / 2 / 1.1;
 
         // Lines
         const linesH = legendLetters.map((c, i)=>{
-            return <line key={i} x1={padding} y1={padding+i*d} x2={boardWidth-padding} y2={padding+i*d} style={lineStyle}/>
+            return <line key={i} x1={padding} y1={padding+i*d} x2={boardWidth-padding} y2={padding+i*d} style={lineStyle}/>;
         });
-        
+
         const linesW = legendNumbers.map((n, i)=>{
-            return <line key={i} y1={padding} x1={padding+i*d} y2={boardHeight - padding} x2={padding+i*d} style={lineStyle}/>
+            return <line key={i} y1={padding} x1={padding+i*d} y2={boardHeight - padding} x2={padding+i*d} style={lineStyle}/>;
         });
 
         // Legend
         const textLeft = legendNumbers.map((n, i)=>{
-            return <text key={i} x='7' y={boardHeight-padding-d*i+5} textAnchor='middle' style={textStyle}>{n}</text>
+            return <text key={i} x='7' y={boardHeight-padding-d*i+5} textAnchor='middle' style={textStyle}>{n}</text>;
         });
         const textRight = legendNumbers.map((n, i)=>{
-            return <text key={i} x={boardWidth - 15} y={boardHeight-padding-d*i+5} textAnchor='middle' style={textStyle}>{n}</text>
+            return <text key={i} x={boardWidth - 15} y={boardHeight-padding-d*i+5} textAnchor='middle' style={textStyle}>{n}</text>;
         });
 
         const textTop = legendLetters.map((c,i)=>{
-            return <text key={i} y='20' x={padding+i*d} textAnchor='middle' style={textStyle} >{c}</text>
+            return <text key={i} y='20' x={padding+i*d} textAnchor='middle' style={textStyle} >{c}</text>;
         });
 
         const textBottom = legendLetters.map((c,i)=>{
-            return <text key={i} y={boardHeight - 5} x={padding+i*d} textAnchor='middle' style={textStyle} >{c}</text>
+            return <text key={i} y={boardHeight - 5} x={padding+i*d} textAnchor='middle' style={textStyle} >{c}</text>;
         });
 
         const whiteStonePositions = (this.props.game as any).get('field').map((v,i)=>{
@@ -179,25 +178,25 @@ export class Board extends React.Component<Board.Props, Board.State>{
             if(v.stone === 'black')
                 return i;
         }).filter(isFinite);
-        
+
         const whitheStones = whiteStonePositions.map(i=>{
-            var x = i%width;
-            var y = Math.floor(i/height);
-            return <circle key={i} r={radius} cx={padding + x*d} cy={padding + y*d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(255,255,255,0.9)'/>
+            const x = i%width;
+            const y = Math.floor(i/height);
+            return <circle key={i} r={radius} cx={padding + x*d} cy={padding + y*d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(255,255,255,0.9)'/>;
         });
 
         const blackStones = blackStonePositions.map(i=>{
-            var x = i%width;
-            var y = Math.floor(i/height);
-            return <circle key={i} r={radius} cx={padding + x*d} cy={padding + y*d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(0,0,0,0.9)'/>
+            const x = i%width;
+            const y = Math.floor(i/height);
+            return <circle key={i} r={radius} cx={padding + x*d} cy={padding + y*d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(0,0,0,0.9)'/>;
         });
 
         const liberties = [];
         if((displaySettings as any).get('showLiberties')) {
             const whiteStoneLiberties = (this.props.game as any).get('field').forEach((v,i)=>{
                 if(v.stone !== 'empty') {
-                    var x = i%width;
-                    var y = Math.floor(i/height);
+                    const x = i%width;
+                    const y = Math.floor(i/height);
                     liberties.push(<text  key={i} x={padding+x*d} y={padding+5+y*d} textAnchor="middle" style={greenTextStyle} >{v.liberties}</text>);
                 }
             });
