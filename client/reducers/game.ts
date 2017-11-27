@@ -15,7 +15,7 @@ function calcLiberties(state: immutlable.Map<string, any>, action: ActionPayload
     const player = action.player === 'white' ? 'black': 'white';
     const fieldWidth = state.get('width');
     const i = action.pos.x + action.pos.y*action.fieldWidth;
-    const oldCell = state.getIn(['field', i]); 
+    const oldCell = state.getIn(['field', i]);
     oldCell.stone = action.player;
     oldCell.liberties = 1;
     return state.setIn(['field', i], oldCell).set('turn', player);
