@@ -1,5 +1,5 @@
 import { handleActions } from 'redux-actions';
-import * as immutlable from 'immutable'; 
+import * as immutlable from 'immutable';
 import * as Actions from '../constants/actions';
 
 const initialRecord = immutlable.Record({
