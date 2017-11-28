@@ -18,15 +18,23 @@ declare interface Cell {
     forbidden: boolean;
 }
 
+declare interface Group {
+    player: Player;
+    items: {[pos: string]: boolean};
+    liberties: {[pos: string]: boolean};
+}
+
 declare interface Game {
     field: Cell[];
     turn: Player;
+
+    groups: Group[];
 }
 
 declare interface RootState
 {
     navigation: NavigationState;
-    settings: Settings
+    settings: Settings;
 
     game: Game;
 

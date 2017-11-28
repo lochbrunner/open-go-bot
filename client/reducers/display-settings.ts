@@ -4,7 +4,7 @@ import * as Actions from '../constants/actions';
 import {ActionPayload} from '../actions/display-settings';
 
 const initialRecord = immutlable.Record({
-    showLiberties: false
+    showLiberties: true
 });
 
 const initialState = new initialRecord();

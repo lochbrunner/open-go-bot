@@ -48,6 +48,7 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
         const e = event as React.MouseEvent<HTMLButtonElement>;
         this.props.gameActions.setStone({
             fieldWidth: this.props.boardSize.width,
+            fieldHeight: this.props.boardSize.height,
             player: this.props.game.turn,
             pos: this.state
         });

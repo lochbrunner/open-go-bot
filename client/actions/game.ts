@@ -7,8 +7,10 @@ export interface Vector2d{
 }
 
 export interface ActionPayload {
-    pos: Vector2d, 
-    player: Player,
+    pos: Vector2d;
+    player: Player;
     fieldWidth: number;
-} 
+    fieldHeight: number;
+}
+
 export const setStone = createAction<ActionPayload>(Actions.SET_STONE);
