@@ -33,12 +33,21 @@ class EmptyLibertyCell implements LibertyCell {
   }
 }
 
-const initialState: Game = {
-  field: _.range(19 * 19).map(i => new EmptyCell()),
-  turn: 'black',
-  cache: {groups: [], libertyCells: new Map()},
-  capturedStones: {black: 0, white: 0}
-};
+class EmptyGame implements Game {
+  field: Cell[];
+  turn: Player;
+  cache: GameCache;
+  capturedStones: {
+    black: number;
+    white: number;
+  };
+  constructor() {
+    this.field = _.range(19 * 19).map(i => new EmptyCell());
+    this.turn = 'black';
+    this.cache = {groups: [], libertyCells: new Map()};
+    this.capturedStones = {black: 0, white: 0};
+  }
+}
 
 function oponent(player: Player): Player {
   return player === 'white' ? 'black' : 'white';
@@ -386,5 +395,5 @@ function putStone(state: Game, action: ActionPayload): Game {
 export default handleActions<Game, ActionPayload>({
   [Actions.SET_STONE]: (state, action) => {
     return putStone(state, action.payload);
-  }
-}, initialState);
+  }, [Actions.RESET_GAME]: (state, action) => { return new EmptyGame(); }
+}, new EmptyGame());

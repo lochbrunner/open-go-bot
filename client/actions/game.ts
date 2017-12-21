@@ -14,3 +14,6 @@ export interface ActionPayload {
 }
 
 export const setStone = createAction<ActionPayload>(Actions.SET_STONE);
+export const resetGame = createAction<void>(Actions.RESET_GAME);
+export const stepBackward = createAction<void>(Actions.STEP_BACKWARD);
+export const stepForward = createAction<void>(Actions.STEP_FORWARD);

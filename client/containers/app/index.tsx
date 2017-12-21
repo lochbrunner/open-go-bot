@@ -11,6 +11,7 @@ import * as DisplayActions from '../../actions/display-settings';
 
 import { Board } from '../../components/board';
 import { CheckButton } from '../../components/check-button';
+import { Button } from '../../components/button';
 
 require('./index.scss');
 
@@ -51,6 +52,7 @@ export class App extends React.Component<App.Props, App.State> {
           <CheckButton onSwitched={displaySettingsActions.toggleLibertiesView} checked={(state.displaySettings as any).get('showLiberties')}>Liberties Count</CheckButton>
           <CheckButton onSwitched={displaySettingsActions.toggleIsLibertyView} checked={(state.displaySettings as any).get('showIsLiberty')}>Is Liberty</CheckButton>
           <CheckButton onSwitched={displaySettingsActions.toggleForbiddenView} checked={(state.displaySettings as any).get('showForbidden')}>Forbidden Fields</CheckButton>
+          <Button onClicked={gameActions.resetGame}>New Game</Button>
         </div>
         {children}
       </div>
