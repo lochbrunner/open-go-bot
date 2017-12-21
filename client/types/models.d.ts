@@ -1,42 +1,70 @@
-declare interface NavigationState {
-    step: number;
-}
+declare interface NavigationState { step: number; }
 
-declare interface Settings {
-    boardSize: {width: number, height: number};
-}
+declare interface Settings { boardSize: {width: number, height: number}; }
 
 declare interface DisplaySettings {
-    showLiberties: boolean;
+  showLiberties: boolean;
+  showIsLiberty: boolean;
+  showForbidden: boolean;
 }
 
 declare type Player = 'black' | 'white';
 
 declare interface Cell {
-    stone: Player | 'empty';
-    liberties: number; // 0 means empty field
-    forbidden: boolean;
+  stone: Player | 'empty';
+  liberties: number;  // 0 means empty field
+  forbidden?: Player | 'both';
+  isLiberty: boolean;
+  occupiedAdjacentCells?: number;
+}
+
+declare type BoardRange = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+                          13 | 14 | 15 | 16 | 17 | 18;
+
+declare interface Vector {
+  x: BoardRange;
+  y: BoardRange;
 }
 
 declare interface Group {
-    player: Player;
-    items: {[pos: string]: boolean};
-    liberties: {[pos: string]: boolean};
+  color: Player;
+  stones: Set<number>;
+  /**
+   * Used when the group gets destroyed
+   * Key is the position e.g. 'x+y*width'
+   */
+  adjacentLibertyCells: Set<number>;
+}
+
+declare interface LibertyCell {
+  /**
+   * 0: left (-1,0) , 1: up (0,-1), 2: right (1,0), 3: down (0,1)
+   */
+  adjacentGroups: Group[];
+  occupiedAdjacentCells: number;
+  forbidden?: Player | 'both';
+}
+
+declare interface GameCache {
+  groups: Group[];
+  /**
+   * Key is the position e.g. 'x+y*width'
+   */
+  libertyCells: Map<number, LibertyCell>;
 }
 
 declare interface Game {
-    field: Cell[];
-    turn: Player;
-
-    groups: Group[];
+  field: Cell[];
+  turn: Player;
+  cache: GameCache;
+  capturedStones: {black: number, white: number};
 }
 
-declare interface RootState
-{
-    navigation: NavigationState;
-    settings: Settings;
+declare interface RootState {
+  navigation: NavigationState;
+  settings: Settings;
 
-    game: Game;
+  game: Game;
 
-    displaySettings: DisplaySettings;
+  displaySettings: DisplaySettings;
 }
