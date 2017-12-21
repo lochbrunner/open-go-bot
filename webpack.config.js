@@ -48,33 +48,32 @@ module.exports = {
       // scss
       {
         test: /\.scss$/,
-        use:
-          extractSass.extract({
-            use: [{loader: "css-loader"}, {loader: "sass-loader"}],
-            // use style-loader in development
-            fallback: "style-loader"
-          })
-          // {
-          //   loader: "style-loader"
-          // },
-          // {
-          //   loader: 'css-loader',
-          //   options: {
-          //     sourceMap: true
-          //   }
-          //   // query: {
-          //   //   modules: true,
-          //   //   sourceMap: !isProduction,
-          //   //   importLoaders: 1,
-          //   //   localIdentName: '[local]__[hash:base64:5]'
-          //   // }
-          // },
-          // {
-          //   loader: "sass-loader", // compiles Sass to CSS
-          //   options: {
-          //     sourceMap: true
-          //   }
-          // }
+        use: extractSass.extract({
+          use: [{loader: "css-loader"}, {loader: "sass-loader"}],
+          // use style-loader in development
+          fallback: "style-loader"
+        })
+        // {
+        //   loader: "style-loader"
+        // },
+        // {
+        //   loader: 'css-loader',
+        //   options: {
+        //     sourceMap: true
+        //   }
+        //   // query: {
+        //   //   modules: true,
+        //   //   sourceMap: !isProduction,
+        //   //   importLoaders: 1,
+        //   //   localIdentName: '[local]__[hash:base64:5]'
+        //   // }
+        // },
+        // {
+        //   loader: "sass-loader", // compiles Sass to CSS
+        //   options: {
+        //     sourceMap: true
+        //   }
+        // }
         // ]
       },
       // static assets
@@ -96,13 +95,11 @@ module.exports = {
       filename: 'styles.css',
       // disable: !isProduction
     }),
-    new HtmlWebpackPlugin({
-      template: 'index.html', 
-      favicon: './assets/favicon.ico'
-    }),
+    new HtmlWebpackPlugin(
+        {template: 'index.html', favicon: './assets/favicon.ico'}),
     extractSass
   ],
-  devtool: "source-map",
+  devtool: "eval-source-map",
   devServer: {
     contentBase: sourcePath,
     hot: true,
