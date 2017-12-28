@@ -53,11 +53,32 @@ declare interface GameCache {
   libertyCells: Map<number, LibertyCell>;
 }
 
+declare interface Vector2d {
+  x: number;
+  y: number;
+}
+
+declare interface Step { player: Player, pos: Vector2d }
+
+declare interface GameInfo {
+  title: string;
+  oponents: {white: string, black: string};
+  size: number;
+  date?: Date;
+  komi: number;
+}
+
 declare interface Game {
+  steps: Step[];
+  /**
+   * -1 indecates a live game
+   */
+  currentStep: number;
   field: Cell[];
   turn: Player;
   cache: GameCache;
   capturedStones: {black: number, white: number};
+  info: GameInfo;
 }
 
 declare interface RootState {

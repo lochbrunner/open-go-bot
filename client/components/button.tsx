@@ -5,6 +5,8 @@ require('../../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap.scss');
 export namespace Button {
 
   export interface Props extends React.HTMLProps<HTMLButtonElement> {
+    disabled?: boolean;
+    tooltip?: string;
     onClicked?(payload?: void): any;
   }
 
@@ -22,11 +24,14 @@ export class Button extends React.Component<Button.Props, Button.State> {
   }
 
   onClicked() {
-    if (this.props.onClicked)
+    if (this.props.onClicked && !this.props.disabled)
       this.props.onClicked();
   }
 
   render(): JSX.Element {
-    return <button className='btn btn-default' onClick={this.onClicked} >{this.props.children} </button>;
+    const { tooltip, children, disabled } = this.props;
+    const title = tooltip || (typeof children === 'string' ? children : '');
+    const classes = `btn btn-default ${disabled ? 'disabled' : ''}`;
+    return <button className={classes} onClick={this.onClicked} title={title}>{children} </button>;
   }
 }

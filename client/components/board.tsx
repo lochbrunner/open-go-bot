@@ -11,6 +11,7 @@ export namespace Board {
   export interface Props {
     boardSize: Size2d;
     game: Game;
+    disabled: boolean;
 
     displaySettings: DisplaySettings;
 
@@ -236,6 +237,9 @@ export class Board extends React.Component<Board.Props, Board.State>{
       });
     }
 
+    const hover = this.props.disabled ?
+      '' : <BoardHover gameActions={this.props.gameActions} game={this.props.game} boardSize={boardSize} physicalSize={{ width: boardWidth, height: boardHeight }} />;
+
     return (
       <div style={componentStyle}>
         <svg width={boardWidth} height={boardHeight}>
@@ -251,7 +255,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
           {liberties}
           {libCells}
           {forbiddenCells}
-          <BoardHover gameActions={this.props.gameActions} game={this.props.game} boardSize={boardSize} physicalSize={{ width: boardWidth, height: boardHeight }} />
+          {hover}
         </svg>
       </div>
     );

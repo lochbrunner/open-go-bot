@@ -2,10 +2,9 @@ import {handleActions} from 'redux-actions';
 import * as immutlable from 'immutable';
 import * as _ from 'lodash';
 import * as Actions from '../constants/actions';
-import {ActionPayload} from '../actions/game';
-// import wu from 'wu';
-// const wu = require('wu');
+import {ActionPayload, TurnPayload} from '../actions/game';
 import * as wu from 'wu';
+import {parse} from 'smartgame';
 // import {start} from 'repl'
 
 class EmptyCell implements Cell {
@@ -34,6 +33,12 @@ class EmptyLibertyCell implements LibertyCell {
 }
 
 class EmptyGame implements Game {
+  /**
+   * -1 indecates a live game
+   */
+  currentStep: number;
+  info: GameInfo;
+  steps: Step[];
   field: Cell[];
   turn: Player;
   cache: GameCache;
@@ -46,6 +51,21 @@ class EmptyGame implements Game {
     this.turn = 'black';
     this.cache = {groups: [], libertyCells: new Map()};
     this.capturedStones = {black: 0, white: 0};
+    this.info = {
+      title: 'New Game',
+      oponents: {white: 'Human', black: 'Human'},
+      date: new Date(),
+      komi: 6.5,
+      size: 19
+    };
+    this.steps = [];
+    this.currentStep = -1;
+  }
+}
+
+function assert(condition) {
+  if (!condition) {
+    console.error('Debug Assert');
   }
 }
 
@@ -327,7 +347,7 @@ function createField(cache: GameCache): Cell[] {
       }, fieldWithStones);
 }
 
-function putStone(state: Game, action: ActionPayload): Game {
+function putStone(state: Game, action: TurnPayload): Game {
   const nextPlayer = oponent(action.player);
   const fieldWidth = action.fieldWidth;
   const {x, y} = action.pos;
@@ -384,16 +404,70 @@ function putStone(state: Game, action: ActionPayload): Game {
     // Create new liberty Cells
     state.turn = oponent(action.player);
   }
+
   return {
     turn: oponent(action.player),
+    currentStep: state.currentStep,
     cache: state.cache,
     field: createField(state.cache),
-    capturedStones: {...state.capturedStones}
+    capturedStones: {...state.capturedStones},
+    info: {...state.info},
+    steps: state.steps
   };
 }
 
+function convertSgfPos(pos: string): Vector2d {
+  // Hopefully the next three lines get cached by the compiler optimizer...
+  const startLetter = 'a'.charCodeAt(0);
+  const legendLetters = _.range(0, 19).map(
+      i => String.fromCharCode(i + startLetter));  // Remove 'I';
+  const dict = _.fromPairs(legendLetters.map((c, i) => [c, i]));
+  const x = dict[pos[0]];
+  const y = dict[pos[1]];
+  return {x, y};
+}
+
+function convertSgfPlayer(player: string): Player {
+  const dict: {[sgf: string]: Player} = {'B': 'black', 'W': 'white'};
+  return dict[player];
+}
+
+function loadGame(state: Game, sgf: string): Game {
+  const gameTree: string[][] = parse(sgf).gameTrees[0].nodes;
+  const config = gameTree.splice(0, 1)[0];
+  state = new EmptyGame();
+
+  state.steps = gameTree.map(turn => {
+    const[player, pos] = _.toPairs(turn)[0];
+    return {player: convertSgfPlayer(player), pos: convertSgfPos(pos)};
+  });
+
+  state.info = {
+    title: config['EV'] || 'Loaded game',
+    oponents: {black: config['PB'] || 'Black', white: config['PW'] || 'White'},
+    komi: parseFloat(config['KM'] || '6.5'),
+    date: config['DT'] ? new Date(config['DT']) : new Date(),
+    size: parseFloat(config['SZ'] || '19'),
+  };
+  state.currentStep = 0;
+  return state;
+}
+
+function nextStep(state: Game) {
+  console.log('Next Step');
+  const action: TurnPayload = {
+    fieldHeight: state.info.size,
+    fieldWidth: state.info.size, ...state.steps[state.currentStep++]
+  };
+  return putStone(state, action);
+}
+
 export default handleActions<Game, ActionPayload>({
-  [Actions.SET_STONE]: (state, action) => {
-    return putStone(state, action.payload);
-  }, [Actions.RESET_GAME]: (state, action) => { return new EmptyGame(); }
+  [Actions.SET_STONE]: (
+      state, action) => putStone(state, (action).payload as TurnPayload),
+             [Actions.RESET_GAME]: (state,
+                                    action) => { return new EmptyGame(); },
+             [Actions.LOAD_GAME]: (state, action) =>
+                 loadGame(state, (action.payload as string)),
+             [Actions.STEP_FORWARD]: nextStep
 }, new EmptyGame());
