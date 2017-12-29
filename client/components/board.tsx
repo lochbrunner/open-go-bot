@@ -146,20 +146,28 @@ export class Board extends React.Component<Board.Props, Board.State>{
       return <line key={i + 2000} y1={padding} x1={padding + i * d} y2={boardHeight - padding} x2={padding + i * d} style={lineStyle} />;
     });
 
+    // Board Marks
+    let markCoords = [];
+    if (size === 19) {
+      // Draw marks at 3, 9 and 15
+      markCoords = [3, 9, 15];
+    }
+    const marks = _.flatten(markCoords.map(x => markCoords.map(y => <circle key={x + y * 19 + 3000} r={radius / 3.2} cx={padding + x * d} cy={padding + y * d} fill='rgb(60,60,60)' />)));
+
     // Legend
     const textLeft = legendNumbers.map((n, i) => {
-      return <text key={i + 3000} x='7' y={boardHeight - padding - d * i + 5} textAnchor='middle' style={textStyle}>{n}</text>;
+      return <text key={i + 4000} x='7' y={boardHeight - padding - d * i + 5} textAnchor='middle' style={textStyle}>{n}</text>;
     });
     const textRight = legendNumbers.map((n, i) => {
-      return <text key={i + 4000} x={boardWidth - 15} y={boardHeight - padding - d * i + 5} textAnchor='middle' style={textStyle}>{n}</text>;
+      return <text key={i + 5000} x={boardWidth - 15} y={boardHeight - padding - d * i + 5} textAnchor='middle' style={textStyle}>{n}</text>;
     });
 
     const textTop = legendLetters.map((c, i) => {
-      return <text key={i + 5000} y='20' x={padding + i * d} textAnchor='middle' style={textStyle} >{c}</text>;
+      return <text key={i + 6000} y='20' x={padding + i * d} textAnchor='middle' style={textStyle} >{c}</text>;
     });
 
     const textBottom = legendLetters.map((c, i) => {
-      return <text key={i + 6000} y={boardHeight - 5} x={padding + i * d} textAnchor='middle' style={textStyle} >{c}</text>;
+      return <text key={i + 7000} y={boardHeight - 5} x={padding + i * d} textAnchor='middle' style={textStyle} >{c}</text>;
     });
 
     const whiteStonePositions = game.field.map((v, i) => {
@@ -175,14 +183,16 @@ export class Board extends React.Component<Board.Props, Board.State>{
     const whitheStones = whiteStonePositions.map(i => {
       const x = i % size;
       const y = Math.floor(i / size);
-      return <circle key={i + 7000} r={radius} cx={padding + x * d} cy={padding + y * d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(255,255,255,0.9)' />;
+      return <circle key={i + 8000} r={radius} cx={padding + x * d} cy={padding + y * d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(255,255,255,0.9)' />;
     });
 
     const blackStones = blackStonePositions.map(i => {
       const x = i % size;
       const y = Math.floor(i / size);
-      return <circle key={i + 8000} r={radius} cx={padding + x * d} cy={padding + y * d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(0,0,0,0.9)' />;
+      return <circle key={i + 9000} r={radius} cx={padding + x * d} cy={padding + y * d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(0,0,0,0.9)' />;
     });
+
+    const lastMove = game.lastMove ? <circle key={game.lastMove.x + game.lastMove.y * 19 + 3000} r={radius / 1.8} cx={padding + game.lastMove.x * d} cy={padding + game.lastMove.y * d} stroke='rgba(127,127,127, 1.0)' strokeWidth='3' fill='rgba(127,127,127, 0.0)' /> : '';
 
     const liberties = [];
     if ((displaySettings as any).get('showLiberties')) {
@@ -190,7 +200,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
         if (v.stone !== 'empty') {
           const x = i % size;
           const y = Math.floor(i / size);
-          liberties.push(<text key={i + 9000} x={padding + x * d} y={padding + 5 + y * d} textAnchor="middle" style={greenTextStyle} >{v.liberties}</text>);
+          liberties.push(<text key={i + 10000} x={padding + x * d} y={padding + 5 + y * d} textAnchor="middle" style={greenTextStyle} >{v.liberties}</text>);
         }
       });
     }
@@ -201,7 +211,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
         if (v.isLiberty) {
           const x = i % size;
           const y = Math.floor(i / size);
-          liberties.push(<rect key={i + 10000} x={padding + x * d - d / 2} y={padding + y * d - d / 2} width={d} height={d} fill={'rgba(64,255,64,0.4)'} />);
+          liberties.push(<rect key={i + 11000} x={padding + x * d - d / 2} y={padding + y * d - d / 2} width={d} height={d} fill={'rgba(64,255,64,0.4)'} />);
         }
       });
     }
@@ -211,7 +221,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
         if (v.occupiedAdjacentCells) {
           const x = i % size;
           const y = Math.floor(i / size);
-          libCells.push(<text key={i + 9000} x={padding + x * d} y={padding + 5 + y * d} textAnchor="middle" style={greenTextStyle} >{v.occupiedAdjacentCells}</text>);
+          libCells.push(<text key={i + 12000} x={padding + x * d} y={padding + 5 + y * d} textAnchor="middle" style={greenTextStyle} >{v.occupiedAdjacentCells}</text>);
         }
       });
     }
@@ -223,7 +233,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
         if (v.isLiberty && v.forbidden === game.turn) {
           const x = i % size;
           const y = Math.floor(i / size);
-          liberties.push(<rect key={i + 11000} x={d * (1.0 - rectSize) / 2.0 + padding + x * d - d / 2} y={d * (1.0 - rectSize) / 2.0 + padding + y * d - d / 2} width={d * rectSize} height={d * rectSize} stroke='rgb(0,0,0)' strokeWidth='3' fill='rgba(0,0,0,0)' />);
+          liberties.push(<rect key={i + 13000} x={d * (1.0 - rectSize) / 2.0 + padding + x * d - d / 2} y={d * (1.0 - rectSize) / 2.0 + padding + y * d - d / 2} width={d * rectSize} height={d * rectSize} stroke='rgb(0,0,0)' strokeWidth='3' fill='rgba(0,0,0,0)' />);
         }
       });
     }
@@ -237,12 +247,14 @@ export class Board extends React.Component<Board.Props, Board.State>{
           {libertyCells}
           {linesH}
           {linesW}
+          {marks}
           {textLeft}
           {textRight}
           {textTop}
           {textBottom}
           {blackStones}
           {whitheStones}
+          {lastMove}
           {liberties}
           {libCells}
           {forbiddenCells}

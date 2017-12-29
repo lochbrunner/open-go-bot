@@ -32,6 +32,7 @@ class EmptyLibertyCell implements LibertyCell {
 }
 
 class EmptyGame implements Game {
+  lastMove: Vector2d;
   /**
    * -1 indecates a live game
    */
@@ -408,7 +409,8 @@ function putStone(state: Game, action: TurnPayload): Game {
     field: createField(state.cache),
     capturedStones: {...state.capturedStones},
     info: {...state.info},
-    steps: state.steps
+    steps: state.steps,
+    lastMove: action.pos
   };
 }
 

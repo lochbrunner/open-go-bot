@@ -67,6 +67,7 @@ declare interface GameInfo {
 }
 
 declare interface Game {
+  lastMove?: Vector2d;
   steps: Step[];
   /**
    * -1 indecates a live game
