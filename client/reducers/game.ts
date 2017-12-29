@@ -5,7 +5,6 @@ import * as Actions from '../constants/actions';
 import {ActionPayload, TurnPayload} from '../actions/game';
 import * as wu from 'wu';
 import {parse} from 'smartgame';
-// import {start} from 'repl'
 
 class EmptyCell implements Cell {
   stone: 'black' | 'white' | 'empty';
@@ -454,7 +453,6 @@ function loadGame(state: Game, sgf: string): Game {
 }
 
 function nextStep(state: Game) {
-  console.log('Next Step');
   const action: TurnPayload = {
     fieldHeight: state.info.size,
     fieldWidth: state.info.size, ...state.steps[state.currentStep++]
