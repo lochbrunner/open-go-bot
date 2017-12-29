@@ -2,14 +2,8 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import * as gameActions from '../actions/game';
 
-interface Size2d {
-  width: number;
-  height: number;
-}
-
 export namespace Board {
   export interface Props {
-    boardSize: Size2d;
     game: Game;
     disabled: boolean;
 
@@ -24,8 +18,7 @@ export namespace Board {
 
 namespace BoardHover {
   export interface Props {
-    physicalSize: Size2d;
-    boardSize: Size2d;
+    physicalSize: { width: number, height: number };
     game: Game;
 
     gameActions: typeof gameActions;
@@ -48,8 +41,6 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
   private onClick(event: any) {
     const e = event as React.MouseEvent<HTMLButtonElement>;
     this.props.gameActions.setStone({
-      fieldWidth: this.props.boardSize.width,
-      fieldHeight: this.props.boardSize.height,
       player: this.props.game.turn,
       pos: this.state
     });
@@ -61,7 +52,7 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
 
   onMouseMove(event: any) {
 
-    const d = this.props.physicalSize.width / (2 + this.props.boardSize.width);
+    const d = this.props.physicalSize.width / (2 + this.props.game.info.size);
     const padding = d * 1.5;
 
     const e = event as MouseEvent;
@@ -82,16 +73,16 @@ class BoardHover extends React.Component<BoardHover.Props, BoardHover.State>{
     const blackColor = 'rgba(0,0,0,0.5)';
     const whiteColor = 'rgba(255,255,255, 0.5)';
 
-    const { physicalSize, boardSize, game } = this.props;
+    const { physicalSize, game } = this.props;
     const { turn } = game;
     const color = turn === 'white' ? whiteColor : blackColor;
 
-    const d = physicalSize.width / (2 + boardSize.width);
+    const d = physicalSize.width / (2 + game.info.size);
     const padding = d * 1.5;
     const radius = d / 2 / 1.1;
-    const { width } = boardSize;
+    const { size } = game.info;
 
-    if (x > -1 && x < boardSize.width && y > -1 && y < boardSize.height && !game.field[x + y * width].forbidden)
+    if (x > -1 && x < size && y > -1 && y < size && !game.field[x + y * size].forbidden)
       return (
         <g onClick={this.onClick} onMouseMove={this.onMouseMove} ref='main'>
           <rect x='0' y='0' width={this.props.physicalSize.width} height={this.props.physicalSize.height} strokeWidth='0' fill='rgba(0,0,0,0.0)' />
@@ -133,16 +124,16 @@ export class Board extends React.Component<Board.Props, Board.State>{
       fill: "rgb(0,192, 0)"
     };
 
-    const { game, boardSize, displaySettings } = this.props;
-    const { width, height } = boardSize;
+    const { game, displaySettings } = this.props;
+    const { size } = game.info;
 
-    const legendNumbers = _.range(1, height + 1);
-    const legendLetters = _.range(1, width + 1).map(i => String.fromCharCode(i > 8 ? i + 65 : i + 64)); // Remove 'I'
+    const legendNumbers = _.range(1, size + 1);
+    const legendLetters = _.range(1, size + 1).map(i => String.fromCharCode(i > 8 ? i + 65 : i + 64)); // Remove 'I'
 
     const boardWidth = 630;
     const boardHeight = 630;
 
-    const d = boardWidth / (2 + width);
+    const d = boardWidth / (2 + size);
     const padding = d * 1.5;
     const radius = d / 2 / 1.1;
 
@@ -182,14 +173,14 @@ export class Board extends React.Component<Board.Props, Board.State>{
     }).filter(isFinite);
 
     const whitheStones = whiteStonePositions.map(i => {
-      const x = i % width;
-      const y = Math.floor(i / height);
+      const x = i % size;
+      const y = Math.floor(i / size);
       return <circle key={i + 7000} r={radius} cx={padding + x * d} cy={padding + y * d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(255,255,255,0.9)' />;
     });
 
     const blackStones = blackStonePositions.map(i => {
-      const x = i % width;
-      const y = Math.floor(i / height);
+      const x = i % size;
+      const y = Math.floor(i / size);
       return <circle key={i + 8000} r={radius} cx={padding + x * d} cy={padding + y * d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(0,0,0,0.9)' />;
     });
 
@@ -197,8 +188,8 @@ export class Board extends React.Component<Board.Props, Board.State>{
     if ((displaySettings as any).get('showLiberties')) {
       const whiteStoneLiberties = game.field.forEach((v, i) => {
         if (v.stone !== 'empty') {
-          const x = i % width;
-          const y = Math.floor(i / height);
+          const x = i % size;
+          const y = Math.floor(i / size);
           liberties.push(<text key={i + 9000} x={padding + x * d} y={padding + 5 + y * d} textAnchor="middle" style={greenTextStyle} >{v.liberties}</text>);
         }
       });
@@ -208,8 +199,8 @@ export class Board extends React.Component<Board.Props, Board.State>{
     if ((displaySettings as any).get('showIsLiberty')) {
       const whiteStoneLiberties = game.field.forEach((v, i) => {
         if (v.isLiberty) {
-          const x = i % width;
-          const y = Math.floor(i / height);
+          const x = i % size;
+          const y = Math.floor(i / size);
           liberties.push(<rect key={i + 10000} x={padding + x * d - d / 2} y={padding + y * d - d / 2} width={d} height={d} fill={'rgba(64,255,64,0.4)'} />);
         }
       });
@@ -218,8 +209,8 @@ export class Board extends React.Component<Board.Props, Board.State>{
     if ((displaySettings as any).get('showIsLiberty')) {
       const whiteStoneLiberties = game.field.forEach((v, i) => {
         if (v.occupiedAdjacentCells) {
-          const x = i % width;
-          const y = Math.floor(i / height);
+          const x = i % size;
+          const y = Math.floor(i / size);
           libCells.push(<text key={i + 9000} x={padding + x * d} y={padding + 5 + y * d} textAnchor="middle" style={greenTextStyle} >{v.occupiedAdjacentCells}</text>);
         }
       });
@@ -230,15 +221,15 @@ export class Board extends React.Component<Board.Props, Board.State>{
     if ((displaySettings as any).get('showForbidden')) {
       const whiteStoneLiberties = game.field.forEach((v, i) => {
         if (v.isLiberty && v.forbidden === game.turn) {
-          const x = i % width;
-          const y = Math.floor(i / height);
+          const x = i % size;
+          const y = Math.floor(i / size);
           liberties.push(<rect key={i + 11000} x={d * (1.0 - rectSize) / 2.0 + padding + x * d - d / 2} y={d * (1.0 - rectSize) / 2.0 + padding + y * d - d / 2} width={d * rectSize} height={d * rectSize} stroke='rgb(0,0,0)' strokeWidth='3' fill='rgba(0,0,0,0)' />);
         }
       });
     }
 
     const hover = this.props.disabled ?
-      '' : <BoardHover gameActions={this.props.gameActions} game={this.props.game} boardSize={boardSize} physicalSize={{ width: boardWidth, height: boardHeight }} />;
+      '' : <BoardHover gameActions={this.props.gameActions} game={this.props.game} physicalSize={{ width: boardWidth, height: boardHeight }} />;
 
     return (
       <div style={componentStyle}>

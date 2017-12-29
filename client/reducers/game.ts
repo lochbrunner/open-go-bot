@@ -348,13 +348,13 @@ function createField(cache: GameCache): Cell[] {
 
 function putStone(state: Game, action: TurnPayload): Game {
   const nextPlayer = oponent(action.player);
-  const fieldWidth = action.fieldWidth;
+  const {size} = state.info;
   const {x, y} = action.pos;
   const {groups, libertyCells} = state.cache;
-  const createCellId = (x: number, y: number) => x + y * fieldWidth;
+  const createCellId = (x: number, y: number) => x + y * size;
   const currentCellId = createCellId(x, y);
   const killer = (group: Group) =>
-      killGroup(groups, libertyCells, state.capturedStones, group, fieldWidth);
+      killGroup(groups, libertyCells, state.capturedStones, group, size);
 
   // Are there nearby groups?
   const libertyCell = libertyCells.get(currentCellId);
@@ -367,9 +367,6 @@ function putStone(state: Game, action: TurnPayload): Game {
                             g => g.color === action.player)) :
                         [];
   if (ownGroups.length > 0) {
-    // if (libertyCell.adjacentGroups.reduce(
-    //         (prev, curr) => prev || (curr && curr.color === action.player),
-    //         false)) {
     if (ownGroups.length > 1) {
       console.log(`${x}x${y} merges ${ownGroups.length} groups`);
       // Delete and deregister old groups
@@ -383,9 +380,9 @@ function putStone(state: Game, action: TurnPayload): Game {
     console.log(`${x}x${y} extends a group`);
     // Remove the liberty and add new one
     ownGroups[0].stones.add(currentCellId);
-    addLibertiesArroundExpandedGroup(x, y, fieldWidth, libertyCells,
-                                     ownGroups[0], oponentGroups);
-    deleteLiberty(currentCellId, fieldWidth, libertyCells, killer);
+    addLibertiesArroundExpandedGroup(x, y, size, libertyCells, ownGroups[0],
+                                     oponentGroups);
+    deleteLiberty(currentCellId, size, libertyCells, killer);
 
   } else {
     // Create new Group
@@ -396,9 +393,9 @@ function putStone(state: Game, action: TurnPayload): Game {
     };
     state.cache.groups.push(group);
     if (libertyCell) {
-      deleteLiberty(currentCellId, fieldWidth, libertyCells, killer);
+      deleteLiberty(currentCellId, size, libertyCells, killer);
     }
-    addLibertiesArroundExpandedGroup(x, y, fieldWidth, libertyCells, group,
+    addLibertiesArroundExpandedGroup(x, y, size, libertyCells, group,
                                      oponentGroups);
     // Create new liberty Cells
     state.turn = oponent(action.player);
@@ -453,10 +450,7 @@ function loadGame(state: Game, sgf: string): Game {
 }
 
 function nextStep(state: Game) {
-  const action: TurnPayload = {
-    fieldHeight: state.info.size,
-    fieldWidth: state.info.size, ...state.steps[state.currentStep++]
-  };
+  const action: TurnPayload = {...state.steps[state.currentStep++]};
   return putStone(state, action);
 }
 

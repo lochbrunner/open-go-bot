@@ -1,7 +1,5 @@
 declare interface NavigationState { step: number; }
 
-declare interface Settings { boardSize: {width: number, height: number}; }
-
 declare interface DisplaySettings {
   showLiberties: boolean;
   showIsLiberty: boolean;
@@ -83,7 +81,6 @@ declare interface Game {
 
 declare interface RootState {
   navigation: NavigationState;
-  settings: Settings;
 
   game: Game;
 

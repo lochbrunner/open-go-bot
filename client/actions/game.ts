@@ -4,8 +4,6 @@ import * as Actions from '../constants/actions';
 export interface TurnPayload {
   pos: Vector2d;
   player: Player;
-  fieldWidth: number;
-  fieldHeight: number;
 }
 
 export type ActionPayload = TurnPayload | string;
