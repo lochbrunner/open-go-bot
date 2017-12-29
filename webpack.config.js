@@ -47,34 +47,12 @@ module.exports = {
       },
       // scss
       {
-        test: /\.scss$/,
+        test: /\.s?css$/,
         use: extractSass.extract({
           use: [{loader: "css-loader"}, {loader: "sass-loader"}],
           // use style-loader in development
           fallback: "style-loader"
         })
-        // {
-        //   loader: "style-loader"
-        // },
-        // {
-        //   loader: 'css-loader',
-        //   options: {
-        //     sourceMap: true
-        //   }
-        //   // query: {
-        //   //   modules: true,
-        //   //   sourceMap: !isProduction,
-        //   //   importLoaders: 1,
-        //   //   localIdentName: '[local]__[hash:base64:5]'
-        //   // }
-        // },
-        // {
-        //   loader: "sass-loader", // compiles Sass to CSS
-        //   options: {
-        //     sourceMap: true
-        //   }
-        // }
-        // ]
       },
       // static assets
       {test: /\.html$/, use: 'html-loader'},

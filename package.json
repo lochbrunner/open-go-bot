@@ -15,6 +15,7 @@
   "homepage": "https://github.com/lochbrunner/open-go-bot#readme",
   "devDependencies": {
     "@types/lodash": "^4.14.85",
+    "@types/rc-slider": "^8.2.2",
     "@types/react": "^16.0.24",
     "@types/react-dom": "^16.0.3",
     "@types/react-redux": "^5.0.13",
@@ -44,6 +45,7 @@
     "bootstrap-sass": "^3.3.7",
     "immutable": "^3.8.2",
     "lodash": "^4.17.4",
+    "rc-slider": "^8.5.0",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "react-redux": "^5.0.6",

@@ -14,6 +14,9 @@ import { CheckButton } from '../../components/check-button';
 import { Button } from '../../components/button';
 import { FileButton } from '../../components/file-button';
 
+import { Menu } from '../../components/menu';
+import { Graph } from '../../components/graph';
+
 require('./index.scss');
 
 export namespace App {
@@ -35,33 +38,31 @@ export class App extends React.Component<App.Props, App.State> {
 
   render(): React.ReactNode {
     const { state, children, gameActions, displaySettingsActions } = this.props;
-    const appStyle = {
-      width: '800px',
-      margin: 'auto'
-    };
-    const displaySettings = {
-      display: 'inline-block',
-      float: 'right',
-      margin: '20px'
-    };
+	const appStyle = {
+	//   width: '800px',
+	//   margin: 'auto'
+	};
+	const gameStyle = {
+		width: '40%'
+	};
+	const graphStyle = {
 
-    return (
-      <div style={appStyle}>
-        <h3>{state.game.info.title}</h3>
-        <h4>{state.game.info.oponents.black} - {state.game.info.oponents.white}</h4>
-        <p>Captured Stones: Black: {state.game.capturedStones.black} White: {state.game.capturedStones.white}</p>
-        <Board gameActions={gameActions} game={state.game} displaySettings={state.displaySettings} disabled={state.game.currentStep !== -1} />
-        <div style={displaySettings}>
-          <CheckButton onSwitched={displaySettingsActions.toggleLibertiesView} checked={(state.displaySettings as any).get('showLiberties')}>Liberties Count</CheckButton>
-          <CheckButton onSwitched={displaySettingsActions.toggleIsLibertyView} checked={(state.displaySettings as any).get('showIsLiberty')}>Is Liberty</CheckButton>
-          <CheckButton onSwitched={displaySettingsActions.toggleForbiddenView} checked={(state.displaySettings as any).get('showForbidden')}>Forbidden Fields</CheckButton>
-          <FileButton onSelected={gameActions.loadGame}>Load Game</FileButton>
-          <Button onClicked={gameActions.resetGame}>New Game</Button>
-          <Button onClicked={gameActions.stepForward} disabled={state.game.currentStep === -1}>Next Step</Button>
-        </div>
-        {children}
-      </div>
-    );
+	};
+
+    return(
+	  <div style={appStyle} >
+	  	<div className="game-section">
+		  <h3>{state.game.info.title}</h3>
+		  <h4>{state.game.info.oponents.black} - {state.game.info.oponents.white}</h4>
+		  <p>Captured Stones: Black: {state.game.capturedStones.black} White: {state.game.capturedStones.white}</p>
+		  <Board gameActions={gameActions} game={state.game} displaySettings={state.displaySettings} disabled={state.game.currentStep !== -1} />
+		  <Menu state={state} gameActions={gameActions} displaySettingsActions={displaySettingsActions} />
+		</div>
+		<div  className="graph-section">
+		  <Graph game={state.game} width={600} height={600} /> 
+		</div>   
+      </div>   
+    );     
   }
 }
 

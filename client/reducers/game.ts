@@ -369,7 +369,6 @@ function putStone(state: Game, action: TurnPayload): Game {
                         [];
   if (ownGroups.length > 0) {
     if (ownGroups.length > 1) {
-      console.log(`${x}x${y} merges ${ownGroups.length} groups`);
       // Delete and deregister old groups
       ownGroups.slice(1).forEach(group => {
         group.stones.forEach(stone => ownGroups[0].stones.add(stone));
@@ -378,7 +377,6 @@ function putStone(state: Game, action: TurnPayload): Game {
         state.cache.groups.splice(gId, 1);
       });
     }
-    console.log(`${x}x${y} extends a group`);
     // Remove the liberty and add new one
     ownGroups[0].stones.add(currentCellId);
     addLibertiesArroundExpandedGroup(x, y, size, libertyCells, ownGroups[0],
