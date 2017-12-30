@@ -12,17 +12,6 @@ export namespace Graph {
   }
   export interface State {
     selection: number;
-    show: {
-      black: boolean;
-      white: boolean;
-      empty: boolean;
-      oneLiberty: boolean;
-      twoLiberties: boolean;
-      threeLiberties: boolean;
-      fourLiberties: boolean;
-      moreLiberties: boolean;
-      lastMove: boolean;
-    };
   }
 }
 
@@ -31,18 +20,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     super(props, context);
 
     this.state = {
-      selection: 0,
-      show: {
-        black: true,
-        white: false,
-        empty: false,
-        oneLiberty: false,
-        twoLiberties: false,
-        threeLiberties: false,
-        fourLiberties: false,
-        moreLiberties: false,
-        lastMove: false,
-      }
+      selection: 0
     };
 
     this.onSelectionChanged = this.onSelectionChanged.bind(this);
@@ -94,12 +72,12 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     const marks = _.fromPairs(keys.map((key, i) => [i, key]));
 
     return <div>
-      <svg width={width} height={height} >
+      <svg style={{ float: 'left' }} width={width} height={height} >
         {linesH}
         {linesW}
         {featuresField}
       </svg>
-      <Slider style={{ width: 600 }} min={0} max={8} marks={marks} step={1} included={false} onChange={this.onSelectionChanged} defaultValue={0} />
+      <Slider style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={8} marks={marks} step={1} included={false} onChange={this.onSelectionChanged} defaultValue={0} vertical />
     </div>;
   }
 }

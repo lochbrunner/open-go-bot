@@ -2,8 +2,8 @@
  * Features are hot encodes: Means 0: false, 1: true
  */
 export interface Feature {
-  black: number;
-  white: number;
+  own: number;
+  opponent: number;
   empty: number;
   oneLiberty: number;
   twoLiberties: number;
@@ -18,9 +18,12 @@ export function createFeatures(game: Game): Feature[] {
     const x = i % game.info.size;
     const y = Math.floor(i / game.info.size);
 
+    const {turn} = game;
+    const opponent = turn === 'black' ? 'white' : 'black';
+
     return {
-      black: cell.stone === 'black' ? 1 : 0,
-      white: cell.stone === 'white' ? 1 : 0,
+      own: cell.stone === turn ? 1 : 0,
+      opponent: cell.stone === opponent ? 1 : 0,
       empty: cell.stone === 'empty' ? 1 : 0,
       oneLiberty: cell.liberties === 1 ? 1 : 0,
       twoLiberties: cell.liberties === 2 ? 1 : 0,

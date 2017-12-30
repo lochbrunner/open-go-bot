@@ -38,31 +38,31 @@ export class App extends React.Component<App.Props, App.State> {
 
   render(): React.ReactNode {
     const { state, children, gameActions, displaySettingsActions } = this.props;
-	const appStyle = {
-	//   width: '800px',
-	//   margin: 'auto'
-	};
-	const gameStyle = {
-		width: '40%'
-	};
-	const graphStyle = {
+    const appStyle = {
+      //   width: '800px',
+      //   margin: 'auto'
+    };
+    const gameStyle = {
+      width: '40%'
+    };
+    const graphStyle = {
 
-	};
+    };
 
-    return(
-	  <div style={appStyle} >
-	  	<div className="game-section">
-		  <h3>{state.game.info.title}</h3>
-		  <h4>{state.game.info.oponents.black} - {state.game.info.oponents.white}</h4>
-		  <p>Captured Stones: Black: {state.game.capturedStones.black} White: {state.game.capturedStones.white}</p>
-		  <Board gameActions={gameActions} game={state.game} displaySettings={state.displaySettings} disabled={state.game.currentStep !== -1} />
-		  <Menu state={state} gameActions={gameActions} displaySettingsActions={displaySettingsActions} />
-		</div>
-		<div  className="graph-section">
-		  <Graph game={state.game} width={600} height={600} /> 
-		</div>   
-      </div>   
-    );     
+    return (
+      <div style={appStyle} >
+        <div className="game-section">
+          <h3>{state.game.info.title}</h3>
+          <h4>{state.game.info.oponents.black} - {state.game.info.oponents.white}</h4>
+          <p>Captured Stones: Black: {state.game.capturedStones.black} White: {state.game.capturedStones.white}</p>
+          <Board gameActions={gameActions} game={state.game} displaySettings={state.displaySettings} disabled={state.game.currentStep !== -1} />
+          <Menu state={state} gameActions={gameActions} displaySettingsActions={displaySettingsActions} />
+        </div>
+        <div className="graph-section">
+          <Graph game={state.game} width={300} height={300} />
+        </div>
+      </div>
+    );
   }
 }
 
