@@ -2,6 +2,7 @@ import * as React from 'react';
 
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import { withRouter, Link } from 'react-router-dom';
 import { RouteComponentProps } from 'react-router';
 import * as GameActions from '../../actions/game';
 import * as DisplayActions from '../../actions/display-settings';
@@ -30,8 +31,7 @@ export namespace App {
   }
 }
 
-@connect(mapStateToProps, mapDispatchToProps as any)
-export class App extends React.Component<App.Props, App.State> {
+class AppComponent extends React.Component<App.Props, App.State> {
 
   render(): React.ReactNode {
     const { state, children, gameActions, displaySettingsActions } = this.props;
@@ -56,6 +56,7 @@ export class App extends React.Component<App.Props, App.State> {
         <div className="graph-section">
           <Graph game={state.game} />
         </div>
+        <Link style={{ position: 'absolute', bottom: '80px', left: '20px' }} to="training" >Training</Link>
       </div>
     );
   }
@@ -73,3 +74,5 @@ function mapDispatchToProps(dispatch): Partial<App.Props> {
     displaySettingsActions: bindActionCreators(DisplayActions, dispatch)
   };
 }
+
+export const App = withRouter(connect(mapStateToProps, mapDispatchToProps)(AppComponent));

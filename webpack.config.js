@@ -4,6 +4,7 @@ var path = require('path');
 // variables
 var isProduction = process.argv.indexOf('-p') >= 0;
 var sourcePath = path.join(__dirname, './client');
+var dataPath = path.join(__dirname, './data');
 var outPath = path.join(__dirname, './www');
 
 // plugins
@@ -79,7 +80,7 @@ module.exports = {
   ],
   devtool: "eval-source-map",
   devServer: {
-    contentBase: sourcePath,
+    contentBase: [dataPath],
     hot: true,
     stats: {warnings: false},
   },
