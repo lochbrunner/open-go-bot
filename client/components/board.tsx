@@ -193,6 +193,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
     });
 
     const lastMove = game.lastMove ? <circle key={game.lastMove.x + game.lastMove.y * 19 + 3000} r={radius / 1.8} cx={padding + game.lastMove.x * d} cy={padding + game.lastMove.y * d} stroke='rgba(127,127,127, 1.0)' strokeWidth='3' fill='rgba(127,127,127, 0.0)' /> : '';
+    const nextMove = (displaySettings as any).get('showNextMove') && game.nextMove ? <circle key={game.nextMove.x + game.nextMove.y * 19 + 3000} r={radius / 1.8} cx={padding + game.nextMove.x * d} cy={padding + game.nextMove.y * d} fill='rgba(80,80,80, 1.0)' /> : '';
 
     const liberties = [];
     if ((displaySettings as any).get('showLiberties')) {
@@ -255,6 +256,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
           {blackStones}
           {whitheStones}
           {lastMove}
+          {nextMove}
           {liberties}
           {libCells}
           {forbiddenCells}

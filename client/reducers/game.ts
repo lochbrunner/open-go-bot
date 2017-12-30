@@ -446,12 +446,15 @@ function loadGame(state: Game, sgf: string): Game {
     size: parseFloat(config['SZ'] || '19'),
   };
   state.currentStep = 0;
+  state.nextMove = state.steps[state.currentStep].pos;
   return state;
 }
 
 function nextStep(state: Game) {
   const action: TurnPayload = {...state.steps[state.currentStep++]};
-  return putStone(state, action);
+  const nextState = putStone(state, action);
+  nextState.nextMove = state.steps[state.currentStep].pos;
+  return nextState;
 }
 
 export default handleActions<Game, ActionPayload>({

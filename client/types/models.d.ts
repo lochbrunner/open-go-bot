@@ -4,6 +4,7 @@ declare interface DisplaySettings {
   showLiberties: boolean;
   showIsLiberty: boolean;
   showForbidden: boolean;
+  showNextMove: boolean;
 }
 
 declare type Player = 'black' | 'white';
@@ -67,6 +68,7 @@ declare interface GameInfo {
 }
 
 declare interface Game {
+  nextMove?: Vector2d;
   lastMove?: Vector2d;
   steps: Step[];
   /**
