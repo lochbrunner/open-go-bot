@@ -1,8 +1,5 @@
 import * as React from 'react';
 
-// import * as style from './style.scss';
-// import * as scss from './style.scss';
-// require('./style.scss');
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { RouteComponentProps } from 'react-router';
@@ -39,8 +36,6 @@ export class App extends React.Component<App.Props, App.State> {
   render(): React.ReactNode {
     const { state, children, gameActions, displaySettingsActions } = this.props;
     const appStyle = {
-      //   width: '800px',
-      //   margin: 'auto'
     };
     const gameStyle = {
       width: '40%'
