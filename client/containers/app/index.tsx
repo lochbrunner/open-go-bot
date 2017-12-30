@@ -54,7 +54,7 @@ export class App extends React.Component<App.Props, App.State> {
           <Menu state={state} gameActions={gameActions} displaySettingsActions={displaySettingsActions} />
         </div>
         <div className="graph-section">
-          <Graph game={state.game} width={300} height={300} />
+          <Graph game={state.game} />
         </div>
       </div>
     );
