@@ -64,6 +64,19 @@ module.exports = {
       {test: /\.woff$/, use: 'file-loader'},
       {test: /\.eot$/, use: 'file-loader'},
       {test: /\.svg$/, use: 'file-loader'},
+      {
+        test: /\.worker\.ts$/,
+        use: [
+          {loader: 'worker-loader', options: {inline: true}},
+          {loader: 'awesome-typescript-loader'}
+        ]
+      },
+      {
+        test: /\.worker\.js$/,
+        use: [
+          {loader: 'worker-loader', options: {inline: false}},
+        ]
+      }
     ],
   },
   plugins: [

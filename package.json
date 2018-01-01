@@ -42,10 +42,12 @@
     "typescript": "^2.6.1",
     "url-loader": "^0.6.2",
     "webpack": "^3.8.1",
-    "webpack-dev-server": "^2.9.4"
+    "webpack-dev-server": "^2.9.4",
+    "worker-loader": "^1.1.0"
   },
   "dependencies": {
     "bootstrap-sass": "^3.3.7",
+    "deeplearn": "^0.3.17",
     "immutable": "^3.8.2",
     "lodash": "^4.17.4",
     "rc-slider": "^8.5.0",
