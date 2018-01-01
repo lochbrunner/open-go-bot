@@ -82,10 +82,17 @@ declare interface Game {
   info: GameInfo;
 }
 
+declare interface Training {
+  features: number[][][];
+  labels: number[];
+  loading: {progress: {finished: number, total: number}, description: string};
+}
+
 declare interface RootState {
   navigation: NavigationState;
 
   game: Game;
 
   displaySettings: DisplaySettings;
+  training: Training;
 }
