@@ -6,7 +6,8 @@
     "start": "webpack-dev-server --debug --devtool cheap-module-source-map --output-pathinfo --history-api-fallback --hot --inline --progress --colors --port 3000 --open",
     "build": "webpack -p",
     "lint": "tslint ./client/**/*.{ts,tsx}",
-    "postinstall": "(cd ./data && find . -name \\*.sgf > sitemap.txt)"
+    "postinstall": "(cd ./data && find . -name \\*.sgf > sitemap.txt)",
+    "download-training-data": "mkdir data && wget -O ./data/badukmovies-pro-collection.zip https://badukmovies.com/pro_games/download && mkdir ./data/badukmovies-pro-collection && unzip ./data/badukmovies-pro-collection.zip -d ./data/badukmovies-pro-collection"
   },
   "author": "Matthias Lochbrunner",
   "license": "MIT",

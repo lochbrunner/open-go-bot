@@ -1,34 +1,11 @@
-import Worker = require('worker-loader!./sample.worker');
 import {loadGame, EmptyGame, putStone, nextStep} from '../utilities/game-logic';
 import {createFeatures, createLabel} from '../utilities/encoder';
-import {create} from 'domain';
+
 
 export interface TrainingProgress {
   description: string;
   progress: {finished: number, total: number};
 }
-
-// export default function load(reporter: (msg: string) => void) {
-//   const blob = new Blob([
-//     `
-//       function send(payload) {
-//         postMessage('From the worker: ' + payload);
-//       }
-//       setTimeout(() => send('Hello'),500);
-//       setTimeout(() => send('how'),1000);
-//       setTimeout(() => send('are'),1500);
-//       setTimeout(() => send('you'),2000);
-//       setTimeout(() => send('?'),2500);
-//       `
-//   ]);
-
-//   // Obtain a blob URL reference to our worker 'file'.
-//   // const blobURL = window.URL.createObjectURL(blob);
-
-//   const worker = new Worker();
-//   worker.onmessage = e => { reporter(e.data); };
-//   worker.postMessage('start');  // Start the worker.
-// }
 
 function createsSamples() {}
 
