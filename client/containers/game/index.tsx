@@ -56,7 +56,7 @@ class AppComponent extends React.Component<App.Props, App.State> {
         <div className="graph-section">
           <Graph game={state.game} />
         </div>
-        <Link style={{ position: 'absolute', bottom: '80px', left: '20px' }} to="training" >Training</Link>
+        <Link style={{ position: 'absolute', bottom: '40px', left: '20px' }} to="training" >Training</Link>
       </div>
     );
   }

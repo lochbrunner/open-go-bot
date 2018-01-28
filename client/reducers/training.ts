@@ -26,4 +26,7 @@ export default handleActions<Training, TrainingProgress>({
     state.loading = action.payload;
     return {...state};
   },
+  [Actions.LOAD_DATA]: (state, action) => {
+    return state;
+  },
 }, new EmptyData());

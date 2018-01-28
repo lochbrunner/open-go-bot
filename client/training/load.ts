@@ -1,6 +1,10 @@
 import {loadGame, EmptyGame, putStone, nextStep} from '../utilities/game-logic';
 import {createFeatures, createLabel} from '../utilities/encoder';
 
+export interface TrainingProgress {
+  description: string;
+  progress: {finished: number, total: number};
+}
 
 export interface TrainingProgress {
   description: string;
@@ -47,7 +51,7 @@ async function processGame(path: string, maxSamples: number,
     }
 
 export default async function
-load(reporter: (msg: TrainingProgress) => void) {
+load(reporter: (msg: TrainingProgress) => void, resolve: (data: {features: number[][][], labels: number[][]}) => void) {
   try {
     const text = await loadTextFile('sitemap.txt');
     // Make this constant a hyperparamter
@@ -68,6 +72,7 @@ load(reporter: (msg: TrainingProgress) => void) {
       description: `Finished loading`,
       progress: {finished: features.length, total: maxSamples}
     });
+    resolve({features, labels});
   } catch (error) {
     reporter({
       description:

@@ -41,10 +41,14 @@ class AppComponent extends React.Component<App.Props, App.State> {
 
     return (
       <div className="training-app" style={appStyle} >
-        <h2>Training</h2>
-        <Button onClicked={() => loadData(this.props.trainingActions.updateProgress)}>Load data </Button>
+        <h2>Loading training data</h2>
+        <Button onClicked={() => loadData(this.props.trainingActions.updateProgress, this.props.trainingActions.loadData)}>Load data </Button>
         <p style={{ margin: '5px' }}>{loading.description}</p>
         <ProgressBar active={progress.finished < progress.total} now={progress.finished / progress.total * 100} label={`${progress.finished} of ${progress.total}`} />
+        <h2>Training</h2>
+        <Button>Training</Button>
+        <p>Training not started yet</p>
+        <ProgressBar />
       </div>
     );
   }
