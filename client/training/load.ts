@@ -13,20 +13,24 @@ export interface TrainingProgress {
 
 function createsSamples() {}
 
-function loadTextFile(path: string): Promise<string> {
+async function readBlob(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    fetch(path)
-        .then(response => {
-          if (response.ok) return response.blob();
-          throw new Error('Network response was not ok.');
-        })
-        .then(blob => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsText(blob);
-        });
-
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsText(blob);
   });
+}
+
+async function loadTextFile(path: string) : Promise<string> {
+
+  const response = await fetch(path);
+  if (!response.ok) {
+
+    throw new Error(`Error ${response.status} while trying to load trainings data: ${response.statusText}`);
+  }
+  const blob = await response.blob();
+
+  return await readBlob(blob);
 }
 
 async function processGame(path: string, maxSamples: number,
@@ -76,9 +80,8 @@ load(reporter: (msg: TrainingProgress) => void, resolve: (data: {features: numbe
   } catch (error) {
     reporter({
       description:
-          `There has been a problem with your fetch operation: ${error.message}`,
+          `An error occured: ${error.message}`,
       progress: {finished: 0, total: 1}
-
     });
   }
 }
