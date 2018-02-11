@@ -1,5 +1,3 @@
-declare interface NavigationState { step: number; }
-
 declare interface DisplaySettings {
   showLiberties: boolean;
   showIsLiberty: boolean;
@@ -89,7 +87,6 @@ declare interface Training {
 }
 
 declare interface RootState {
-  navigation: NavigationState;
 
   game: Game;
 

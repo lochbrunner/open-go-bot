@@ -1,6 +1,5 @@
 export const STEP_FORWARD = 'STEP_FORWARD';
 export const RESET_GAME = 'RESET_GAME';
-export const STEP_BACKWARD = 'STEP_FORWARD';
 export const SET_STONE = 'SET_STONE';
 export const LOAD_GAME = 'LOAD_GAME';
 
