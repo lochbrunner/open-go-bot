@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "bootstrap-sass": "^3.3.7",
+    "deeplearn": "^0.4.2",
     "immutable": "^3.8.2",
     "lodash": "^4.17.4",
     "rc-slider": "^8.5.0",

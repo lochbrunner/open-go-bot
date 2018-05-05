@@ -35,8 +35,7 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
 
   private onSelectionChanged(e: number) {
     this.setState((prev, props) => {
-      prev.selection = e;
-      return prev;
+      return {...prev, selection: e};
     });
   }
 

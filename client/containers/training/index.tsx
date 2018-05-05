@@ -66,4 +66,4 @@ function mapDispatchToProps(dispatch): Partial<App.Props> {
   };
 }
 
-export const App = withRouter(connect(mapStateToProps, mapDispatchToProps)(AppComponent));
+export const App = withRouter(connect(mapStateToProps, mapDispatchToProps as any)(AppComponent));

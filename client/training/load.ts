@@ -6,11 +6,6 @@ export interface TrainingProgress {
   progress: {finished: number, total: number};
 }
 
-export interface TrainingProgress {
-  description: string;
-  progress: {finished: number, total: number};
-}
-
 function createsSamples() {}
 
 async function readBlob(blob: Blob): Promise<string> {
