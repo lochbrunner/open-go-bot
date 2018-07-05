@@ -3,7 +3,8 @@ import * as Actions from '../constants/actions';
 import {TrainingProgress} from '../training/load';
 
 export interface TrainingsData {
-    features: number[][][]; labels: number[][];
+  features: number[][][][];
+  labels: number[][];
 }
 export const loadData = createAction<TrainingsData>(Actions.LOAD_DATA);
 

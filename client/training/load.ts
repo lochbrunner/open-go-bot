@@ -1,5 +1,6 @@
-import {loadGame, EmptyGame, putStone, nextStep} from '../utilities/game-logic';
-import {createFeatures, createLabel} from '../utilities/encoder';
+import {TrainingsData} from '../actions/training';
+import {createFeatures, createLabel, make2d} from '../utilities/encoder';
+import {EmptyGame, loadGame, nextStep, putStone} from '../utilities/game-logic';
 
 export interface TrainingProgress {
   description: string;
@@ -16,47 +17,53 @@ async function readBlob(blob: Blob): Promise<string> {
   });
 }
 
-async function loadTextFile(path: string) : Promise<string> {
-
+async function loadTextFile(path: string): Promise<string> {
   const response = await fetch(path);
   if (!response.ok) {
-
-    throw new Error(`Error ${response.status} while trying to load trainings data: ${response.statusText}`);
+    throw new Error(
+        `Error ${
+                 response.status
+               } while trying to load trainings data: ${response.statusText}`);
   }
   const blob = await response.blob();
 
   return await readBlob(blob);
 }
 
-async function processGame(path: string, maxSamples: number,
-                           features: number[][][], labels: number[][]):
-    Promise<number> {
-      try {
-        const sgf = await loadTextFile(path);
-        const game = loadGame(new EmptyGame(), sgf);
-        for (let step of game.steps) {
-          --maxSamples;
-          if (maxSamples < 0) break;
-          features.push(createFeatures(game));
-          labels.push(createLabel(game));
-          nextStep(game);
-        }
-        return game.steps.length;
-      } catch (error) {
-        console.log(
-            `There has been a problem when process a game: ${error.message}`, );
-        return 0;
-      }
+async function processGame(
+    path: string, maxSamples: number, features: TrainingsData['features'],
+    labels: TrainingsData['labels']): Promise<number> {
+  try {
+    const sgf = await loadTextFile(path);
+    const game = loadGame(new EmptyGame(), sgf);
+    for (let step of game.steps) {
+      --maxSamples;
+      if (maxSamples < 0) break;
+      features.push(make2d(createFeatures(game), 19));
+      labels.push(createLabel(game));
+      nextStep(game);
     }
+    return game.steps.length;
+  } catch (error) {
+    console.log(
+        `There has been a problem when process a game: ${error.message}`,
+    );
+    return 0;
+  }
+}
 
-export default async function
-load(reporter: (msg: TrainingProgress) => void, resolve: (data: {features: number[][][], labels: number[][]}) => void) {
+export default async function load(
+    reporter: (msg: TrainingProgress) => void,
+    resolve: (data: {
+      features: TrainingsData['features'],
+      labels: TrainingsData['labels']
+    }) => void) {
   try {
     const text = await loadTextFile('sitemap.txt');
-    // Make this constant a hyperparamter
+    // Make this constant a hyper-paramter
     const maxSamples = 40000;
-    const features: number[][][] = [];
-    const labels: number[][] = [];
+    const features: TrainingsData['features'] = [];
+    const labels: TrainingsData['labels'] = [];
     for (let line of text.split('\n')) {
       if (maxSamples <= features.length) break;
       const fileName = line.substr(2);
@@ -64,8 +71,8 @@ load(reporter: (msg: TrainingProgress) => void, resolve: (data: {features: numbe
         description: `Loading ${fileName} ...`,
         progress: {finished: features.length, total: maxSamples}
       });
-      await processGame(fileName, maxSamples - features.length, features,
-                        labels);
+      await processGame(
+          fileName, maxSamples - features.length, features, labels);
     }
     reporter({
       description: `Finished loading`,
@@ -74,8 +81,7 @@ load(reporter: (msg: TrainingProgress) => void, resolve: (data: {features: numbe
     resolve({features, labels});
   } catch (error) {
     reporter({
-      description:
-          `An error occured: ${error.message}`,
+      description: `An error occurred: ${error.message}`,
       progress: {finished: 0, total: 1}
     });
   }

@@ -46,8 +46,8 @@
     "webpack-dev-server": "^2.9.4"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "^0.12.0",
     "bootstrap-sass": "^3.3.7",
-    "deeplearn": "^0.4.2",
     "immutable": "^3.8.2",
     "lodash": "^4.17.4",
     "rc-slider": "^8.5.0",
