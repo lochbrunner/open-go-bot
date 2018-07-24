@@ -8,15 +8,15 @@ declare interface DisplaySettings {
 declare type Player = 'black' | 'white';
 
 declare interface Cell {
-  stone: Player | 'empty';
+  stone: Player|'empty';
   liberties: number;  // 0 means empty field
-  forbidden?: Player | 'both';
+  forbidden?: Player|'both';
   isLiberty: boolean;
   occupiedAdjacentCells?: number;
 }
 
 declare type BoardRange = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
-                          13 | 14 | 15 | 16 | 17 | 18;
+    13 | 14 | 15 | 16 | 17 | 18;
 
 declare interface Vector {
   x: BoardRange;
@@ -39,7 +39,7 @@ declare interface LibertyCell {
    */
   adjacentGroups: Group[];
   occupiedAdjacentCells: number;
-  forbidden?: Player | 'both';
+  forbidden?: Player|'both';
 }
 
 declare interface GameCache {
@@ -80,14 +80,17 @@ declare interface Game {
   info: GameInfo;
 }
 
+declare interface TrainingsData {
+  features: number[][][][];
+  labels: number[][];
+}
+
 declare interface Training {
-  features: number[][][];
-  labels: number[];
+  trainingsData: TrainingsData;
   loading: {progress: {finished: number, total: number}, description: string};
 }
 
 declare interface RootState {
-
   game: Game;
 
   displaySettings: DisplaySettings;

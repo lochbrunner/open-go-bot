@@ -1,7 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
 
-import {TrainingsData} from '../actions/training';
-
 export interface LearningProgress {
   description: string;
   progress: {finished: number, total: number};
@@ -24,8 +22,10 @@ class BatchHandler {
   }
 }
 
-export default async function train(
+export default async function trainOnRecords(
     reporter: (msg: LearningProgress) => void, trainingsData: TrainingsData) {
+  console.log('Training..');
+
   const model = tf.sequential();
 
   model.add(tf.layers.conv2d({

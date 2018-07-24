@@ -1,5 +1,4 @@
-import {TrainingsData} from '../actions/training';
-import {createFeatures, createLabel, make2d} from '../utilities/encoder';
+import {createFeatures, createLabel} from '../utilities/encoder';
 import {EmptyGame, loadGame, nextStep, putStone} from '../utilities/game-logic';
 
 export interface TrainingProgress {
@@ -8,11 +7,21 @@ export interface TrainingProgress {
 }
 
 function createsSamples() {}
+declare class TextDecoder {
+  constructor(coding: string);
+  decode(text: ArrayBuffer): string;
+}
+
+function encode2utf8(text: string|ArrayBuffer): string {
+  if (typeof(text) === 'string') return text;
+  const encoder = new TextDecoder('utf-8');
+  return encoder.decode(text);
+}
 
 async function readBlob(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => resolve(encode2utf8(reader.result));
     reader.readAsText(blob);
   });
 }
@@ -39,7 +48,7 @@ async function processGame(
     for (let step of game.steps) {
       --maxSamples;
       if (maxSamples < 0) break;
-      features.push(make2d(createFeatures(game), 19));
+      features.push(createFeatures(game));
       labels.push(createLabel(game));
       nextStep(game);
     }
@@ -61,7 +70,7 @@ export default async function load(
   try {
     const text = await loadTextFile('sitemap.txt');
     // Make this constant a hyper-paramter
-    const maxSamples = 40000;
+    const maxSamples = 1000;
     const features: TrainingsData['features'] = [];
     const labels: TrainingsData['labels'] = [];
     for (let line of text.split('\n')) {

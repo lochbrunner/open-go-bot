@@ -12,8 +12,8 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 const extractSass = new ExtractTextPlugin({
-  filename: "[name].[contenthash].css",
-  disable: process.env.NODE_ENV === "development"
+  filename: '[name].[contenthash].css',
+  disable: process.env.NODE_ENV === 'development'
 });
 
 module.exports = {
@@ -50,9 +50,9 @@ module.exports = {
       {
         test: /\.s?css$/,
         use: extractSass.extract({
-          use: [{loader: "css-loader"}, {loader: "sass-loader"}],
+          use: [{loader: 'css-loader'}, {loader: 'sass-loader'}],
           // use style-loader in development
-          fallback: "style-loader"
+          fallback: 'style-loader'
         })
       },
       // static assets
@@ -69,8 +69,7 @@ module.exports = {
   plugins: [
     new webpack.optimize.CommonsChunkPlugin(
         {name: 'vendor', filename: 'vendor.bundle.js', minChunks: Infinity}),
-    new webpack.optimize.AggressiveMergingPlugin(),
-    new ExtractTextPlugin({
+    new webpack.optimize.AggressiveMergingPlugin(), new ExtractTextPlugin({
       filename: 'styles.css',
       // disable: !isProduction
     }),
@@ -78,7 +77,7 @@ module.exports = {
         {template: 'index.html', favicon: './assets/favicon.ico'}),
     extractSass
   ],
-  devtool: "eval-source-map",
+  devtool: 'eval-source-map',
   devServer: {
     contentBase: [dataPath],
     hot: true,

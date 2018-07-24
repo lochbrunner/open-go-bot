@@ -10,6 +10,8 @@ const { ProgressBar } = require('react-bootstrap');
 
 import * as TrainingActions from '../../actions/training';
 import loadData from '../../training/load';
+import trainOnRecords from '../../training/train';
+import { assert } from '@tensorflow/tfjs-core/dist/util';
 
 require('./index.scss');
 
@@ -29,24 +31,25 @@ export namespace App {
 class AppComponent extends React.Component<App.Props, App.State> {
 
   render(): React.ReactNode {
-    const { state, children } = this.props;
+    const { state, children, trainingActions } = this.props;
     const appStyle = {
     };
     const gameStyle = {
 
     };
 
-    const { loading } = state.training;
+    const { loading, trainingsData } = state.training;
     const { progress } = loading;
 
     return (
       <div className="training-app" style={appStyle} >
         <h2>Loading training data</h2>
-        <Button onClicked={() => loadData(this.props.trainingActions.updateProgress, this.props.trainingActions.loadData)}>Load data </Button>
+        <Button onClicked={() => loadData(trainingActions.updateProgress, trainingActions.loadData)}>Load data </Button>
         <p style={{ margin: '5px' }}>{loading.description}</p>
         <ProgressBar active={progress.finished < progress.total} now={progress.finished / progress.total * 100} label={`${progress.finished} of ${progress.total}`} />
         <h2>Training</h2>
-        <Button>Training</Button>
+        {/* <Button onClick={() => trainOnRecords(trainingActions.updateTrainingsProgress, trainingsData)}>Training</Button> */}
+        <Button onClick={() => console.log('Training')}>Training</Button>
         <p>Training not started yet</p>
         <ProgressBar />
       </div>
