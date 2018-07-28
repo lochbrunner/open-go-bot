@@ -48,7 +48,7 @@ class AppComponent extends React.Component<App.Props, App.State> {
       <div style={appStyle} >
         <div className="game-section">
           <h3>{state.game.info.title}</h3>
-          <h4>{state.game.info.oponents.black} - {state.game.info.oponents.white}</h4>
+          <h4>{state.game.info.opponents.black} - {state.game.info.opponents.white}</h4>
           <p>Captured Stones: Black: {state.game.capturedStones.black} White: {state.game.capturedStones.white}</p>
           <Board gameActions={gameActions} game={state.game} displaySettings={state.displaySettings} disabled={state.game.currentStep !== -1} />
           <Menu state={state} gameActions={gameActions} displaySettingsActions={displaySettingsActions} />

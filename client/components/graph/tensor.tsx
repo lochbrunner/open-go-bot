@@ -5,15 +5,36 @@ import 'rc-slider/assets/index.css';
 
 export namespace Tensor {
   export interface Props {
-    features: any;
+    features: number[][][];
     width: number;
     height: number;
     dimension: { width: number, height: number };
-    showLegend: boolean;
+    legend?: string[];
   }
   export interface State {
     selection: number;
   }
+}
+
+function getRank(tensor: number | number[] | number[][] | number[][][] | number[][][][]): number {
+  let rank = 0;
+  let testee = tensor;
+  while (testee instanceof Array) {
+    if (testee.length > 0)
+      testee = testee[0];
+    else
+      break;
+    ++rank;
+  }
+  return rank;
+}
+
+function concateArrays<T>(a: T[], b: T[]): T[] {
+  if (!(a instanceof Array))
+    return b;
+  if (!(b instanceof Array))
+    return a;
+  return b.push.apply(b, a);
 }
 
 export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
@@ -35,14 +56,15 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
 
   private onSelectionChanged(e: number) {
     this.setState((prev, props) => {
-      return {...prev, selection: e};
+      return { ...prev, selection: e };
     });
   }
 
   render(): JSX.Element {
-    const { width, height, features, dimension } = this.props;
+    const { width, height, features, dimension, legend } = this.props;
     const { selection } = this.state;
 
+    // const width = features.length;
     const dx = (width - 1) / dimension.width;
     const dy = (height - 1) / dimension.height;
     const lineStyle = {
@@ -58,15 +80,15 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
       return <line key={i + 2000} y1={0} x1={Math.floor(i * dx) + 0.5} y2={height} x2={Math.floor(i * dx) + 0.5} style={lineStyle} />;
     });
 
-    const keys = _.keys(features[0]);
+    // const keys = _.keys(features[0]);
 
-    const featuresField = features.map((feature, i) => {
+    const featuresField = _.flatten(features).map((feature, i) => {
       const x = i % dimension.width;
       const y = Math.floor(i / dimension.width);
-      return <rect key={i} x={x * dx} y={y * dy} width={dx} height={dy} fill={Tensor.calcColor(feature[keys[selection]])} />;
+      return <rect key={i} x={x * dx} y={y * dy} width={dx} height={dy} fill={Tensor.calcColor(feature[selection])} />;
     });
 
-    const marks = _.fromPairs(keys.map((key, i) => [i, key]));
+    const marks = _.fromPairs(legend.map((key, i) => [i, key]));
 
     return <div>
       <svg style={{ float: 'left' }} width={width} height={height} >

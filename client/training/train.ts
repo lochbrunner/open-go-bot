@@ -60,13 +60,13 @@ export default async function trainOnRecords(
   // How many examples the model should "see" before making a parameter update.
   const BATCH_SIZE = 64;
   // How many batches to train the model for.
-  const TRAIN_BATCHES = 300;
+  const TRAIN_BATCHES = 40;
 
   // Every TEST_ITERATION_FREQUENCY batches, test accuracy over TEST_BATCH_SIZE
   // examples. Ideally, we'd compute accuracy over the whole test set, but for
   // performance reasons we'll use a subset.
   const TEST_BATCH_SIZE = 1000;
-  const TEST_ITERATION_FREQUENCY = 5;
+  const TEST_ITERATION_FREQUENCY = 20;
 
   const batchHandler = new BatchHandler(trainingsData);
 
@@ -87,14 +87,24 @@ export default async function trainOnRecords(
     const loss = history.history.loss[0];
     const accuracy = history.history.acc[0];
 
-    console.log(`loss: ${loss}, accuracy: ${accuracy}`);
-
     if (i % TEST_ITERATION_FREQUENCY === 0) {
-      setImmediate(
-          () => reporter({
-            description: `Training loss: ${loss} accuracy: ${accuracy}`,
-            progress: {total: TRAIN_BATCHES, finished: i}
-          }));
+      setImmediate(() => {
+        console.log(`loss: ${loss}, accuracy: ${accuracy}`);
+
+        const weights = model.getWeights(true);
+
+        for (let weight of weights) {
+          weight.data().then(d => {
+
+            console.log(d);
+          });
+        }
+
+        reporter({
+          description: `Training loss: ${loss} accuracy: ${accuracy}`,
+          progress: {total: TRAIN_BATCHES, finished: i}
+        });
+      });
     }
   }
 

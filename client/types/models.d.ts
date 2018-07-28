@@ -59,7 +59,7 @@ declare interface Step { player: Player, pos: Vector2d }
 
 declare interface GameInfo {
   title: string;
-  oponents: {white: string, black: string};
+  opponents: {white: string, black: string};
   size: number;
   date?: Date;
   komi: number;

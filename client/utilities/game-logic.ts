@@ -1,12 +1,13 @@
-import {ActionPayload, TurnPayload} from '../actions/game';
 import * as _ from 'lodash';
-import * as wu from 'wu';
 import {parse} from 'smartgame';
+import * as wu from 'wu';
+
+import {ActionPayload, TurnPayload} from '../actions/game';
 
 class EmptyCell implements Cell {
-  stone: 'black' | 'white' | 'empty';
+  stone: 'black'|'white'|'empty';
   liberties: number;
-  forbidden?: Player | 'both';
+  forbidden?: Player|'both';
   isLiberty: boolean;
   occupiedAdjacentCells?: number;
   constructor() {
@@ -20,7 +21,7 @@ class EmptyCell implements Cell {
 class EmptyLibertyCell implements LibertyCell {
   adjacentGroups: Group[];
   occupiedAdjacentCells: number;
-  forbidden?: Player | 'both';
+  forbidden?: Player|'both';
 
   constructor() {
     this.adjacentGroups = new Array(4);
@@ -39,10 +40,7 @@ export class EmptyGame implements Game {
   field: Cell[];
   turn: Player;
   cache: GameCache;
-  capturedStones: {
-    black: number;
-    white: number;
-  };
+  capturedStones: {black: number; white: number;};
   constructor() {
     this.field = _.range(19 * 19).map(i => new EmptyCell());
     this.turn = 'black';
@@ -50,7 +48,7 @@ export class EmptyGame implements Game {
     this.capturedStones = {black: 0, white: 0};
     this.info = {
       title: 'New Game',
-      oponents: {white: 'Human', black: 'Human'},
+      opponents: {white: 'Human', black: 'Human'},
       date: new Date(),
       komi: 6.5,
       size: 19
@@ -71,7 +69,7 @@ function oponent(player: Player): Player {
 }
 
 type CellIdCreator = (x: number, y: number) => number;
-type Direction = 'up' | 'down' | 'left' | 'right';
+type Direction = 'up'|'down'|'left'|'right';
 const allDirections: Direction[] = ['up', 'down', 'left', 'right'];
 
 function direction2Vector(direction?: Direction): number[] {
@@ -89,17 +87,17 @@ function direction2Vector(direction?: Direction): number[] {
   }
 }
 
-function idPlusDir(fieldWidth: number, sourceId: number,
-                   direction?: Direction): number {
+function idPlusDir(
+    fieldWidth: number, sourceId: number, direction?: Direction): number {
   const x = sourceId % fieldWidth;
   const y = Math.floor(sourceId / fieldWidth);
-  const[offX, offY] = direction2Vector(direction);
+  const [offX, offY] = direction2Vector(direction);
   return createCellId(fieldWidth, x + offX, y + offY);
 }
 
-function evalPosition(fieldWidth: number, x: number, y: number,
-                      direction?: Direction): boolean {
-  const[offX, offY] = direction2Vector(direction);
+function evalPosition(
+    fieldWidth: number, x: number, y: number, direction?: Direction): boolean {
+  const [offX, offY] = direction2Vector(direction);
   x += offX;
   y += offY;
   if (x < 0) return false;
@@ -116,12 +114,11 @@ function revertDirection(direction: Direction): Direction {
 }
 
 function direction2Id(direction: Direction) {
-  return { 'left': 0, 'up': 1, 'right': 2, 'down': 3 }
-  [direction];
+  return {'left': 0, 'up': 1, 'right': 2, 'down': 3}[direction];
 }
 
-function createCellId(fieldWidth: number, x: number, y: number,
-                      off?: Direction): number {
+function createCellId(
+    fieldWidth: number, x: number, y: number, off?: Direction): number {
   if (createCellId) {
     switch (off) {
       case 'up':
@@ -141,8 +138,8 @@ function createCellId(fieldWidth: number, x: number, y: number,
   return x + y * fieldWidth;
 }
 
-function checkSuicide(libertyCell: LibertyCell, fieldWidth: number,
-                      pos: number): void {
+function checkSuicide(
+    libertyCell: LibertyCell, fieldWidth: number, pos: number): void {
   const x = pos % fieldWidth;
   const y = Math.floor(pos / fieldWidth);
   const libs = {};
@@ -176,8 +173,8 @@ function checkSuicide(libertyCell: LibertyCell, fieldWidth: number,
 /**
  * The liberties from the source get not deleted here
  */
-function moveLiberties(target: Group, source: Group,
-                       libertyCells: Map<number, LibertyCell>) {
+function moveLiberties(
+    target: Group, source: Group, libertyCells: Map<number, LibertyCell>) {
   source.adjacentLibertyCells.forEach(lib => {
     target.adjacentLibertyCells.add(lib);
     for (let i = 0; i < 4; ++i) {
@@ -187,9 +184,9 @@ function moveLiberties(target: Group, source: Group,
   });
 }
 
-function createLiberty(fieldWidth: number, cellId: number, group: Group,
-                       libertyCells: Map<number, LibertyCell>,
-                       direction: Direction) {
+function createLiberty(
+    fieldWidth: number, cellId: number, group: Group,
+    libertyCells: Map<number, LibertyCell>, direction: Direction) {
   const dirId = direction2Id(revertDirection(direction));
   if (libertyCells.get(cellId)) {
     const existingLibertyCell = libertyCells.get(cellId);
@@ -210,9 +207,10 @@ function createLiberty(fieldWidth: number, cellId: number, group: Group,
   }
 }
 
-function killGroup(groups: Group[], libertyCells: Map<number, LibertyCell>,
-                   capturedStones: {black: number, white: number},
-                   groupToKill: Group, fieldWidth: number) {
+function killGroup(
+    groups: Group[], libertyCells: Map<number, LibertyCell>,
+    capturedStones: {black: number, white: number}, groupToKill: Group,
+    fieldWidth: number) {
   capturedStones[oponent(groupToKill.color)] += groupToKill.stones.size;
   const groupId = groups.indexOf(groupToKill);
   groups.splice(groupId, 1);
@@ -244,9 +242,9 @@ function killGroup(groups: Group[], libertyCells: Map<number, LibertyCell>,
   });
 }
 
-function deleteLiberty(cellId: number, fieldWidth: number,
-                       libertyCells: Map<number, LibertyCell>,
-                       killer: (group: Group) => void) {
+function deleteLiberty(
+    cellId: number, fieldWidth: number, libertyCells: Map<number, LibertyCell>,
+    killer: (group: Group) => void) {
   const libertyCell = libertyCells.get(cellId);
 
   if (libertyCell) {
@@ -264,18 +262,19 @@ function addLibertiesArroundExpandedGroup(
     oponentGroups: Group[]) {
   const createCellId = (x: number, y: number) => x + y * fieldWidth;
   for (let dir of allDirections) {
-    const[offX, offY] = direction2Vector(dir);
+    const [offX, offY] = direction2Vector(dir);
     const cellId = createCellId(x + offX, y + offY);
     if (evalPosition(fieldWidth, x + offX, y + offY) &&
         !group.stones.has(cellId) &&
-        oponentGroups.reduce((prev, group) => prev && !group.stones.has(cellId),
-                             true))
+        oponentGroups.reduce(
+            (prev, group) => prev && !group.stones.has(cellId), true))
       createLiberty(fieldWidth, cellId, group, libertyCells, dir);
   }
 }
 
-function createNewGroup(color: Player, x: number, y: number, fieldWidth: number,
-                        libertyCells: Map<number, LibertyCell>) {
+function createNewGroup(
+    color: Player, x: number, y: number, fieldWidth: number,
+    libertyCells: Map<number, LibertyCell>) {
   const createCellId = (x: number, y: number) => x + y * fieldWidth;
   const group: Group = {
     color,
@@ -285,17 +284,18 @@ function createNewGroup(color: Player, x: number, y: number, fieldWidth: number,
   group.stones.add(x + y * fieldWidth);
   for (let dir of allDirections) {
     if (evalPosition(fieldWidth, x, y, dir)) {
-      const[offX, offY] = direction2Vector(dir);
-      createLiberty(fieldWidth, createCellId(x + offX, y + offY), group,
-                    libertyCells, dir);
+      const [offX, offY] = direction2Vector(dir);
+      createLiberty(
+          fieldWidth, createCellId(x + offX, y + offY), group, libertyCells,
+          dir);
     }
   }
   return group;
 }
 
-function calculatePremission(fieldWidth: number, x: number, y: number,
-                             field: Cell): Player |
-    'both' | undefined {
+function calculatePremission(
+    fieldWidth: number, x: number, y: number, field: Cell): Player|'both'|
+    undefined {
   const createId = (x: number, y: number) => x + y * fieldWidth;
   const libs = {};
   let maxLibs = 4;
@@ -313,8 +313,8 @@ function calculatePremission(fieldWidth: number, x: number, y: number,
     libs[oponent(field[createId(x + 1, y)].stone)]--;
   if (y < fieldWidth - 1 && field[createId(x, y + 1)].stone !== 'empty')
     libs[oponent(field[createId(x, y + 1)].stone)]--;
-  return libs['black'] === 0 ? 'black' : libs['white'] === 0 ? 'white' :
-                                                               undefined;
+  return libs['black'] === 0 ? 'black' :
+                               libs['white'] === 0 ? 'white' : undefined;
 }
 
 function createField(cache: GameCache): Cell[] {
@@ -332,15 +332,14 @@ function createField(cache: GameCache): Cell[] {
 
     return field;
   }, emptyField);
-  return wu(cache.libertyCells.entries())
-      .reduce((field, [id, libCell]) => {
-        field[id].isLiberty = true;
-        field[id].forbidden = libCell.forbidden;
-        // libCell.occupiedAdjacentCells === 4 ? 'both' : undefined;
-        field[id].occupiedAdjacentCells = libCell.adjacentGroups.reduce(
-            (prev, group) => prev + (group ? 1 : 0), 0);
-        return field;
-      }, fieldWithStones);
+  return wu(cache.libertyCells.entries()).reduce((field, [id, libCell]) => {
+    field[id].isLiberty = true;
+    field[id].forbidden = libCell.forbidden;
+    // libCell.occupiedAdjacentCells === 4 ? 'both' : undefined;
+    field[id].occupiedAdjacentCells = libCell.adjacentGroups.reduce(
+        (prev, group) => prev + (group ? 1 : 0), 0);
+    return field;
+  }, fieldWithStones);
 }
 
 export function putStone(state: Game, action: TurnPayload): Game {
@@ -355,14 +354,12 @@ export function putStone(state: Game, action: TurnPayload): Game {
 
   // Are there nearby groups?
   const libertyCell = libertyCells.get(currentCellId);
-  const oponentGroups = libertyCell ?
-                            _.uniq(libertyCell.adjacentGroups.filter(
-                                g => g.color !== action.player)) :
-                            [];
-  const ownGroups = libertyCell ?
-                        _.uniq(libertyCell.adjacentGroups.filter(
-                            g => g.color === action.player)) :
-                        [];
+  const oponentGroups = libertyCell ? _.uniq(libertyCell.adjacentGroups.filter(
+                                          g => g.color !== action.player)) :
+                                      [];
+  const ownGroups = libertyCell ? _.uniq(libertyCell.adjacentGroups.filter(
+                                      g => g.color === action.player)) :
+                                  [];
   if (ownGroups.length > 0) {
     if (ownGroups.length > 1) {
       // Delete and deregister old groups
@@ -375,8 +372,8 @@ export function putStone(state: Game, action: TurnPayload): Game {
     }
     // Remove the liberty and add new one
     ownGroups[0].stones.add(currentCellId);
-    addLibertiesArroundExpandedGroup(x, y, size, libertyCells, ownGroups[0],
-                                     oponentGroups);
+    addLibertiesArroundExpandedGroup(
+        x, y, size, libertyCells, ownGroups[0], oponentGroups);
     deleteLiberty(currentCellId, size, libertyCells, killer);
 
   } else {
@@ -390,8 +387,8 @@ export function putStone(state: Game, action: TurnPayload): Game {
     if (libertyCell) {
       deleteLiberty(currentCellId, size, libertyCells, killer);
     }
-    addLibertiesArroundExpandedGroup(x, y, size, libertyCells, group,
-                                     oponentGroups);
+    addLibertiesArroundExpandedGroup(
+        x, y, size, libertyCells, group, oponentGroups);
     // Create new liberty Cells
     state.turn = oponent(action.player);
   }
@@ -430,13 +427,13 @@ export function loadGame(state: Game, sgf: string): Game {
   state = new EmptyGame();
 
   state.steps = gameTree.map(turn => {
-    const[player, pos] = _.toPairs(turn)[0];
+    const [player, pos] = _.toPairs(turn)[0];
     return {player: convertSgfPlayer(player), pos: convertSgfPos(pos)};
   });
 
   state.info = {
     title: config['EV'] || 'Loaded game',
-    oponents: {black: config['PB'] || 'Black', white: config['PW'] || 'White'},
+    opponents: {black: config['PB'] || 'Black', white: config['PW'] || 'White'},
     komi: parseFloat(config['KM'] || '6.5'),
     date: config['DT'] ? new Date(config['DT']) : new Date(),
     size: parseFloat(config['SZ'] || '19'),
@@ -450,7 +447,7 @@ export function nextStep(state: Game) {
   const action: TurnPayload = {...state.steps[state.currentStep++]};
   const nextState = putStone(state, action);
   nextState.nextMove = state.steps[state.currentStep] ?
-                           state.steps[state.currentStep].pos :
-                           undefined;
+      state.steps[state.currentStep].pos :
+      undefined;
   return nextState;
 }
