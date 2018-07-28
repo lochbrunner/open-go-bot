@@ -1,7 +1,7 @@
 import {createFeatures, createLabel} from '../utilities/encoder';
 import {EmptyGame, loadGame, nextStep, putStone} from '../utilities/game-logic';
 
-export interface TrainingProgress {
+export interface Progress {
   description: string;
   progress: {finished: number, total: number};
 }
@@ -62,15 +62,14 @@ async function processGame(
 }
 
 export default async function load(
-    reporter: (msg: TrainingProgress) => void,
-    resolve: (data: {
-      features: TrainingsData['features'],
-      labels: TrainingsData['labels']
-    }) => void) {
+    reporter: (msg: Progress) => void, resolve: (data: {
+                                         features: TrainingsData['features'],
+                                         labels: TrainingsData['labels']
+                                       }) => void) {
   try {
     const text = await loadTextFile('sitemap.txt');
     // Make this constant a hyper-paramter
-    const maxSamples = 1000;
+    const maxSamples = 256;
     const features: TrainingsData['features'] = [];
     const labels: TrainingsData['labels'] = [];
     for (let line of text.split('\n')) {

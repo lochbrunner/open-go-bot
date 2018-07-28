@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 
-export interface LearningProgress {
+export interface Progress {
   description: string;
   progress: {finished: number, total: number};
 }
@@ -23,7 +23,7 @@ class BatchHandler {
 }
 
 export default async function trainOnRecords(
-    reporter: (msg: LearningProgress) => void, trainingsData: TrainingsData) {
+    reporter: (msg: Progress) => void, trainingsData: TrainingsData) {
   console.log('Training..');
 
   const model = tf.sequential();
@@ -39,6 +39,13 @@ export default async function trainOnRecords(
     useBias: true
   }));
 
+  // model.add(tf.layers.dense({
+  //   units: 19 * 19,
+  //   kernelInitializer: 'VarianceScaling',
+  //   activation: 'softmax'
+  // }));
+  model.add(tf.layers.flatten());
+
   const LEARNING_RATE = 0.15;
   const optimizer = tf.train.sgd(LEARNING_RATE);
 
@@ -53,7 +60,7 @@ export default async function trainOnRecords(
   // How many examples the model should "see" before making a parameter update.
   const BATCH_SIZE = 64;
   // How many batches to train the model for.
-  const TRAIN_BATCHES = 100;
+  const TRAIN_BATCHES = 300;
 
   // Every TEST_ITERATION_FREQUENCY batches, test accuracy over TEST_BATCH_SIZE
   // examples. Ideally, we'd compute accuracy over the whole test set, but for
@@ -80,10 +87,15 @@ export default async function trainOnRecords(
     const loss = history.history.loss[0];
     const accuracy = history.history.acc[0];
 
-    reporter({
-      description: `Training loss: ${loss} accuracy: ${accuracy}`,
-      progress: {total: TRAIN_BATCHES, finished: i}
-    });
+    console.log(`loss: ${loss}, accuracy: ${accuracy}`);
+
+    if (i % TEST_ITERATION_FREQUENCY === 0) {
+      setImmediate(
+          () => reporter({
+            description: `Training loss: ${loss} accuracy: ${accuracy}`,
+            progress: {total: TRAIN_BATCHES, finished: i}
+          }));
+    }
   }
 
   // const graph = new dl.Graph();

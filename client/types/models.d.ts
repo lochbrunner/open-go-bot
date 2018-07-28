@@ -82,12 +82,13 @@ declare interface Game {
 
 declare interface TrainingsData {
   features: number[][][][];
-  labels: number[][];
+  labels: number[][];  // sample * width * length * 1
 }
 
 declare interface Training {
   trainingsData: TrainingsData;
   loading: {progress: {finished: number, total: number}, description: string};
+  training: {progress: {finished: number, total: number}, description: string};
 }
 
 declare interface RootState {

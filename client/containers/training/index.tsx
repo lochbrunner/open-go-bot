@@ -38,20 +38,21 @@ class AppComponent extends React.Component<App.Props, App.State> {
 
     };
 
-    const { loading, trainingsData } = state.training;
-    const { progress } = loading;
+    const { training, loading, trainingsData } = state.training;
+    // const { progress } = loading;
+
+    const isTrainingActive = training.progress.finished < training.progress.total;
 
     return (
       <div className="training-app" style={appStyle} >
         <h2>Loading training data</h2>
-        <Button onClicked={() => loadData(trainingActions.updateProgress, trainingActions.loadData)}>Load data </Button>
+        <Button onClicked={() => loadData(trainingActions.updateLoadingProgress, trainingActions.loadData)}>Load data </Button>
         <p style={{ margin: '5px' }}>{loading.description}</p>
-        <ProgressBar active={progress.finished < progress.total} now={progress.finished / progress.total * 100} label={`${progress.finished} of ${progress.total}`} />
+        <ProgressBar active={loading.progress.finished < loading.progress.total} now={loading.progress.finished / loading.progress.total * 100} label={`${loading.progress.finished} of ${loading.progress.total}`} />
         <h2>Training</h2>
-        {/* <Button onClick={() => trainOnRecords(trainingActions.updateTrainingsProgress, trainingsData)}>Training</Button> */}
-        <Button onClick={() => console.log('Training')}>Training</Button>
-        <p>Training not started yet</p>
-        <ProgressBar />
+        <Button onClicked={() => trainOnRecords(trainingActions.updateTrainingsProgress, trainingsData)}>Training</Button>
+        <p>{isTrainingActive ? training.description : 'Training not started yet'}</p>
+        <ProgressBar active={isTrainingActive} now={training.progress.finished / training.progress.total * 100} label={`${training.progress.finished} of ${training.progress.total}`} />
       </div>
     );
   }

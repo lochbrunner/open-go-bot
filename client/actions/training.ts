@@ -1,6 +1,7 @@
 import {createAction} from 'redux-actions';
 import * as Actions from '../constants/actions';
-import {TrainingProgress} from '../training/load';
+import {Progress as LoadingProgress} from '../training/load';
+import {Progress as TrainingProgress} from '../training/train';
 
 // export interface TrainingsData {
 //   features: number[][][][];
@@ -8,8 +9,8 @@ import {TrainingProgress} from '../training/load';
 // }
 export const loadData = createAction<TrainingsData>(Actions.LOAD_DATA);
 
-export const updateProgress =
-    createAction<TrainingProgress>(Actions.UPDATE_LOADING_PROGRESS);
+export const updateLoadingProgress =
+    createAction<LoadingProgress>(Actions.UPDATE_LOADING_PROGRESS);
 
 export const updateTrainingsProgress =
     createAction<TrainingProgress>(Actions.UPDATE_TRAINING_PROGRESS);
