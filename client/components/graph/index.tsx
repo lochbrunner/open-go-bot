@@ -23,7 +23,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     const { game } = this.props;
     const features = encoder.createFeatures(game);
     return <div>
-      <Tensor width={300} height={300} legend={encoder.legend} features={features} dimension={{ height: game.info.size, width: game.info.size }} />
+      <Tensor width={300} height={300} legend={encoder.legend} features={features} />
     </div>;
   }
 }

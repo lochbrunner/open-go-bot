@@ -8,7 +8,6 @@ export namespace Tensor {
     features: number[][][];
     width: number;
     height: number;
-    dimension: { width: number, height: number };
     legend?: string[];
   }
   export interface State {
@@ -16,15 +15,15 @@ export namespace Tensor {
   }
 }
 
-function getRank(tensor: number | number[] | number[][] | number[][][] | number[][][][]): number {
-  let rank = 0;
+function getRank(tensor: number | number[] | number[][] | number[][][] | number[][][][]): number[] {
+  let rank = [];
   let testee = tensor;
   while (testee instanceof Array) {
+    rank.push(testee.length);
     if (testee.length > 0)
       testee = testee[0];
     else
       break;
-    ++rank;
   }
   return rank;
 }
@@ -61,34 +60,32 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
   }
 
   render(): JSX.Element {
-    const { width, height, features, dimension, legend } = this.props;
+    const { width, height, features, legend } = this.props;
     const { selection } = this.state;
 
-    // const width = features.length;
-    const dx = (width - 1) / dimension.width;
-    const dy = (height - 1) / dimension.height;
+    const [rows, columns, channels] = getRank(features);
+    const dx = (width - 1) / rows;
+    const dy = (height - 1) / columns;
     const lineStyle = {
       stroke: 'rgb(0,0,0)',
       strokeWidth: 1
     };
     // Lines
-    const linesH = _.range(0, dimension.height + 1).map(i => {
+    const linesH = _.range(0, columns + 1).map(i => {
       return <line key={i + 1000} x1={0} y1={Math.floor(i * dy) + 0.5} x2={width} y2={Math.floor(i * dy) + 0.5} style={lineStyle} />;
     });
 
-    const linesW = _.range(0, dimension.width + 1).map(i => {
+    const linesW = _.range(0, rows + 1).map(i => {
       return <line key={i + 2000} y1={0} x1={Math.floor(i * dx) + 0.5} y2={height} x2={Math.floor(i * dx) + 0.5} style={lineStyle} />;
     });
 
-    // const keys = _.keys(features[0]);
-
     const featuresField = _.flatten(features).map((feature, i) => {
-      const x = i % dimension.width;
-      const y = Math.floor(i / dimension.width);
+      const x = i % rows;
+      const y = Math.floor(i / rows);
       return <rect key={i} x={x * dx} y={y * dy} width={dx} height={dy} fill={Tensor.calcColor(feature[selection])} />;
     });
 
-    const marks = _.fromPairs(legend.map((key, i) => [i, key]));
+    const marks = legend ? _.fromPairs(legend.map((key, i) => [i, key])) : _.times(channels).map((v, i) => i.toString());
 
     return <div>
       <svg style={{ float: 'left' }} width={width} height={height} >
