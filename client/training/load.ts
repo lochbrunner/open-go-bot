@@ -1,12 +1,12 @@
+import {EmptyGame, loadGame, nextStep, putStone} from '../reducers/game/game-logic';
 import {createFeatures, createLabel} from '../utilities/encoder';
-import {EmptyGame, loadGame, nextStep, putStone} from '../utilities/game-logic';
 
 export interface Progress {
   description: string;
   progress: {finished: number, total: number};
 }
 
-function createsSamples() {}
+// function createsSamples() {}
 declare class TextDecoder {
   constructor(coding: string);
   decode(text: ArrayBuffer): string;

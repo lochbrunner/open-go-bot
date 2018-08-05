@@ -193,10 +193,10 @@ export class Board extends React.Component<Board.Props, Board.State>{
     });
 
     const lastMove = game.lastMove ? <circle key={game.lastMove.x + game.lastMove.y * 19 + 3000} r={radius / 1.8} cx={padding + game.lastMove.x * d} cy={padding + game.lastMove.y * d} stroke='rgba(127,127,127, 1.0)' strokeWidth='3' fill='rgba(127,127,127, 0.0)' /> : '';
-    const nextMove = (displaySettings as any).get('showNextMove') && game.nextMove ? <circle key={game.nextMove.x + game.nextMove.y * 19 + 3000} r={radius / 1.8} cx={padding + game.nextMove.x * d} cy={padding + game.nextMove.y * d} fill='rgba(80,80,80, 1.0)' /> : '';
+    const nextMove = displaySettings.showNextMove && game.nextMove ? <circle key={game.nextMove.x + game.nextMove.y * 19 + 3000} r={radius / 1.8} cx={padding + game.nextMove.x * d} cy={padding + game.nextMove.y * d} fill='rgba(80,80,80, 1.0)' /> : '';
 
     const liberties = [];
-    if ((displaySettings as any).get('showLiberties')) {
+    if (displaySettings.showLiberties) {
       const whiteStoneLiberties = game.field.forEach((v, i) => {
         if (v.stone !== 'empty') {
           const x = i % size;
@@ -207,7 +207,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
     }
 
     const libertyCells = [];
-    if ((displaySettings as any).get('showIsLiberty')) {
+    if (displaySettings.showIsLiberty) {
       const whiteStoneLiberties = game.field.forEach((v, i) => {
         if (v.isLiberty) {
           const x = i % size;
@@ -217,7 +217,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
       });
     }
     const libCells = [];
-    if ((displaySettings as any).get('showIsLiberty')) {
+    if (displaySettings.showIsLiberty) {
       const whiteStoneLiberties = game.field.forEach((v, i) => {
         if (v.occupiedAdjacentCells) {
           const x = i % size;
@@ -229,7 +229,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
 
     const forbiddenCells = [];
     const rectSize = 0.6;
-    if ((displaySettings as any).get('showForbidden')) {
+    if (displaySettings.showForbidden) {
       const whiteStoneLiberties = game.field.forEach((v, i) => {
         if (v.isLiberty && v.forbidden === game.turn) {
           const x = i % size;

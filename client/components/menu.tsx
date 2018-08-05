@@ -28,10 +28,10 @@ export class Menu extends React.Component<Menu.Props, Menu.State> {
     };
 
     return <div style={displaySettings}>
-      <CheckButton onSwitched={displaySettingsActions.toggleLibertiesView} checked={(state.displaySettings as any).get('showLiberties')}>Liberties Count</CheckButton>
-      <CheckButton onSwitched={displaySettingsActions.toggleIsLibertyView} checked={(state.displaySettings as any).get('showIsLiberty')}>Is Liberty</CheckButton>
-      <CheckButton onSwitched={displaySettingsActions.toggleForbiddenView} checked={(state.displaySettings as any).get('showForbidden')}>Forbidden Fields</CheckButton>
-      <CheckButton onSwitched={displaySettingsActions.toggleNextMoveView} checked={(state.displaySettings as any).get('showNextMove')}>Move Preview</CheckButton>
+      <CheckButton onSwitched={displaySettingsActions.toggleLibertiesView} checked={state.displaySettings.showLiberties}>Liberties Count</CheckButton>
+      <CheckButton onSwitched={displaySettingsActions.toggleIsLibertyView} checked={state.displaySettings.showIsLiberty}>Is Liberty</CheckButton>
+      <CheckButton onSwitched={displaySettingsActions.toggleForbiddenView} checked={state.displaySettings.showForbidden}>Forbidden Fields</CheckButton>
+      <CheckButton onSwitched={displaySettingsActions.toggleNextMoveView} checked={state.displaySettings.showNextMove}>Move Preview</CheckButton>
       <Button onClicked={gameActions.resetGame}>New Game</Button>
       <FileButton onSelected={gameActions.loadGame}>Load Game</FileButton>
       <Button onClicked={gameActions.stepForward} disabled={state.game.currentStep === -1}>Next Step</Button>

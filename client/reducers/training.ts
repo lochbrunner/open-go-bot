@@ -1,4 +1,4 @@
-import {Action} from 'redux';
+import {Action} from 'redux-actions';
 import {handleActions} from 'redux-actions';
 
 import * as Actions from '../constants/actions';
@@ -23,20 +23,28 @@ class EmptyData implements Training {
   }
 }
 
-export default handleActions<
-    Training, LoadingProgress|TrainingProgress|TrainingsData>(
-    {
-      [Actions.UPDATE_LOADING_PROGRESS]: (state, action) => {
-        state.loading = action.payload as LoadingProgress;
-        return {...state};
-      },
-      [Actions.UPDATE_TRAINING_PROGRESS]: (state, action) => {
-        state.training = action.payload as TrainingProgress;
-        return {...state};
-      },
-      [Actions.LOAD_DATA]: (state, action) => {
-        state.trainingsData = action.payload as TrainingsData;
+export type actionTypes = LoadingProgress|TrainingProgress|TrainingsData;
+
+export const createInitialState: () => Training = () => new EmptyData();
+
+export const reducers: (state: RootState, action: Action<actionTypes>) =>
+    RootState = (state: RootState, action: Action<actionTypes>) => {
+      if (action.type === Actions.UPDATE_LOADING_PROGRESS) {
+        state.training.loading = action.payload as LoadingProgress;
         return state;
-      },
-    },
-    new EmptyData());
+      }
+      if (action.type === Actions.UPDATE_TRAINING_PROGRESS) {
+        state.training.loading = action.payload as LoadingProgress;
+        return state;
+      }
+      if (action.type === Actions.UPDATE_LOADING_PROGRESS) {
+        state.training.training = action.payload as LoadingProgress;
+        return state;
+      }
+
+      if (action.type === Actions.LOAD_DATA) {
+        state.training.trainingsData = action.payload as TrainingsData;
+        return state;
+      }
+      return state;
+    };
