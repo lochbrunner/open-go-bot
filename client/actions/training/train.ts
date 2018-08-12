@@ -130,7 +130,9 @@ export default async function trainOnRecords(dispatch, graph: Model.Graph) {
           });
         }
         reporter({
-          description: `Training loss: ${loss} accuracy: ${accuracy}`,
+          description: `Training loss: ${
+                                         (loss as number).toFixed(2)
+                                       } accuracy: ${accuracy}`,
           progress: {total: TRAIN_BATCHES, finished: i}
         });
       });

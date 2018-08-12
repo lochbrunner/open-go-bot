@@ -61,8 +61,8 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     if (min === max)
       return `rgb(127,165,127)`;
     const norm = (value - min) / (max - min);// Math.min(255, Math.max(0, value));
-    const v = Math.floor(255 * norm);
-    return `rgb(${v}, ${v}, ${v})`;
+    const v = Math.floor(180 + 180 * norm);
+    return `hsl(${v}, ${80}%, ${50}%)`;
   }
 
   private onSelectionChanged(e: number) {

@@ -64,7 +64,7 @@ class AppComponent extends React.Component<App.Props, App.State> {
         <div className="train">
           <Button onClicked={() => trainingActions.train(state.graph)} style={{}} >Train</Button>
           <p>{training.training.description}</p>
-          <ProgressBar active={true} now={training.training.progress.finished / training.training.progress.total * 100} label={`${training.training.progress.finished} of ${training.training.progress.total}`} />
+          <ProgressBar style={{ width: '500px' }} active={true} now={training.training.progress.finished / training.training.progress.total * 100} label={`${training.training.progress.finished} of ${training.training.progress.total}`} />
         </div>
       </div>
     );
