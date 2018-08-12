@@ -25,7 +25,7 @@ export const reducers: (state: RootState, action: Action<actionTypes>) =>
     RootState = (state: RootState, action: Action<actionTypes>) => {
       if (action.type === Actions.UPDATE_TRAINING_PROGRESS) {
         state.training.training = action.payload as Progress;
-        return state;
+        return {...state};
       }
 
       return state;

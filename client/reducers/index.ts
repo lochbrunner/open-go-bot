@@ -1,8 +1,6 @@
 import {combineReducers, Reducer} from 'redux';
 import {Action} from 'redux-actions';
 
-import * as Actions from '../constants/actions';
-
 import {createInitialState as initialDisplaySettings, reducers as displaySettingsReducer} from './display-settings';
 import {createInitialState as initialGame, reducers as gameReducer} from './game';
 import {createInitialState as initialGraph, reducers as graphReducers} from './graph';
