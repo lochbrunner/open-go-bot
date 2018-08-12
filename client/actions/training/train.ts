@@ -1,6 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 
-import {updateTrainingsProgress} from '../../actions/training';
+import {updateTrainingsProgress, updateWeights} from '../../actions/training';
 import {Progress} from '../../utilities/progress';
 import load from './load';
 
@@ -21,9 +21,16 @@ class BatchHandler {
   }
 }
 
-export default async function trainOnRecords(dispatch, graph: Model.Graph) {
-  console.log('Loading..');
+function calcWeightsSize(node: Model.Node) {
+  if (node.type === 'convolution') {
+    const inputShape = node.input.shape;
+    return node.kernel.size * node.kernel.size * node.filters *
+        inputShape[inputShape.length - 1];
+  }
+  return 0;
+}
 
+export default async function trainOnRecords(dispatch, graph: Model.Graph) {
   const reporter = (progress: Progress) =>
       dispatch(updateTrainingsProgress(progress));
 
@@ -33,23 +40,30 @@ export default async function trainOnRecords(dispatch, graph: Model.Graph) {
 
   const model = tf.sequential();
 
-  model.add(tf.layers.conv2d({
-    inputShape: [19, 19, 9],
-    kernelSize: 5,  // 5x5 kernel
-    filters: 1,     // For the output
-    strides: 1,
-    activation: 'relu',
-    padding: 'same',
-    kernelInitializer: 'VarianceScaling',
-    useBias: true
-  }));
+  const layers = [] as Model.Node[];
 
-  // model.add(tf.layers.dense({
-  //   units: 19 * 19,
-  //   kernelInitializer: 'VarianceScaling',
-  //   activation: 'softmax'
-  // }));
-  model.add(tf.layers.flatten());
+  // Traverse all nodes
+  let nodes: Model.Node[] = [graph.input];
+  while (nodes.length > 0) {
+    const node = nodes.pop();
+    if (node.type === 'convolution') {
+      model.add(tf.layers.conv2d({
+        inputShape: node.input.shape,
+        filters: node.filters,
+        kernelSize: node.kernel.size,
+        strides: node.strides,
+        activation: node.activation,
+        padding: 'same',
+        kernelInitializer: 'VarianceScaling',
+        useBias: true
+      }));
+      layers.push(node);
+    } else if (node.type === 'flatten') {
+      model.add(tf.layers.flatten());
+      layers.push(node);
+    }
+    nodes.push(...node.outputs);
+  }
 
   const LEARNING_RATE = 0.15;
   const optimizer = tf.train.sgd(LEARNING_RATE);
@@ -101,7 +115,18 @@ export default async function trainOnRecords(dispatch, graph: Model.Graph) {
         for (let weight of weights) {
           weight.data().then(d => {
 
+            for (let layer of layers) {
+              // console.log(
+              //     `calc: ${calcWeightsSize(layer)} d.length: ${d.length}`);
+              if (layer.type === 'convolution' &&
+                  calcWeightsSize(layer) === d.length) {
+                layer.weights = Array.from(d);
+              }
+            }
             console.log(d);
+            // TODO(Matthias): How get the correct mapping?
+
+            dispatch(updateWeights({...graph}));
           });
         }
         reporter({
@@ -111,22 +136,4 @@ export default async function trainOnRecords(dispatch, graph: Model.Graph) {
       });
     }
   }
-  // TODO(Matthias): Dispatch trainings result
-  // dispatch();
-
-  // const graph = new dl.Graph();
-  // const inputShape = [19, 19, 9];
-  // const inputTensor = graph.placeholder('input', inputShape);
-
-  // const labelShape = [19, 19];
-  // const labelTensor = graph.placeholder('label', labelShape);
-  //   const w =
-  //       graph.variable<'float32'>('w', new dl.RandomNormalInitializer([1, 1,
-  //       1]))
-  //           const outputTensor = graph.conv2d(
-  //           inputTensor,
-  //           ) const costTensor = graph.softmaxCrossEntropyCost(labelTensor);
-
-  // const session = new dl.Session(graph, dl.ENV.math);
-  // const cost = session.train()
 }

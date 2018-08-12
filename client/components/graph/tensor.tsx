@@ -5,10 +5,12 @@ import 'rc-slider/assets/index.css';
 
 export namespace Tensor {
   export interface Props {
-    features: number[][][];
+    features: number[][][] | { shape: number[], array: number[] };
     width: number;
     height: number;
     legend?: string[];
+
+    position: { top: number, left: number };
   }
   export interface State {
     selection: number;
@@ -36,6 +38,14 @@ function concateArrays<T>(a: T[], b: T[]): T[] {
   return b.push.apply(b, a);
 }
 
+function createDimension(array: number[], length: number) {
+  const result = [] as number[][];
+  for (let i = 0; i < array.length; i += length) {
+    result.push(array.slice(i, i + length));
+  }
+  return result;
+}
+
 export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
   constructor(props?: Tensor.Props, context?: any) {
     super(props, context);
@@ -47,9 +57,11 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     this.onSelectionChanged = this.onSelectionChanged.bind(this);
   }
 
-  private static calcColor(value: number) {
-    const norm = Math.min(255, Math.max(0, value));
-    const v = Math.floor(155 + 100 * norm);
+  private static calcColor(value: number, min: number, max: number) {
+    if (min === max)
+      return `rgb(127,165,127)`;
+    const norm = (value - min) / (max - min);// Math.min(255, Math.max(0, value));
+    const v = Math.floor(255 * norm);
     return `rgb(${v}, ${v}, ${v})`;
   }
 
@@ -60,10 +72,10 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
   }
 
   render(): JSX.Element {
-    const { width, height, features, legend } = this.props;
+    const { width, height, features, legend, position } = this.props;
     const { selection } = this.state;
-
-    const [rows, columns, channels] = getRank(features);
+    const [rows, columns, channels] = features instanceof Array ? getRank(features) : features.shape;
+    const flatFeatures = features instanceof Array ? _.flatten(features) : createDimension(features.array, 9);
     const dx = (width - 1) / rows;
     const dy = (height - 1) / columns;
     const lineStyle = {
@@ -79,15 +91,19 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
       return <line key={i + 2000} y1={0} x1={Math.floor(i * dx) + 0.5} y2={height} x2={Math.floor(i * dx) + 0.5} style={lineStyle} />;
     });
 
-    const featuresField = _.flatten(features).map((feature, i) => {
+    const [min, max] = flatFeatures.reduce((p, s) => [Math.min(p[0], s[selection]), Math.max(p[1], s[selection])], [Number.MAX_VALUE, Number.MIN_VALUE]);
+
+    const featuresField = flatFeatures.map((feature, i) => {
       const x = i % rows;
       const y = Math.floor(i / rows);
-      return <rect key={i} x={x * dx} y={y * dy} width={dx} height={dy} fill={Tensor.calcColor(feature[selection])} />;
+      return <rect key={i} x={x * dx} y={y * dy} width={dx} height={dy} fill={Tensor.calcColor(feature[selection], min, max)} >
+        <title>{feature[selection]}</title>
+      </rect>;
     });
 
     const marks = legend ? _.fromPairs(legend.map((key, i) => [i, key])) : _.times(channels).map((v, i) => i.toString());
 
-    return <div>
+    return <div style={{ position: 'absolute', top: position.top, left: position.left }}>
       <svg style={{ float: 'left' }} width={width} height={height} >
         {linesH}
         {linesW}

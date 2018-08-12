@@ -8,7 +8,7 @@ export type ActionTypes = {
 };
 
 export function createInitialState(): Model.Graph {
-  const output: Model.Node = {type: 'output', shape: [19 * 19]};
+  const output: Model.Node = {type: 'output', shape: [19 * 19], outputs: []};
 
   const conv2d1: Model.Convolution = {
     type: 'convolution',
@@ -16,14 +16,27 @@ export function createInitialState(): Model.Graph {
     kernel: {size: 5},
     filters: 1,
     strides: 1,
-    weights: [],
+    weights: Array(5 * 5 * 9).fill(0),
     activation: 'relu',
-    outputs: [output]
+    outputs: []
   };
 
-  return {
-    input: {type: 'input', legend, shape: [19, 19, 9], outputs: [conv2d1]}
-  };
+  const input:
+      Model.Input = {type: 'input', legend, shape: [19, 19, 9], outputs: []};
+
+  const flatten:
+      Model.Flatten = {type: 'flatten', outputs: [], shape: [19 * 19]};
+
+  conv2d1.input = input;
+  input.outputs.push(conv2d1);
+
+  flatten.input = conv2d1;
+  conv2d1.outputs.push(flatten);
+
+  output.input = flatten;
+  flatten.outputs.push(output);
+
+  return {input};
 }
 
 export const reducers: (state: RootState, action: ActionTypes) => RootState =

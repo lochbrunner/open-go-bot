@@ -92,13 +92,21 @@ declare interface Training {
 
 
 declare namespace Model {
-  interface Node {
-    type: 'convolution'|'output'|'input'
+  type Node = Convolution|Input|Output|Flatten;
+  interface BaseNode {
+    // type: 'convolution'|'output'|'input'
+    outputs: Node[];
+    input?: Node;
     shape: number[]
   }
 
-  interface Convolution extends Node {
+  interface Output extends BaseNode {
+    type: 'output';
+  }
+
+  interface Convolution extends BaseNode {
     type: 'convolution';
+
     kernel: {size: number};
     filters: number;
     strides: number;
@@ -106,19 +114,15 @@ declare namespace Model {
     activation: 'relu', outputs: Node[];
   }
 
-  interface Input extends Node {
+  interface Input extends BaseNode {
     type: 'input';
     legend: string[];
-    outputs: Node[];
   }
 
-  interface Convolution extends Node {
-    type: 'convolution';
-    kernel: {size: number};
-
-    weights: number[];
-    outputs: Node[];
+  interface Flatten extends BaseNode {
+    type: 'flatten';
   }
+
   interface Graph {
     input?: Input;
   }
