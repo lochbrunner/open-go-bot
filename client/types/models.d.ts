@@ -91,8 +91,44 @@ declare interface Training {
   training: {progress: {finished: number, total: number}, description: string};
 }
 
+
+declare namespace Model {
+  interface Node {
+    type: 'convolution'|'output'|'input'
+    shape: number[]
+  }
+
+  interface Convolution extends Node {
+    type: 'convolution';
+    kernel: {size: number};
+    filters: number;
+    strides: number;
+    weights: number[];
+    activation: 'relu', outputs: Node[];
+  }
+
+  interface Input extends Node {
+    type: 'input';
+    legend: string[];
+    outputs: Node[];
+  }
+
+  interface Convolution extends Node {
+    type: 'convolution';
+    kernel: {size: number};
+
+    weights: number[];
+    outputs: Node[];
+  }
+  interface Graph {
+    input?: Input;
+  }
+}
+
+
 declare interface RootState {
   game: Game;
+  graph: Model.Graph
 
   displaySettings: DisplaySettings;
   training: Training;

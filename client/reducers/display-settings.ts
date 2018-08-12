@@ -3,7 +3,6 @@ import {Action} from 'redux-actions';
 import {ActionPayload} from '../actions/display-settings';
 import * as Actions from '../constants/actions';
 
-
 export function createInitialState(): DisplaySettings {
   return {
     showForbidden: true,

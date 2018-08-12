@@ -54,7 +54,7 @@ class AppComponent extends React.Component<App.Props, App.State> {
           <Menu state={state} gameActions={gameActions} displaySettingsActions={displaySettingsActions} />
         </div>
         <div className="graph-section">
-          <Graph game={state.game} />
+          <Graph game={state.game} graph={state.graph} />
         </div>
         <Link style={{ position: 'absolute', bottom: '40px', left: '20px' }} to="training" >Training</Link>
       </div>

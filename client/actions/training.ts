@@ -1,7 +1,7 @@
 import {createAction} from 'redux-actions';
 import * as Actions from '../constants/actions';
-import {Progress as LoadingProgress} from '../training/load';
-import {Progress as TrainingProgress} from '../training/train';
+import {Progress as LoadingProgress} from '../reducers/training/load';
+import {Progress as TrainingProgress} from '../reducers/training/train';
 
 // export interface TrainingsData {
 //   features: number[][][][];

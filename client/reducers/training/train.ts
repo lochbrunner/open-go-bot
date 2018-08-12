@@ -1,5 +1,7 @@
 import * as tf from '@tensorflow/tfjs';
 
+import {updateTrainingsProgress} from '../../actions/training';
+
 export interface Progress {
   description: string;
   progress: {finished: number, total: number};
@@ -23,7 +25,7 @@ class BatchHandler {
 }
 
 export default async function trainOnRecords(
-    reporter: (msg: Progress) => void, trainingsData: TrainingsData) {
+    graph: Model.Graph, trainingsData: TrainingsData) {
   console.log('Training..');
 
   const model = tf.sequential();
@@ -99,8 +101,7 @@ export default async function trainOnRecords(
             console.log(d);
           });
         }
-
-        reporter({
+        updateTrainingsProgress({
           description: `Training loss: ${loss} accuracy: ${accuracy}`,
           progress: {total: TRAIN_BATCHES, finished: i}
         });

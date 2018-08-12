@@ -9,6 +9,7 @@ import { Tensor } from './tensor';
 export namespace Graph {
   export interface Props {
     game: Game;
+    graph: Model.Graph;
   }
   export interface State {
   }

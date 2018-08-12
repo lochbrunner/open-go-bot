@@ -1,9 +1,9 @@
 import {Action} from 'redux-actions';
 import {handleActions} from 'redux-actions';
 
-import * as Actions from '../constants/actions';
-import {Progress as LoadingProgress} from '../training/load';
-import {Progress as TrainingProgress} from '../training/train';
+import * as Actions from '../../constants/actions';
+import {Progress as LoadingProgress} from './load';
+import {Progress as TrainingProgress} from './train';
 
 class EmptyData implements Training {
   loading: {progress: {finished: number, total: number}; description: string;};
