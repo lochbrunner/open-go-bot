@@ -87,7 +87,6 @@ declare interface TrainingsData {
 
 declare interface Training {
   trainingsData: TrainingsData;
-  loading: {progress: {finished: number, total: number}, description: string};
   training: {progress: {finished: number, total: number}, description: string};
 }
 

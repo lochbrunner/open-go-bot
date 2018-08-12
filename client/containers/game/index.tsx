@@ -6,6 +6,7 @@ import { withRouter, Link } from 'react-router-dom';
 import { RouteComponentProps } from 'react-router';
 import * as GameActions from '../../actions/game';
 import * as DisplayActions from '../../actions/display-settings';
+import * as TrainingsActions from '../../actions/training';
 
 import { Board } from '../../components/board';
 import { CheckButton } from '../../components/check-button';
@@ -14,6 +15,8 @@ import { FileButton } from '../../components/file-button';
 
 import { Menu } from '../../components/menu';
 import { Graph } from '../../components/graph';
+
+const { ProgressBar } = require('react-bootstrap');
 
 require('./index.scss');
 
@@ -24,6 +27,7 @@ export namespace App {
 
     gameActions: typeof GameActions;
     displaySettingsActions: typeof DisplayActions;
+    trainingActions: typeof TrainingsActions;
   }
 
   export interface State {
@@ -34,7 +38,7 @@ export namespace App {
 class AppComponent extends React.Component<App.Props, App.State> {
 
   render(): React.ReactNode {
-    const { state, children, gameActions, displaySettingsActions } = this.props;
+    const { state, children, gameActions, displaySettingsActions, trainingActions } = this.props;
     const appStyle = {
     };
     const gameStyle = {
@@ -43,6 +47,7 @@ class AppComponent extends React.Component<App.Props, App.State> {
     const graphStyle = {
 
     };
+    const { training } = state;
 
     return (
       <div style={appStyle} >
@@ -56,7 +61,11 @@ class AppComponent extends React.Component<App.Props, App.State> {
         <div className="graph-section">
           <Graph game={state.game} graph={state.graph} />
         </div>
-        <Link style={{ position: 'absolute', bottom: '40px', left: '20px' }} to="training" >Training</Link>
+        <div className="train">
+          <Button onClicked={() => trainingActions.train(state.graph)} style={{}} >Train</Button>
+          <p>{training.training.description}</p>
+          <ProgressBar active={true} now={training.training.progress.finished / training.training.progress.total * 100} label={`${training.training.progress.finished} of ${training.training.progress.total}`} />
+        </div>
       </div>
     );
   }
@@ -71,7 +80,8 @@ function mapStateToProps(state: RootState): Partial<App.Props> {
 function mapDispatchToProps(dispatch): Partial<App.Props> {
   return {
     gameActions: bindActionCreators(GameActions, dispatch),
-    displaySettingsActions: bindActionCreators(DisplayActions, dispatch)
+    displaySettingsActions: bindActionCreators(DisplayActions, dispatch),
+    trainingActions: bindActionCreators(TrainingsActions, dispatch)
   };
 }
 

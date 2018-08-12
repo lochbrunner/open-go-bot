@@ -1,5 +1,5 @@
+import {EmptyGame, loadGame, nextStep, putStone} from '../../reducers/game/game-logic';
 import {createFeatures, createLabel} from '../../utilities/encoder';
-import {EmptyGame, loadGame, nextStep, putStone} from '../game/game-logic';
 
 export interface Progress {
   description: string;
@@ -61,11 +61,8 @@ async function processGame(
   }
 }
 
-export default async function load(
-    reporter: (msg: Progress) => void, resolve: (data: {
-                                         features: TrainingsData['features'],
-                                         labels: TrainingsData['labels']
-                                       }) => void) {
+export default async function load(reporter: (msg: Progress) => void): Promise<
+    {features: TrainingsData['features'], labels: TrainingsData['labels']}> {
   try {
     const text = await loadTextFile('sitemap.txt');
     // Make this constant a hyper-paramter
@@ -86,7 +83,7 @@ export default async function load(
       description: `Finished loading`,
       progress: {finished: features.length, total: maxSamples}
     });
-    resolve({features, labels});
+    return {features, labels};
   } catch (error) {
     reporter({
       description: `An error occurred: ${error.message}`,

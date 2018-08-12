@@ -1,11 +1,8 @@
 import * as tf from '@tensorflow/tfjs';
 
 import {updateTrainingsProgress} from '../../actions/training';
-
-export interface Progress {
-  description: string;
-  progress: {finished: number, total: number};
-}
+import {Progress} from '../../utilities/progress';
+import load from './load';
 
 class BatchHandler {
   private caret: number;
@@ -24,8 +21,14 @@ class BatchHandler {
   }
 }
 
-export default async function trainOnRecords(
-    graph: Model.Graph, trainingsData: TrainingsData) {
+export default async function trainOnRecords(dispatch, graph: Model.Graph) {
+  console.log('Loading..');
+
+  const reporter = (progress: Progress) =>
+      dispatch(updateTrainingsProgress(progress));
+
+  const trainingsData = await load(reporter);
+
   console.log('Training..');
 
   const model = tf.sequential();
@@ -62,7 +65,7 @@ export default async function trainOnRecords(
   // How many examples the model should "see" before making a parameter update.
   const BATCH_SIZE = 64;
   // How many batches to train the model for.
-  const TRAIN_BATCHES = 40;
+  const TRAIN_BATCHES = 2;
 
   // Every TEST_ITERATION_FREQUENCY batches, test accuracy over TEST_BATCH_SIZE
   // examples. Ideally, we'd compute accuracy over the whole test set, but for
@@ -101,13 +104,15 @@ export default async function trainOnRecords(
             console.log(d);
           });
         }
-        updateTrainingsProgress({
+        reporter({
           description: `Training loss: ${loss} accuracy: ${accuracy}`,
           progress: {total: TRAIN_BATCHES, finished: i}
         });
       });
     }
   }
+  // TODO(Matthias): Dispatch trainings result
+  // dispatch();
 
   // const graph = new dl.Graph();
   // const inputShape = [19, 19, 9];

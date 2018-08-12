@@ -14,7 +14,7 @@ body>div#root>div {
   >div.graph-section {
     position: absolute;
     left: 700px;
-    bottom: 0px;
+    bottom: 200px;
     top: 0px;
     right: 0px;
     >div {
@@ -22,5 +22,12 @@ body>div#root>div {
       left: calc(+50% - 240px);
       margin-top: 150px;
     }
+  }
+  >div.train {
+    position: absolute;
+    left: 700px;
+    bottom: 000px;
+    height: 200px;
+    right: 0px;
   }
 }
