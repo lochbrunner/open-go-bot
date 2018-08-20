@@ -61,8 +61,8 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     if (min === max)
       return `rgb(127,165,127)`;
     const norm = (value - min) / (max - min);// Math.min(255, Math.max(0, value));
-    const v = Math.floor(180 + 180 * norm);
-    return `hsl(${v}, ${80}%, ${50}%)`;
+    const v = Math.floor(260 + 100 * norm);
+    return `hsl(${v}, ${70}%, ${60}%)`;
   }
 
   private onSelectionChanged(e: number) {
@@ -75,7 +75,7 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     const { width, height, features, legend, position } = this.props;
     const { selection } = this.state;
     const [rows, columns, channels] = features instanceof Array ? getRank(features) : features.shape;
-    const flatFeatures = features instanceof Array ? _.flatten(features) : createDimension(features.array, 9);
+    const flatFeatures = features instanceof Array ? _.flatten(features) : createDimension(features.array, channels);
     const dx = (width - 1) / rows;
     const dy = (height - 1) / columns;
     const lineStyle = {
@@ -102,6 +102,7 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     });
 
     const marks = legend ? _.fromPairs(legend.map((key, i) => [i, key])) : _.times(channels).map((v, i) => i.toString());
+    const slider = legend || channels > 1 ? <Slider style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={8} marks={marks} step={1} included={false} onChange={this.onSelectionChanged} defaultValue={0} vertical /> : '';
 
     return <div style={{ position: 'absolute', top: position.top, left: position.left }}>
       <svg style={{ float: 'left' }} width={width} height={height} >
@@ -109,7 +110,7 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
         {linesW}
         {featuresField}
       </svg>
-      <Slider style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={8} marks={marks} step={1} included={false} onChange={this.onSelectionChanged} defaultValue={0} vertical />
+      {slider}
     </div>;
   }
 }

@@ -3,6 +3,9 @@ import * as _ from 'lodash';
 import * as encoder from '../../utilities/encoder';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
+import * as tf from '@tensorflow/tfjs';
+
+import { createModel, loadWeightsFromGraph } from '../../utilities/tf-model';
 
 import { Tensor } from './tensor';
 
@@ -26,21 +29,38 @@ function findFirst(start: Model.Node, predicate: (node: Model.Node) => boolean) 
 }
 
 export class Graph extends React.Component<Graph.Props, Graph.State> {
+  private model: tf.Model;
+
   constructor(props?: Graph.Props, context?: any) {
     super(props, context);
+    this.model = createModel(props.graph);
   }
 
   render(): JSX.Element {
     const { game, graph } = this.props;
     const features = encoder.createFeatures(game);
 
+    loadWeightsFromGraph(graph, this.model);
+    const predictionTensor = this.model.predict(tf.tensor3d(features).reshape([-1, 19, 19, 9]));
+    let prediction: { array: number[], shape: number[] } = { array: [], shape: [] };
+    if (predictionTensor instanceof Array) {
+      console.log('predictionTensor is array!');
+      prediction.array = Array.from(predictionTensor[0].dataSync());
+      prediction.shape = [19, 19, 1];
+      console.log(prediction.shape);
+    }
+    else {
+      prediction.array = Array.from(predictionTensor.dataSync());
+      prediction.shape = [19, 19, 1];
+    }
+
     // Find the correct conv node
     const convNode = findFirst(graph.input, node => node.type === 'convolution') as Model.Convolution;
-    const convWeights = convNode.weights;
 
     return <div>
       <Tensor width={300} height={300} position={{ left: 0, top: 0 }} legend={encoder.legend} features={features} />
-      <Tensor width={200} height={200} position={{ left: 0, top: 350 }} legend={encoder.legend} features={{ shape: [5, 5, 9], array: convNode.weights }} />
+      <Tensor width={200} height={200} position={{ left: 0, top: 350 }} legend={encoder.legend} features={{ shape: [convNode.kernel.size, convNode.kernel.size, convNode.filters], array: convNode.weights.kernel }} />
+      <Tensor width={300} height={300} position={{ left: 0, top: 600 }} features={prediction} />
     </div>;
   }
 }

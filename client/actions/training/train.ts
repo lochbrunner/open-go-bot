@@ -1,7 +1,10 @@
 import * as tf from '@tensorflow/tfjs';
+import {setTimeout} from 'timers';
 
 import {updateTrainingsProgress, updateWeights} from '../../actions/training';
 import {Progress} from '../../utilities/progress';
+import {createModel, writeWeightsToGraph} from '../../utilities/tf-model';
+
 import load from './load';
 
 class BatchHandler {
@@ -21,73 +24,49 @@ class BatchHandler {
   }
 }
 
-function calcWeightsSize(node: Model.Node) {
-  if (node.type === 'convolution') {
-    const inputShape = node.input.shape;
-    return node.kernel.size * node.kernel.size * node.filters *
-        inputShape[inputShape.length - 1];
-  }
-  return 0;
+async function interrupt() {
+  return new Promise((resolve, reject) => {
+    setImmediate(() => resolve());
+  });
 }
 
-export default async function trainOnRecords(dispatch, graph: Model.Graph) {
+async function sleep(duration: number) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(), duration);
+  });
+}
+
+export default async function trainOnRecords(
+    dispatch: any, graph: Model.Graph) {
   const reporter = (progress: Progress) =>
       dispatch(updateTrainingsProgress(progress));
 
-  const trainingsData = await load(reporter);
+  const trainingsData = await load(reporter, 512);
 
   console.log('Training..');
 
-  const model = tf.sequential();
+  tf.setBackend('webgl');
 
-  const layers = [] as Model.Node[];
-
-  // Traverse all nodes
-  let nodes: Model.Node[] = [graph.input];
-  while (nodes.length > 0) {
-    const node = nodes.pop();
-    if (node.type === 'convolution') {
-      model.add(tf.layers.conv2d({
-        inputShape: node.input.shape,
-        filters: node.filters,
-        kernelSize: node.kernel.size,
-        strides: node.strides,
-        activation: node.activation,
-        padding: 'same',
-        kernelInitializer: 'VarianceScaling',
-        useBias: true
-      }));
-      layers.push(node);
-    } else if (node.type === 'flatten') {
-      model.add(tf.layers.flatten());
-      layers.push(node);
-    }
-    nodes.push(...node.outputs);
-  }
-
-  const LEARNING_RATE = 0.15;
-  const optimizer = tf.train.sgd(LEARNING_RATE);
-
-  model.compile({
-    optimizer: optimizer,
-    loss: 'categoricalCrossentropy',
-    metrics: ['accuracy'],
-  });
+  const model = createModel(graph);
 
   // Training
 
   // How many examples the model should "see" before making a parameter update.
   const BATCH_SIZE = 64;
   // How many batches to train the model for.
-  const TRAIN_BATCHES = 2;
+  const TRAIN_BATCHES = 16;
 
   // Every TEST_ITERATION_FREQUENCY batches, test accuracy over TEST_BATCH_SIZE
   // examples. Ideally, we'd compute accuracy over the whole test set, but for
   // performance reasons we'll use a subset.
   const TEST_BATCH_SIZE = 1000;
-  const TEST_ITERATION_FREQUENCY = 20;
+  const TEST_ITERATION_FREQUENCY = 2;
 
   const batchHandler = new BatchHandler(trainingsData);
+
+  graph = writeWeightsToGraph(graph, model);
+  dispatch(updateWeights({...graph}));
+  // publishWeights(dispatch, model, layers, graph);
 
   // let caret = 0;
   for (let i = 0; i < TRAIN_BATCHES; i++) {
@@ -104,38 +83,33 @@ export default async function trainOnRecords(dispatch, graph: Model.Graph) {
         features, labels, {batchSize: BATCH_SIZE, validationData, epochs: 1});
 
     const loss = history.history.loss[0];
-    const accuracy = history.history.acc[0];
+    const accuracy = history.history.acc[0] as number;
 
-    if (i % TEST_ITERATION_FREQUENCY === 0) {
-      setImmediate(() => {
-        console.log(`loss: ${loss}, accuracy: ${accuracy}`);
+    console.log(`loss: ${loss}, accuracy: ${(accuracy * 100).toFixed(2)}%`);
 
-        const weights = model.getWeights(true);
-
-        for (let weight of weights) {
-          weight.data().then(d => {
-
-            for (let layer of layers) {
-              // console.log(
-              //     `calc: ${calcWeightsSize(layer)} d.length: ${d.length}`);
-              if (layer.type === 'convolution' &&
-                  calcWeightsSize(layer) === d.length) {
-                layer.weights = Array.from(d);
-              }
-            }
-            console.log(d);
-            // TODO(Matthias): How get the correct mapping?
-
-            dispatch(updateWeights({...graph}));
-          });
-        }
+    if (i % TEST_ITERATION_FREQUENCY === 0 || i === TRAIN_BATCHES - 1) {
+      if (loss > 10) {
         reporter({
-          description: `Training loss: ${
-                                         (loss as number).toFixed(2)
-                                       } accuracy: ${accuracy}`,
-          progress: {total: TRAIN_BATCHES, finished: i}
+          description: `Aborted`,
+          progress: {total: TRAIN_BATCHES, finished: 0}
         });
+        break;
+      }
+      // await publishWeights(dispatch, model, layers, graph);
+      graph = writeWeightsToGraph(graph, model);
+      dispatch(updateWeights({...graph}));
+
+      await sleep(50);
+      reporter({
+        description:
+            `Training loss: ${
+                              (loss as number).toFixed(3)
+                            } accuracy: ${(accuracy * 100).toFixed(2)}%`,
+        progress: {total: TRAIN_BATCHES, finished: i}
       });
     }
   }
+  // await publishWeights(dispatch, model, layers, graph);
+  graph = writeWeightsToGraph(graph, model);
+  dispatch(updateWeights({...graph}));
 }

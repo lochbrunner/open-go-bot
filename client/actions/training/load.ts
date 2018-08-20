@@ -61,12 +61,13 @@ async function processGame(
   }
 }
 
-export default async function load(reporter: (msg: Progress) => void): Promise<
+export default async function
+load(reporter: (msg: Progress) => void, count: number): Promise<
     {features: TrainingsData['features'], labels: TrainingsData['labels']}> {
   try {
     const text = await loadTextFile('sitemap.txt');
     // Make this constant a hyper-paramter
-    const maxSamples = 256;
+    const maxSamples = count;
     const features: TrainingsData['features'] = [];
     const labels: TrainingsData['labels'] = [];
     for (let line of text.split('\n')) {

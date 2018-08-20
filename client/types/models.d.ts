@@ -97,7 +97,8 @@ declare namespace Model {
     // type: 'convolution'|'output'|'input'
     outputs: Node[];
     input?: Node;
-    shape: number[]
+    shape: number[];
+    name: string;
   }
 
   interface Output extends BaseNode {
@@ -110,7 +111,7 @@ declare namespace Model {
     kernel: {size: number};
     filters: number;
     strides: number;
-    weights: number[];
+    weights: {kernel: number[], bias: number[]};
     activation: 'relu', outputs: Node[];
   }
 

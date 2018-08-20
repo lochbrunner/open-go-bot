@@ -1,5 +1,4 @@
 import {Action} from 'redux-actions';
-import {handleActions} from 'redux-actions';
 
 import * as Actions from '../constants/actions';
 import {Progress} from '../utilities/progress';
@@ -17,7 +16,7 @@ class EmptyData implements Training {
   }
 }
 
-export type actionTypes = Progress;
+export type actionTypes = Progress|Model.Graph;
 
 export const createInitialState: () => Training = () => new EmptyData();
 
@@ -25,6 +24,11 @@ export const reducers: (state: RootState, action: Action<actionTypes>) =>
     RootState = (state: RootState, action: Action<actionTypes>) => {
       if (action.type === Actions.UPDATE_TRAINING_PROGRESS) {
         state.training.training = action.payload as Progress;
+        return {...state};
+      }
+
+      if (action.type === Actions.UPDATE_WEIGHTS) {
+        state.graph = action.payload as Model.Graph;
         return {...state};
       }
 
