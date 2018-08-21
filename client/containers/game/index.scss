@@ -21,10 +21,11 @@ body>div#root>div {
     bottom: 200px;
     top: 0px;
     right: 0px;
-    >div {
+    padding-top: 20px;
+    >div.workspace {
       position: relative;
-      left: calc(+50% - 240px);
-      margin-top: 150px;
+      overflow: scroll;
+      height: 100%;
     }
   }
   >div.train {
@@ -33,5 +34,6 @@ body>div#root>div {
     bottom: 000px;
     height: 200px;
     right: 0px;
+    padding: 20px;
   }
 }

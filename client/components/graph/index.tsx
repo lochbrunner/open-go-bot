@@ -57,10 +57,10 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     // Find the correct conv node
     const convNode = findFirst(graph.input, node => node.type === 'convolution') as Model.Convolution;
 
-    return <div>
-      <Tensor width={300} height={300} position={{ left: 0, top: 0 }} legend={encoder.legend} features={features} />
-      <Tensor width={200} height={200} position={{ left: 0, top: 350 }} legend={encoder.legend} features={{ shape: [convNode.kernel.size, convNode.kernel.size, convNode.filters], array: convNode.weights.kernel }} />
-      <Tensor width={300} height={300} position={{ left: 0, top: 600 }} features={prediction} />
+    return <div className="workspace">
+      <Tensor width={200} height={200} position={{ left: 0, top: 20 }} legend={encoder.legend} features={features} />
+      <Tensor width={100} height={100} position={{ left: 0, top: 270 }} legend={encoder.legend} features={{ shape: [convNode.kernel.size, convNode.kernel.size, 9], array: convNode.weights.kernel }} />
+      <Tensor width={200} height={200} position={{ left: 0, top: 420 }} features={prediction} />
     </div>;
   }
 }

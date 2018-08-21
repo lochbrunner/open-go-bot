@@ -15,7 +15,6 @@ function calcWeightsSize(node: Model.Node) {
 
 export function createModel(graph: Model.Graph) {
   const model = tf.sequential();
-  // const layers: Map<string, Model.Node> = new Map<string, Model.Node>();
 
   let nodes: Model.Node[] = [graph.input];
 
@@ -33,15 +32,13 @@ export function createModel(graph: Model.Graph) {
         useBias: true,
         name: node.name
       }));
-      // layers.set(node.name, node);
     } else if (node.type === 'flatten') {
       model.add(tf.layers.flatten({name: 'flatten'}));
-      // layers.set(node.name, node);
     }
     nodes.push(...node.outputs);
   }
 
-  const LEARNING_RATE = 0.015;
+  const LEARNING_RATE = 0.03;
   const optimizer = tf.train.sgd(LEARNING_RATE);
 
   model.compile({
@@ -94,6 +91,9 @@ export function writeWeightsToGraph(graph: Model.Graph, model: tf.Model) {
                                                                    }`);
         node.weights.kernel = Array.from(kernel.dataSync());
         node.weights.bias = Array.from(bias.dataSync());
+        // console.log(
+        //     `bias: ${node.weights.bias[0]} kernel:
+        //     ${node.weights.kernel[0]}`);
       }
     }
   }
@@ -108,11 +108,11 @@ export function loadWeightsFromGraph(graph: Model.Graph, model: tf.Model) {
       const node = nodes.get(layer.name);
       if (node.type === 'convolution') {
         const inputChannels = node.input.shape[node.input.shape.length - 1];
-        // First is kernel, second bias
         const kernel = tf.tensor(
             node.weights.kernel,
             [node.kernel.size, node.kernel.size, inputChannels, node.filters]);
         const bias = tf.tensor(node.weights.bias, [node.filters]);
+        // First is kernel, second bias
         layer.setWeights([kernel, bias]);
       }
     }

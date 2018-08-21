@@ -36,6 +36,13 @@ async function sleep(duration: number) {
   });
 }
 
+function updateGraph(dispatch: any, graph: Model.Graph, model: tf.Model) {
+  tf.tidy(() => {
+    graph = writeWeightsToGraph(graph, model);
+    dispatch(updateWeights({...graph}));
+  });
+}
+
 export default async function trainOnRecords(
     dispatch: any, graph: Model.Graph) {
   const reporter = (progress: Progress) =>
@@ -63,9 +70,7 @@ export default async function trainOnRecords(
   const TEST_ITERATION_FREQUENCY = 2;
 
   const batchHandler = new BatchHandler(trainingsData);
-
-  graph = writeWeightsToGraph(graph, model);
-  dispatch(updateWeights({...graph}));
+  updateGraph(dispatch, graph, model);
   // publishWeights(dispatch, model, layers, graph);
 
   // let caret = 0;
@@ -88,7 +93,7 @@ export default async function trainOnRecords(
     console.log(`loss: ${loss}, accuracy: ${(accuracy * 100).toFixed(2)}%`);
 
     if (i % TEST_ITERATION_FREQUENCY === 0 || i === TRAIN_BATCHES - 1) {
-      if (loss > 10) {
+      if (loss > 10 || loss < .01) {
         reporter({
           description: `Aborted`,
           progress: {total: TRAIN_BATCHES, finished: 0}
@@ -96,8 +101,7 @@ export default async function trainOnRecords(
         break;
       }
       // await publishWeights(dispatch, model, layers, graph);
-      graph = writeWeightsToGraph(graph, model);
-      dispatch(updateWeights({...graph}));
+      updateGraph(dispatch, graph, model);
 
       await sleep(50);
       reporter({
@@ -110,6 +114,5 @@ export default async function trainOnRecords(
     }
   }
   // await publishWeights(dispatch, model, layers, graph);
-  graph = writeWeightsToGraph(graph, model);
-  dispatch(updateWeights({...graph}));
+  updateGraph(dispatch, graph, model);
 }
