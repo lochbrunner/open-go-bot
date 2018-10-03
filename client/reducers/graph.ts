@@ -8,12 +8,19 @@ export type ActionTypes = {
 };
 
 export function createInitialState(): Model.Graph {
-  const output: Model
-      .Node = {type: 'output', name: 'output', shape: [19 * 19], outputs: []};
+  let id = 0;
+  const output: Model.Node = {
+    id: (id++).toString(),
+    type: 'output',
+    name: 'output',
+    shape: [19 * 19],
+    outputs: []
+  };
 
   const conv2d1: Model.Convolution = {
     type: 'convolution',
     name: 'conv',
+    id: (id++).toString(),
     shape: [19, 19, 1],
     kernel: {size: 5},
     filters: 1,
@@ -26,11 +33,22 @@ export function createInitialState(): Model.Graph {
     outputs: []
   };
 
-  const input: Model.Input =
-      {type: 'input', name: 'input', legend, shape: [19, 19, 9], outputs: []};
+  const input: Model.Input = {
+    type: 'input',
+    name: 'input',
+    id: (id++).toString(),
+    legend,
+    shape: [19, 19, 9],
+    outputs: []
+  };
 
-  const flatten: Model.Flatten =
-      {type: 'flatten', name: 'flatten', outputs: [], shape: [19 * 19]};
+  const flatten: Model.Flatten = {
+    type: 'flatten',
+    name: 'flatten',
+    id: (id++).toString(),
+    outputs: [],
+    shape: [19 * 19]
+  };
 
   conv2d1.input = input;
   input.outputs.push(conv2d1);

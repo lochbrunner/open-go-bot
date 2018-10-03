@@ -14,6 +14,8 @@ ReactDOM.render(
     <Router history={history}>
       <Switch>
         <Route exact path="/" component={Game.App} />
+        {/* MNIST */}
+        {/* ANT */}
       </Switch>
     </Router>
   </Provider>,

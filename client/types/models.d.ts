@@ -101,6 +101,7 @@ declare namespace Model {
     input?: Node;
     shape: number[];
     name: string;
+    id: string;
   }
 
   interface Output extends BaseNode {

@@ -10,8 +10,6 @@ export namespace Tensor {
     width: number;
     height: number;
     legend?: string[];
-
-    position: { top: number, left: number };
   }
   export interface State {
     selection: number;
@@ -77,7 +75,7 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
   }
 
   render(): JSX.Element {
-    const { width, height, features, legend, position } = this.props;
+    const { width, height, features, legend } = this.props;
     const { selection } = this.state;
     const [rows, columns, channels] = features instanceof Array ? getRank(features) : features.shape;
     const flatFeatures = features instanceof Array ? _.flatten(features) : createDimension(features.array, channels);
@@ -123,10 +121,10 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
       }
     };
 
-    return <div className="tensor" style={{ top: position.top, left: position.left, width: `${width + (slider ? 100 : 0)}px` }}>
+    return <div className="tensor" style={{ width: `${width + (slider ? 100 : 0)}px` }}>
       <canvas ref={fillCanvas} style={{ float: 'left' }} width={width} height={height} />
       {slider}
-      <div className="legend" style={{ width: '100%' }}>
+      <div className="legend" style={{ width: '100%', marginTop: `${slider ? 15 : 10}px` }}>
         <div className="range" >
           <span className="min label">{min.toPrecision(3)}</span>
           <span className="max label">{max.toPrecision(3)}</span>
