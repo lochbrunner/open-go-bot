@@ -1,0 +1,6 @@
+@import "./node_modules/react-flow-editor/dist/default-theme.scss";
+@import "./node_modules/react-flow-editor/dist/_style.scss";
+
+div.icon::before {
+  box-sizing: content-box;
+}

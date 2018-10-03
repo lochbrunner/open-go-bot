@@ -123,10 +123,10 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
       }
     };
 
-    return <div className="tensor" style={{ top: position.top, left: position.left, width: `${width + 100}px` }}>
+    return <div className="tensor" style={{ top: position.top, left: position.left, width: `${width + (slider ? 100 : 0)}px` }}>
       <canvas ref={fillCanvas} style={{ float: 'left' }} width={width} height={height} />
       {slider}
-      <div className="legend" style={{ width: `${width + 100}px` }}>
+      <div className="legend" style={{ width: '100%' }}>
         <div className="range" >
           <span className="min label">{min.toPrecision(3)}</span>
           <span className="max label">{max.toPrecision(3)}</span>
