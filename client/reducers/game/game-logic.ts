@@ -32,7 +32,7 @@ class EmptyLibertyCell implements LibertyCell {
 export class EmptyGame implements Game {
   lastMove: Vector2d;
   /**
-   * -1 indecates a live game
+   * -1 indicates a live game
    */
   currentStep: number;
   info: GameInfo;
@@ -64,7 +64,7 @@ function assert(condition) {
   }
 }
 
-function oponent(player: Player): Player {
+function opponent(player: Player): Player {
   return player === 'white' ? 'black' : 'white';
 }
 
@@ -211,11 +211,11 @@ function killGroup(
     groups: Group[], libertyCells: Map<number, LibertyCell>,
     capturedStones: {black: number, white: number}, groupToKill: Group,
     fieldWidth: number) {
-  capturedStones[oponent(groupToKill.color)] += groupToKill.stones.size;
+  capturedStones[opponent(groupToKill.color)] += groupToKill.stones.size;
   const groupId = groups.indexOf(groupToKill);
   groups.splice(groupId, 1);
 
-  // Create Fieldmap
+  // Create Field-map
   const groupsOnField = new Map<number, Group>();
   groups.forEach(
       group => group.stones.forEach(stone => groupsOnField.set(stone, group)));
@@ -257,16 +257,16 @@ function deleteLiberty(
   }
 }
 
-function addLibertiesArroundExpandedGroup(
+function addLibertiesAroundExpandedGroup(
     x, y, fieldWidth, libertyCells: Map<number, LibertyCell>, group: Group,
-    oponentGroups: Group[]) {
+    opponentGroups: Group[]) {
   const createCellId = (x: number, y: number) => x + y * fieldWidth;
   for (let dir of allDirections) {
     const [offX, offY] = direction2Vector(dir);
     const cellId = createCellId(x + offX, y + offY);
     if (evalPosition(fieldWidth, x + offX, y + offY) &&
         !group.stones.has(cellId) &&
-        oponentGroups.reduce(
+        opponentGroups.reduce(
             (prev, group) => prev && !group.stones.has(cellId), true))
       createLiberty(fieldWidth, cellId, group, libertyCells, dir);
   }
@@ -293,7 +293,7 @@ function createNewGroup(
   return group;
 }
 
-function calculatePremission(
+function calculatePermission(
     fieldWidth: number, x: number, y: number, field: Cell): Player|'both'|
     undefined {
   const createId = (x: number, y: number) => x + y * fieldWidth;
@@ -306,13 +306,13 @@ function calculatePremission(
   libs['black'] = maxLibs;
   libs['white'] = maxLibs;
   if (x > 0 && field[createId(x - 1, y)].stone !== 'empty')
-    libs[oponent(field[createId(x - 1, y)].stone)]--;
+    libs[opponent(field[createId(x - 1, y)].stone)]--;
   if (y > 0 && field[createId(x, y - 1)].stone !== 'empty')
-    libs[oponent(field[createId(x, y - 1)].stone)]--;
+    libs[opponent(field[createId(x, y - 1)].stone)]--;
   if (x < fieldWidth - 1 && field[createId(x + 1, y)].stone !== 'empty')
-    libs[oponent(field[createId(x + 1, y)].stone)]--;
+    libs[opponent(field[createId(x + 1, y)].stone)]--;
   if (y < fieldWidth - 1 && field[createId(x, y + 1)].stone !== 'empty')
-    libs[oponent(field[createId(x, y + 1)].stone)]--;
+    libs[opponent(field[createId(x, y + 1)].stone)]--;
   return libs['black'] === 0 ? 'black' :
                                libs['white'] === 0 ? 'white' : undefined;
 }
@@ -343,7 +343,7 @@ function createField(cache: GameCache): Cell[] {
 }
 
 export function putStone(state: Game, action: TurnPayload): Game {
-  const nextPlayer = oponent(action.player);
+  const nextPlayer = opponent(action.player);
   const {size} = state.info;
   const {x, y} = action.pos;
   const {groups, libertyCells} = state.cache;
@@ -354,15 +354,15 @@ export function putStone(state: Game, action: TurnPayload): Game {
 
   // Are there nearby groups?
   const libertyCell = libertyCells.get(currentCellId);
-  const oponentGroups = libertyCell ? _.uniq(libertyCell.adjacentGroups.filter(
-                                          g => g.color !== action.player)) :
-                                      [];
+  const opponentGroups = libertyCell ? _.uniq(libertyCell.adjacentGroups.filter(
+                                           g => g.color !== action.player)) :
+                                       [];
   const ownGroups = libertyCell ? _.uniq(libertyCell.adjacentGroups.filter(
                                       g => g.color === action.player)) :
                                   [];
   if (ownGroups.length > 0) {
     if (ownGroups.length > 1) {
-      // Delete and deregister old groups
+      // Delete and de-register old groups
       ownGroups.slice(1).forEach(group => {
         group.stones.forEach(stone => ownGroups[0].stones.add(stone));
         moveLiberties(ownGroups[0], group, libertyCells);
@@ -372,8 +372,8 @@ export function putStone(state: Game, action: TurnPayload): Game {
     }
     // Remove the liberty and add new one
     ownGroups[0].stones.add(currentCellId);
-    addLibertiesArroundExpandedGroup(
-        x, y, size, libertyCells, ownGroups[0], oponentGroups);
+    addLibertiesAroundExpandedGroup(
+        x, y, size, libertyCells, ownGroups[0], opponentGroups);
     deleteLiberty(currentCellId, size, libertyCells, killer);
 
   } else {
@@ -387,14 +387,14 @@ export function putStone(state: Game, action: TurnPayload): Game {
     if (libertyCell) {
       deleteLiberty(currentCellId, size, libertyCells, killer);
     }
-    addLibertiesArroundExpandedGroup(
-        x, y, size, libertyCells, group, oponentGroups);
+    addLibertiesAroundExpandedGroup(
+        x, y, size, libertyCells, group, opponentGroups);
     // Create new liberty Cells
-    state.turn = oponent(action.player);
+    state.turn = opponent(action.player);
   }
 
   return {
-    turn: oponent(action.player),
+    turn: opponent(action.player),
     currentStep: state.currentStep,
     cache: state.cache,
     field: createField(state.cache),

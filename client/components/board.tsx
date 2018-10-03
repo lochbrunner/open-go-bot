@@ -180,7 +180,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
         return i;
     }).filter(isFinite);
 
-    const whitheStones = whiteStonePositions.map(i => {
+    const whiteStones = whiteStonePositions.map(i => {
       const x = i % size;
       const y = Math.floor(i / size);
       return <circle key={i + 8000} r={radius} cx={padding + x * d} cy={padding + y * d} stroke='rgb(0,0,0)' strokeWidth='2' fill='rgba(255,255,255,0.9)' />;
@@ -254,7 +254,7 @@ export class Board extends React.Component<Board.Props, Board.State>{
           {textTop}
           {textBottom}
           {blackStones}
-          {whitheStones}
+          {whiteStones}
           {lastMove}
           {nextMove}
           {liberties}

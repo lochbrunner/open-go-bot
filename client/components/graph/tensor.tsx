@@ -2,6 +2,7 @@ import * as React from "react";
 import * as _ from 'lodash';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
+import './tensor.scss';
 
 export namespace Tensor {
   export interface Props {
@@ -30,12 +31,13 @@ function getRank(tensor: number | number[] | number[][] | number[][][] | number[
   return rank;
 }
 
-function concateArrays<T>(a: T[], b: T[]): T[] {
-  if (!(a instanceof Array))
-    return b;
-  if (!(b instanceof Array))
-    return a;
-  return b.push.apply(b, a);
+function comapareArrays(a: number[], b: number[]): boolean {
+  if (a === undefined || b === undefined) return false;
+  if (a.length !== b.length) return false;
+  for (let i in a) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }
 
 function createDimension(array: number[], length: number) {
@@ -47,6 +49,9 @@ function createDimension(array: number[], length: number) {
 }
 
 export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
+
+  private lastRenderedData?: number[];
+
   constructor(props?: Tensor.Props, context?: any) {
     super(props, context);
 
@@ -66,7 +71,7 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
   }
 
   private onSelectionChanged(e: number) {
-    this.setState((prev, props) => {
+    this.setState(prev => {
       return { ...prev, selection: e };
     });
   }
@@ -78,39 +83,55 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     const flatFeatures = features instanceof Array ? _.flatten(features) : createDimension(features.array, channels);
     const dx = (width - 1) / rows;
     const dy = (height - 1) / columns;
-    const lineStyle = {
-      stroke: 'rgb(0,0,0)',
-      strokeWidth: 1
-    };
-    // Lines
-    const linesH = _.range(0, columns + 1).map(i => {
-      return <line key={i + 1000} x1={0} y1={Math.floor(i * dy) + 0.5} x2={width} y2={Math.floor(i * dy) + 0.5} style={lineStyle} />;
-    });
-
-    const linesW = _.range(0, rows + 1).map(i => {
-      return <line key={i + 2000} y1={0} x1={Math.floor(i * dx) + 0.5} y2={height} x2={Math.floor(i * dx) + 0.5} style={lineStyle} />;
-    });
-
     const [min, max] = flatFeatures.reduce((p, s) => [Math.min(p[0], s[selection]), Math.max(p[1], s[selection])], [Number.MAX_VALUE, Number.MIN_VALUE]);
-
-    const featuresField = flatFeatures.map((feature, i) => {
-      const x = i % rows;
-      const y = Math.floor(i / rows);
-      return <rect key={i} x={x * dx} y={y * dy} width={dx} height={dy} fill={Tensor.calcColor(feature[selection], min, max)} >
-        <title>{feature[selection]}</title>
-      </rect>;
-    });
 
     const marks = legend ? _.fromPairs(legend.map((key, i) => [i, key])) : _.times(channels).map((v, i) => i.toString());
     const slider = legend || channels > 1 ? <Slider style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={8} marks={marks} step={1} included={false} onChange={this.onSelectionChanged} defaultValue={0} vertical /> : '';
 
-    return <div style={{ position: 'absolute', top: position.top, left: position.left }}>
-      <svg style={{ float: 'left' }} width={width} height={height} >
-        {linesH}
-        {linesW}
-        {featuresField}
-      </svg>
+    const fillCanvas = (element: HTMLCanvasElement) => {
+      if (element === null) return;
+      const selectedFeature = flatFeatures.map(feature => feature[selection]);
+      if (comapareArrays(this.lastRenderedData, selectedFeature)) return;
+
+      const ctx = element.getContext('2d');
+      ctx.clearRect(0, 0, element.width, element.height);
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgb(0,0,0)';
+      for (let iy = 0; iy < rows + 1; ++iy) {
+        const y = Math.floor(iy * dy) + 0.5;
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+      }
+      for (let ix = 0; ix < columns + 1; ++ix) {
+        const x = Math.floor(ix * dx) + 0.5;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+      }
+      ctx.stroke();
+      // The features
+      this.lastRenderedData = selectedFeature;
+
+      for (let si in selectedFeature) {
+        const i = parseInt(si);
+        const feature = selectedFeature[i];
+        const x = i % rows;
+        const y = Math.floor(i / rows);
+        ctx.beginPath();
+        ctx.rect(x * dx, y * dy, dx, dy);
+        ctx.fillStyle = Tensor.calcColor(feature, min, max);
+        ctx.fill();
+      }
+    };
+
+    return <div className="tensor" style={{ top: position.top, left: position.left, width: `${width + 100}px` }}>
+      <canvas ref={fillCanvas} style={{ float: 'left' }} width={width} height={height} />
       {slider}
-    </div>;
+      <div className="legend" style={{ width: `${width + 100}px` }}>
+        <div className="range" >
+          <span className="min label">{min.toPrecision(3)}</span>
+          <span className="max label">{max.toPrecision(3)}</span>
+        </div>
+      </div>
+    </div >;
   }
 }

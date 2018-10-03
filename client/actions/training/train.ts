@@ -48,20 +48,20 @@ export default async function trainOnRecords(
   const reporter = (progress: Progress) =>
       dispatch(updateTrainingsProgress(progress));
 
-  const trainingsData = await load(reporter, 512);
+  const trainingsData = await load(reporter, 2048);
 
-  console.log('Training..');
+  // console.log('Training..');
 
   tf.setBackend('webgl');
 
-  const model = createModel(graph);
+  const model = createModel(graph, 0.05);
 
   // Training
 
   // How many examples the model should "see" before making a parameter update.
   const BATCH_SIZE = 64;
   // How many batches to train the model for.
-  const TRAIN_BATCHES = 16;
+  const TRAIN_BATCHES = 64;
 
   // Every TEST_ITERATION_FREQUENCY batches, test accuracy over TEST_BATCH_SIZE
   // examples. Ideally, we'd compute accuracy over the whole test set, but for
@@ -71,9 +71,7 @@ export default async function trainOnRecords(
 
   const batchHandler = new BatchHandler(trainingsData);
   updateGraph(dispatch, graph, model);
-  // publishWeights(dispatch, model, layers, graph);
 
-  // let caret = 0;
   for (let i = 0; i < TRAIN_BATCHES; i++) {
     const {features, labels} = batchHandler.nextBatch(BATCH_SIZE);
 
@@ -100,7 +98,6 @@ export default async function trainOnRecords(
         });
         break;
       }
-      // await publishWeights(dispatch, model, layers, graph);
       updateGraph(dispatch, graph, model);
 
       await sleep(50);
@@ -112,7 +109,9 @@ export default async function trainOnRecords(
         progress: {total: TRAIN_BATCHES, finished: i}
       });
     }
+    tf.dispose([features, labels, validationData]);
+    await tf.nextFrame();
   }
-  // await publishWeights(dispatch, model, layers, graph);
+
   updateGraph(dispatch, graph, model);
 }

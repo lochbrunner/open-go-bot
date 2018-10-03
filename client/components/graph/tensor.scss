@@ -1,0 +1,27 @@
+.tensor {
+  position: absolute;
+
+  .legend {
+    display: inline-block;
+    margin-top: 10px;
+
+    .range {
+      //   width: 400px;
+      height: 18px;
+      background-image: linear-gradient(to right, hsl(260, 70%, 60%), hsl(360, 70%, 60%));
+    }
+
+    .min {
+      float: left;
+    }
+
+    .max {
+      float: right;
+    }
+
+    .label {
+      font-size: smaller;
+      margin: 2px -2px;
+    }
+  }
+}

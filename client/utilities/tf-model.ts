@@ -13,7 +13,7 @@ function calcWeightsSize(node: Model.Node) {
   return 0;
 }
 
-export function createModel(graph: Model.Graph) {
+export function createModel(graph: Model.Graph, rate: number = 0.03) {
   const model = tf.sequential();
 
   let nodes: Model.Node[] = [graph.input];

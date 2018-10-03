@@ -55,7 +55,10 @@ declare interface Vector2d {
   y: number;
 }
 
-declare interface Step { player: Player, pos: Vector2d }
+declare interface Step {
+  player: Player;
+  pos: Vector2d;
+}
 
 declare interface GameInfo {
   title: string;
@@ -70,7 +73,7 @@ declare interface Game {
   lastMove?: Vector2d;
   steps: Step[];
   /**
-   * -1 indecates a live game
+   * -1 indicates a live game
    */
   currentStep: number;
   field: Cell[];
@@ -89,7 +92,6 @@ declare interface Training {
   trainingsData: TrainingsData;
   training: {progress: {finished: number, total: number}, description: string};
 }
-
 
 declare namespace Model {
   type Node = Convolution|Input|Output|Flatten;
@@ -112,7 +114,8 @@ declare namespace Model {
     filters: number;
     strides: number;
     weights: {kernel: number[], bias: number[]};
-    activation: 'relu', outputs: Node[];
+    activation: 'relu';
+    outputs: Node[];
   }
 
   interface Input extends BaseNode {
@@ -129,10 +132,9 @@ declare namespace Model {
   }
 }
 
-
 declare interface RootState {
   game: Game;
-  graph: Model.Graph
+  graph: Model.Graph;
 
   displaySettings: DisplaySettings;
   training: Training;
