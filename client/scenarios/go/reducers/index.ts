@@ -1,7 +1,8 @@
 import {Action, handleActions} from 'redux-actions';
 
-import {ActionPayload, TurnPayload} from '../../actions/game';
-import * as Actions from '../../constants/actions';
+import * as Actions from '../actions/constants';
+
+import {ActionPayload, TurnPayload} from '../actions/game';
 import {EmptyGame, loadGame, nextStep, putStone} from './game-logic';
 
 export type ActionType = 'Actions.SET_STONE';

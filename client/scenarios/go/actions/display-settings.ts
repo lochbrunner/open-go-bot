@@ -1,5 +1,5 @@
 import {createAction} from 'redux-actions';
-import * as Actions from '../constants/actions';
+import * as Actions from './constants';
 
 export interface ActionPayload { nextValue; }
 export const toggleLibertiesView =

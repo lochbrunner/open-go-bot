@@ -1,7 +1,6 @@
-import {prependOnceListener} from 'cluster';
 import {createAction} from 'redux-actions';
 
-import * as Actions from '../constants/actions';
+import * as Actions from './constants';
 
 export interface TurnPayload {
   pos: Vector2d;

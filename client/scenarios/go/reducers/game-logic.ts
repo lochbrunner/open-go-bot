@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {parse} from 'smartgame';
 import * as wu from 'wu';
 
-import {ActionPayload, TurnPayload} from '../../actions/game';
+import {ActionPayload, TurnPayload} from '../actions/game';
 
 class EmptyCell implements Cell {
   stone: 'black'|'white'|'empty';

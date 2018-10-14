@@ -2,10 +2,9 @@ import * as tf from '@tensorflow/tfjs';
 import {setTimeout} from 'timers';
 
 import {updateTrainingsProgress, updateWeights} from '../../actions/training';
+import load from '../../scenarios/go/load'; // TODO: Make this generic
 import {Progress} from '../../utilities/progress';
 import {createModel, writeWeightsToGraph} from '../../utilities/tf-model';
-
-import load from './load';
 
 class BatchHandler {
   private caret: number;

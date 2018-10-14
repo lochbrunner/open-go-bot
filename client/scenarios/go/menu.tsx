@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { CheckButton } from './check-button';
-import { Button } from './button';
-import { FileButton } from './file-button';
-import * as GameActions from '../actions/game';
-import * as DisplayActions from '../actions/display-settings';
+import { CheckButton } from '../../components/check-button';
+import { Button } from '../../components/button';
+import { FileButton } from '../../components/file-button';
+import * as GameActions from './actions/game';
+import * as DisplayActions from './actions/display-settings';
 
 export namespace Menu {
 

@@ -3,8 +3,7 @@ import * as _ from 'lodash';
 import * as encoder from '../../utilities/encoder';
 import * as tf from '@tensorflow/tfjs';
 
-import { Editor, Node, Config } from 'react-flow-editor';
-import { ChangeAction } from 'react-flow-editor/dist/change-api';
+import { Editor, Node, Config, ChangeAction } from 'react-flow-editor';
 
 import { createModel, loadWeightsFromGraph } from '../../utilities/tf-model';
 
@@ -107,12 +106,15 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
       resolver: this.resolver.bind(this),
       connectionType: 'bezier',
       onChanged: this.onGraphChanged.bind(this),
-      grid: true
+      grid: false,
+      direction: 'ew'
     };
 
-    return <div className="workspace">
-      <Editor style={{ height: '100%', width: '100%' }}
-        config={graphConfig} nodes={nodes} />
-    </div>;
+    return (
+      <div className="workspace">
+        <Editor style={{ height: '100%', width: '100%' }}
+          config={graphConfig} nodes={nodes} />
+      </div>
+    );
   }
 }

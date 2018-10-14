@@ -1,5 +1,6 @@
-import {EmptyGame, loadGame, nextStep, putStone} from '../../reducers/game/game-logic';
 import {createFeatures, createLabel} from '../../utilities/encoder';
+
+import {EmptyGame, loadGame, nextStep, putStone} from './reducers/game-logic';
 
 export interface Progress {
   description: string;

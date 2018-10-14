@@ -4,16 +4,14 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { withRouter, Link } from 'react-router-dom';
 import { RouteComponentProps } from 'react-router';
-import * as GameActions from '../../actions/game';
-import * as DisplayActions from '../../actions/display-settings';
+import * as GameActions from './actions/game';
+import * as DisplayActions from './actions/display-settings';
 import * as TrainingsActions from '../../actions/training';
 
-import { Board } from '../../components/board';
-import { CheckButton } from '../../components/check-button';
+import { Board } from './board';
 import { Button } from '../../components/button';
-import { FileButton } from '../../components/file-button';
 
-import { Menu } from '../../components/menu';
+import { Menu } from './menu';
 import { Graph } from '../../components/graph';
 
 const { ProgressBar } = require('react-bootstrap');

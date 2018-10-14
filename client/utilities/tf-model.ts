@@ -38,7 +38,7 @@ export function createModel(graph: Model.Graph, rate: number = 0.03) {
     nodes.push(...node.outputs);
   }
 
-  const LEARNING_RATE = 0.03;
+  const LEARNING_RATE = rate;
   const optimizer = tf.train.sgd(LEARNING_RATE);
 
   model.compile({

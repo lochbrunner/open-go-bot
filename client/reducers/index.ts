@@ -1,8 +1,10 @@
 import {combineReducers, Reducer} from 'redux';
 import {Action} from 'redux-actions';
 
-import {createInitialState as initialDisplaySettings, reducers as displaySettingsReducer} from './display-settings';
-import {createInitialState as initialGame, reducers as gameReducer} from './game';
+// TODO: Make this file scenario independent
+import {createInitialState as initialGame, reducers as gameReducer} from '../scenarios/go/reducers';
+
+import {createInitialState as initialDisplaySettings, reducers as displaySettingsReducer} from '../scenarios/go/reducers/display-settings';
 import {createInitialState as initialGraph, reducers as graphReducers} from './graph';
 import {actionTypes as GraphActions, createInitialState as initialTraining, reducers as trainingReducers} from './training';
 

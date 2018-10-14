@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import * as gameActions from '../actions/game';
+import * as gameActions from './actions/game';
 
 export namespace Board {
   export interface Props {
