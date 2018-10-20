@@ -34,62 +34,99 @@ module.exports = {
     // module
     // https://github.com/Microsoft/TypeScript/issues/11677
     mainFields: ['main'],
-    alias: {inherits$: path.resolve(__dirname, 'node_modules/inherits')}
+    alias: {
+      inherits$: path.resolve(__dirname, 'node_modules/inherits')
+    }
   },
   module: {
     loaders: [
       // for ploty.js
-      {test: /\.js$/, loader: 'ify-loader'},
+      {
+        test: /\.js$/,
+        loader: 'ify-loader'
+      },
       // .ts, .tsx
       {
         test: /\.tsx?$/,
-        use: isProduction ? 'awesome-typescript-loader?module=es6' :
-                            ['react-hot-loader', 'awesome-typescript-loader']
+        use: isProduction ? 'awesome-typescript-loader?module=es6' : ['react-hot-loader', 'awesome-typescript-loader']
       },
       // scss
       {
         test: /\.s?css$/,
         use: extractSass.extract({
-          use: [{loader: 'css-loader'}, {loader: 'sass-loader'}],
+          use: [{
+            loader: 'css-loader'
+          }, {
+            loader: 'sass-loader'
+          }],
           // use style-loader in development
           fallback: 'style-loader'
         })
       },
       // static assets
-      {test: /\.html$/, use: 'html-loader'},
-      {test: /\.png$/, use: 'url-loader?limit=10000'},
-      {test: /\.jpg$/, use: 'file-loader'},
-      {test: /\.ttf$/, use: 'file-loader'},
-      {test: /\.woff2$/, use: 'file-loader'},
-      {test: /\.woff$/, use: 'file-loader'},
-      {test: /\.eot$/, use: 'file-loader'},
-      {test: /\.svg$/, use: 'file-loader'},
+      {
+        test: /\.html$/,
+        use: 'html-loader'
+      },
+      {
+        test: /\.png$/,
+        use: 'url-loader?limit=10000'
+      },
+      {
+        test: /\.jpg$/,
+        use: 'file-loader'
+      },
+      {
+        test: /\.ttf$/,
+        use: 'file-loader'
+      },
+      {
+        test: /\.woff2$/,
+        use: 'file-loader'
+      },
+      {
+        test: /\.woff$/,
+        use: 'file-loader'
+      },
+      {
+        test: /\.eot$/,
+        use: 'file-loader'
+      },
+      {
+        test: /\.svg$/,
+        use: 'file-loader'
+      },
     ],
   },
   plugins: [
-    new webpack.optimize.CommonsChunkPlugin(
-        {name: 'vendor', filename: 'vendor.bundle.js', minChunks: Infinity}),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'vendor',
+      filename: 'vendor.bundle.js',
+      minChunks: Infinity
+    }),
     new webpack.optimize.AggressiveMergingPlugin(), new ExtractTextPlugin({
       filename: 'styles.css',
       // disable: !isProduction
     }),
-    new HtmlWebpackPlugin(
-        {template: 'index.html', favicon: './assets/favicon.ico'}),
+    new HtmlWebpackPlugin({
+      template: 'index.html',
+      favicon: './assets/favicon.ico'
+    }),
     extractSass
   ],
   devtool: 'eval-source-map',
   devServer: {
     contentBase: [dataPath],
     hot: true,
-    stats: {warnings: false},
+    stats: {
+      warnings: false
+    },
+    openPage: '/go'
   },
   node: {
     // workaround for webpack-dev-server issue
     // https://github.com/webpack/webpack-dev-server/issues/60#issuecomment-103411179
     fs: 'empty',
     net: 'empty'
-  },
-  // externals: [{
-  //   xmlhttprequest: '{XMLHttpRequest:XMLHttpRequest}'
-  // }]
+  }
 };

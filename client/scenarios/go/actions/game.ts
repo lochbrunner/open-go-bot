@@ -7,7 +7,7 @@ export interface TurnPayload {
   player: Player;
 }
 
-export type ActionPayload = TurnPayload|string;
+export type ActionGoGamePayload = TurnPayload|string;
 
 export const setStone = createAction<TurnPayload>(Actions.SET_STONE);
 export const resetGame = createAction<void>(Actions.RESET_GAME);

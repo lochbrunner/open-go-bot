@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "",
   "scripts": {
-    "start": "webpack-dev-server --debug --devtool cheap-module-source-map --output-pathinfo --history-api-fallback --hot --inline --progress --colors --port 3000 --open",
+    "start": "webpack-dev-server --debug --devtool cheap-module-source-map --output-pathinfo --history-api-fallback --hot --inline --progress --colors --port 3000",
     "build": "webpack -p",
     "lint": "tslint ./client/**/*.{ts,tsx}",
     "postinstall": "(cd ./data && find . -name \\*.sgf > sitemap.txt)",

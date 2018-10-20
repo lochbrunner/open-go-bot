@@ -2,85 +2,44 @@ import * as React from 'react';
 
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import { withRouter, Link } from 'react-router-dom';
-import { RouteComponentProps } from 'react-router';
-import * as GameActions from './actions/game';
-import * as DisplayActions from './actions/display-settings';
-import * as TrainingsActions from '../../actions/training';
+import * as GoActions from './actions';
 
 import { Board } from './board';
-import { Button } from '../../components/button';
 
 import { Menu } from './menu';
-import { Graph } from '../../components/graph';
+import { legend, createFeatures } from './encoder';
 
-const { ProgressBar } = require('react-bootstrap');
+export { legend, createFeatures } from './encoder';
 
 require('./index.scss');
 
-export namespace App {
-  export interface Props extends RouteComponentProps<void> {
+export namespace Go {
+  export interface Props {
 
-    state: RootState;
+    go: Go;
 
-    gameActions: typeof GameActions;
-    displaySettingsActions: typeof DisplayActions;
-    trainingActions: typeof TrainingsActions;
-  }
-
-  export interface State {
-    /* empty */
+    goActions: typeof GoActions;
   }
 }
 
-class AppComponent extends React.Component<App.Props, App.State> {
+export const render = (props: Go.Props) => {
+  const { go, goActions } = props;
+  const { game } = go;
+  return (
+    <div className="game-section">
+      <h3>{game.info.title}</h3>
+      <h4>{game.info.opponents.black} - {game.info.opponents.white}</h4>
+      <p>Captured Stones: Black: {game.capturedStones.black} White: {game.capturedStones.white}</p>
+      <Board gameActions={goActions} game={game} displaySettings={go.displaySettings} disabled={game.currentStep !== -1} />
+      <Menu go={go} goActions={goActions} />
+    </div>
+  );
+};
 
-  render(): React.ReactNode {
-    const { state, children, gameActions, displaySettingsActions, trainingActions } = this.props;
-    const appStyle = {
-    };
-    const gameStyle = {
-      width: '40%'
-    };
-    const graphStyle = {
+const mapStateToProps = (state: RootState): Partial<Go.Props> => ({ go: state.go });
 
-    };
-    const { training } = state;
+const mapDispatchToProps = (dispatch): Partial<Go.Props> => ({
+  goActions: bindActionCreators(GoActions, dispatch)
+});
 
-    return (
-      <div style={appStyle} >
-        <div className="game-section">
-          <h3>{state.game.info.title}</h3>
-          <h4>{state.game.info.opponents.black} - {state.game.info.opponents.white}</h4>
-          <p>Captured Stones: Black: {state.game.capturedStones.black} White: {state.game.capturedStones.white}</p>
-          <Board gameActions={gameActions} game={state.game} displaySettings={state.displaySettings} disabled={state.game.currentStep !== -1} />
-          <Menu state={state} gameActions={gameActions} displaySettingsActions={displaySettingsActions} />
-        </div>
-        <div className="graph-section">
-          <Graph game={state.game} graph={state.graph} />
-        </div>
-        <div className="train">
-          <Button onClicked={() => trainingActions.train(state.graph)} style={{}} >Train</Button>
-          <p>{training.training.description}</p>
-          <ProgressBar style={{ width: '500px' }} active={true} now={training.training.progress.finished / training.training.progress.total * 100} label={`${training.training.progress.finished} of ${training.training.progress.total}`} />
-        </div>
-      </div>
-    );
-  }
-}
-
-function mapStateToProps(state: RootState): Partial<App.Props> {
-  return {
-    state
-  };
-}
-
-function mapDispatchToProps(dispatch): Partial<App.Props> {
-  return {
-    gameActions: bindActionCreators(GameActions, dispatch),
-    displaySettingsActions: bindActionCreators(DisplayActions, dispatch),
-    trainingActions: bindActionCreators(TrainingsActions, dispatch)
-  };
-}
-
-export const App = withRouter(connect(mapStateToProps, mapDispatchToProps as any)(AppComponent));
+export const GoApp = connect(mapStateToProps, mapDispatchToProps)(render);

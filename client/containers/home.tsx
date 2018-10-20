@@ -33,7 +33,7 @@ export const Home = (props: Props) => {
     ];
 
     const scenarios = scenariosInfos.map((s, i) =>
-        <li>
+        <li key={i}>
             <div>
                 <Link to={s.link}>{s.title}</Link>
                 <p>{s.description}</p>

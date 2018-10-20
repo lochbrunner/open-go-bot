@@ -1,4 +1,4 @@
-import {createFeatures, createLabel} from '../../utilities/encoder';
+import {createFeatures, createLabel} from './encoder';
 
 import {EmptyGame, loadGame, nextStep, putStone} from './reducers/game-logic';
 

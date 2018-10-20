@@ -1,3 +1,5 @@
+[![GitHub issues](https://img.shields.io/github/issues/lochbrunner/open-go-bot.svg)](https://github.com/lochbrunner/open-go-bot/issues)
+
 # Open Go Bot
 
 The aim of this project is to create a little go bot with [TensorFlow.js](https://github.com/tensorflow/tfjs) and live debugging possibility.

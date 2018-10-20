@@ -1,4 +1,4 @@
-import {legend} from '../utilities/encoder';
+import {legend} from '../scenarios/go/encoder';  // TODO(mnist): Remove this dependency
 
 // See
 // https://stackoverflow.com/questions/40463060/turn-a-string-literal-type-to-a-literal-value
