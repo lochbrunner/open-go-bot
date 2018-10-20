@@ -1,0 +1,84 @@
+$content-width: 600px;
+
+.github {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 0;
+}
+
+.home {
+  >section {
+    width: $content-width;
+    margin-left: calc(50% - #{$content-width / 2});
+    text-align: center;
+
+    >h1 {
+      margin: 60px 20px;
+      color: #666;
+      font-weight: lighter;
+      font-size: 26pt;
+    }
+
+    >p {
+      text-align: left;
+      margin: 100px 20px 40px;
+    }
+
+    ul {
+      padding: 0;
+
+      li {
+        list-style: none;
+        text-align: left;
+
+        >div {
+          margin-bottom: 10px;
+          padding: 10px 25px;
+
+          transition: box-shadow 0.4s ease-in-out;
+
+          &:hover {
+            -webkit-box-shadow: 0px 0px 12px 5px rgba(204, 204, 204, 0.3);
+            -moz-box-shadow: 0px 0px 12px 5px rgba(204, 204, 204, 0.3);
+            box-shadow: 0px 0px 12px 5px rgba(204, 204, 204, 0.3);
+          }
+
+          >a {
+            font-size: 17pt;
+            font-weight: normal
+          }
+
+          >p {
+            margin: 0 0 6px;
+          }
+        }
+      }
+    }
+  }
+
+  >footer {
+    background-color: #fbfbfb;
+    color: #666;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    border-top: solid 1px #eee;
+    padding: 6px 40px 8px;
+
+    font-family: arial, sans-serif;
+    font-size: 13px;
+
+    >div {
+      margin-left: calc(50% - #{$content-width / 2 - 25px});
+    }
+
+    .splitter {
+      height: 14px;
+      background-color: #aaa;
+      width: 1px;
+      display: inline-block;
+      margin: -3px 8px;
+    }
+  }
+}
