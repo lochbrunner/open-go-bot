@@ -1,19 +1,26 @@
 import {Reducer} from 'redux';
 import {Action} from 'redux-actions';
 
-// TODO(mnist): Make this file scenario independent
-import {createInitialState as initialGo, reducers as goReducers} from '../scenarios/go/reducers';
+// TODO(github): Make this file scenario independent
+// Might be interesting: https://github.com/ioof-holdings/redux-dynamic-reducer
+// or http://nicolasgallagher.com/redux-modules-and-code-splitting/
+import * as Go from '../scenarios/go';
 
-import {createInitialState as initialGraph, reducers as graphReducers} from './graph';
+import {reducers as graphReducers} from './graph';
 import {createInitialState as initialTraining, reducers as trainingReducers} from './training';
 
 function createInitialState(): RootState {
-  return {go: initialGo(), training: initialTraining(), graph: initialGraph()};
+  return {
+    go: Go.createInitialState(),
+    training: initialTraining(),
+    // graph: Go.createInitialGraph()
+    graph: {input: undefined}
+  };
 }
 
 const reducer: Reducer<RootState> =
     (state: RootState = createInitialState(), action: Action<any>) => {
-      state = goReducers(state, action);
+      state = Go.reducers(state, action);
       state = trainingReducers(state, action);
       state = graphReducers(state, action as any);
       return state;

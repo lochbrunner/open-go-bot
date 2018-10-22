@@ -62,6 +62,7 @@ function nodesMap(graph: Model.Graph) {
 }
 
 export function writeWeightsToGraph(graph: Model.Graph, model: tf.Model) {
+  if (!graph.input) return;
   const nodes = nodesMap(graph);
 
   for (let layer of model.layers) {
@@ -101,6 +102,7 @@ export function writeWeightsToGraph(graph: Model.Graph, model: tf.Model) {
 }
 
 export function loadWeightsFromGraph(graph: Model.Graph, model: tf.Model) {
+  if (!graph.input) return;
   const nodes = nodesMap(graph);
 
   for (let layer of model.layers) {

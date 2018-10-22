@@ -28,7 +28,7 @@ async function readBlob(blob: Blob): Promise<string> {
 }
 
 async function loadTextFile(path: string): Promise<string> {
-  const response = await fetch(path);
+  const response = await fetch('/' + path);
   if (!response.ok) {
     throw new Error(
         `Error ${

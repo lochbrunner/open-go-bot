@@ -31,6 +31,8 @@ function findFirst(start: Model.Node, predicate: (node: Model.Node) => boolean) 
 }
 
 function traverseGraph(input: Model.Node, callback: (node: Model.Node) => void) {
+  if (!input)
+    return;
   // Add an unique index to each
   const queue = [input];
   while (queue.length > 0) {
@@ -45,7 +47,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
 
   constructor(props?: Graph.Props, context?: any) {
     super(props, context);
-    this.model = createModel(props.graph);
+    this.model = props.graph.input ? createModel(props.graph) : undefined;
   }
 
   private resolver(payload: any): JSX.Element {

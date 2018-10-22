@@ -2,7 +2,6 @@ import * as tf from '@tensorflow/tfjs';
 import {setTimeout} from 'timers';
 
 import {updateTrainingsProgress, updateWeights} from '../../actions/training';
-import load from '../../scenarios/go/load'; // TODO: Make this generic
 import {Progress} from '../../utilities/progress';
 import {createModel, writeWeightsToGraph} from '../../utilities/tf-model';
 
@@ -42,14 +41,21 @@ function updateGraph(dispatch: any, graph: Model.Graph, model: tf.Model) {
   });
 }
 
-export default async function trainOnRecords(
-    dispatch: any, graph: Model.Graph) {
+export interface TrainingData {
+  features: number[][][][];
+  labels: number[][];
+}
+
+export type Loader =
+    (reporter: (progress: Progress) => any, maxSamples: number) =>
+        Promise<TrainingData>;
+
+export async function trainOnRecords(
+    loader: Loader, dispatch: any, graph: Model.Graph) {
   const reporter = (progress: Progress) =>
       dispatch(updateTrainingsProgress(progress));
 
-  const trainingsData = await load(reporter, 2048);
-
-  // console.log('Training..');
+  const trainingsData = await loader(reporter, 2048);
 
   tf.setBackend('webgl');
 
@@ -60,7 +66,7 @@ export default async function trainOnRecords(
   // How many examples the model should "see" before making a parameter update.
   const BATCH_SIZE = 64;
   // How many batches to train the model for.
-  const TRAIN_BATCHES = 64;
+  const TRAIN_BATCHES = 16;
 
   // Every TEST_ITERATION_FREQUENCY batches, test accuracy over TEST_BATCH_SIZE
   // examples. Ideally, we'd compute accuracy over the whole test set, but for

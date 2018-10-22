@@ -1,34 +1,34 @@
 import * as React from 'react';
-import { RouteComponentProps } from 'react-router';
-import { withRouter, Link } from 'react-router-dom';
-import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import * as _ from 'lodash';
+import { Loader, TrainingData } from '../../actions/training/train';
 
 require('./index.scss');
 
 export namespace Mnist {
-    export interface Props extends RouteComponentProps<void> {
+  export interface Props {
 
-    }
+  }
 }
 
-const MnistContainer = (props: Mnist.Props) => {
-    return (
-        <div>
-            <h1>MNIST coming soon...</h1>
-        </div>
-    );
+const render = (props: Mnist.Props) => {
+  return (
+    <div>
+      <h1>MNIST coming soon...</h1>
+    </div>
+  );
 };
 
-function mapStateToProps(state: {}): Partial<Mnist.Props> {
-    return {
+const mapStateToProps = (state: {}) => ({});
 
-    };
-}
+const mapDispatchToProps = (dispatch) => ({});
 
-function mapDispatchToProps(dispatch): Partial<Mnist.Props> {
-    return {
-    };
-}
+export const MnistApp = connect(mapStateToProps, mapDispatchToProps as any)(render);
 
-export const MnistApp = connect(mapStateToProps, mapDispatchToProps as any)(MnistContainer);
+export const legend = _.times(10).map((v, i) => i.toString());
+
+export const loader: Loader = (reporter, maxSamples) => {
+  return new Promise<TrainingData>((resolve, reject) => {
+    resolve();
+  });
+};

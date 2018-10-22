@@ -14,28 +14,32 @@ export interface Props {
 
 export const Home = (props: Props) => {
 
+    const title = 'Social AI';
+    if (document.title !== title)
+        document.title = title;
+
     const scenariosInfos: ScenarioInfo[] = [
         {
             title: 'Go',
             description: 'An abstract strategy board game for two players, in which the aim is to surround more territory than the opponent.',
-            link: '/go'
+            link: 'go'
         },
         {
             title: 'Mnist',
             description: 'A large database of handwritten digits that is commonly used for training various image processing systems.',
-            link: '/mnist'
+            link: 'mnist'
         },
         {
             title: 'Ant',
             description: 'A simulation of an ant colony. Model the brain of each individual ant like in serious games. Coming soon!',
-            link: '/ant'
+            link: 'ant'
         }
     ];
 
     const scenarios = scenariosInfos.map((s, i) =>
         <li key={i}>
             <div>
-                <Link to={s.link}>{s.title}</Link>
+                <Link to={`scenario/${s.link}`}>{s.title}</Link>
                 <p>{s.description}</p>
             </div>
         </li>
@@ -60,7 +64,7 @@ export const Home = (props: Props) => {
                     <span className="splitter" />
                     <span>Mail: <a href="">matthias_lochbrunner@web.de</a></span>
                     <span className="splitter" />
-                    <span><a href="https://github.com/lochbrunner/open-go-bot">Github</a></span>
+                    <span><a href="https://github.com/lochbrunner">Github</a></span>
                 </div>
             </footer>
         </div>
