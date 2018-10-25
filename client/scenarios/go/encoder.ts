@@ -1,15 +1,9 @@
+import {make2d} from '../../commons/utils';
 
 export const legend = [
   'own', 'opponent', 'empty', 'one_liberty', 'two_liberties', 'three_liberties',
   'four_liberties', 'more_liberties', 'last_move'
 ];
-
-function make2d<T>(input: T[], edgeLength: number): T[][] {
-  const output: T[][] = [];
-  const t = input;
-  while (t.length) output.push(t.splice(0, edgeLength));
-  return output;
-}
 
 /**
  * Features are hot encodes: Means 0: false, 1: true

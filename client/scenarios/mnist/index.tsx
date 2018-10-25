@@ -10,6 +10,8 @@ import { bindActionCreators } from 'redux';
 
 export { reducers } from './reducers';
 
+import { Button } from '../../components/button';
+
 require('./index.scss');
 
 export namespace Mnist {
@@ -21,7 +23,6 @@ export namespace Mnist {
 
 const render = (props: Mnist.Props) => {
   const resolution = 28;
-  // const pixels = _.times(resolution).map(r => _.times(resolution, i => 0));
   return (
     <div className="mnist">
       <h1>MNIST coming soon...</h1>
@@ -30,6 +31,13 @@ const render = (props: Mnist.Props) => {
           pixels={props.mnist.currentInput.pixels}
           size={{ height: 400, width: 400 }}
           resolution={{ height: resolution, width: resolution }} />
+      </div>
+      <div>
+        <Button onClicked={() => props.mnistActions.clearImage({})} >Clear</Button>
+        <Button onClicked={() => props.mnistActions.loadTrainigsData()} >Load</Button>
+        <Button disabled={!props.mnist.hasLoaded || props.mnist.caret <= 0} onClicked={() => props.mnistActions.showImage(props.mnist.caret - 1)} >Previous</Button>
+        <Button disabled={!props.mnist.hasLoaded} onClicked={() => props.mnistActions.showImage(props.mnist.caret)} >Reload</Button>
+        <Button disabled={!props.mnist.hasLoaded} onClicked={() => props.mnistActions.showImage(props.mnist.caret + 1)} >Next</Button>
       </div>
     </div>
   );
@@ -56,5 +64,7 @@ export const loader: Loader = (reporter, maxSamples) => {
 export const createInitialState: () => MnistState = () => ({
   currentInput: {
     pixels: _.times(28).map(r => _.times(28, i => 0))
-  }
+  },
+  caret: -1,
+  hasLoaded: false
 });

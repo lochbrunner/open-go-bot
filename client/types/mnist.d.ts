@@ -1,1 +1,5 @@
-declare interface MnistState { currentInput: {pixels: number[][];} }
+declare interface MnistState {
+  currentInput: {pixels: number[][]};
+  caret: number;
+  hasLoaded: boolean;
+}

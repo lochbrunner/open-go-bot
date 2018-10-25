@@ -7,7 +7,7 @@ export function configureStore(initialState?: RootState): Store<RootState> {
   const store = createStore(
       rootReducer, initialState,
       compose(
-          applyMiddleware(thunk) as any,
+          applyMiddleware(thunk),
           window.devToolsExtension && window.devToolsExtension()));
 
   if (module.hot) {
