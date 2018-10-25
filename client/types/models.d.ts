@@ -1,4 +1,5 @@
 /// <reference path='./go.d.ts' />
+/// <reference path='./mnist.d.ts' />
 
 declare interface TrainingsData {
   features: number[][][][];
@@ -52,6 +53,7 @@ declare namespace Model {
 
 declare interface RootState {
   go: Go;
+  mnist: MnistState;
   graph: Model.Graph;
 
   training: Training;

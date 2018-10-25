@@ -1,1 +1,13 @@
+.mnist {
+  width: calc(100% - 700px);
 
+  >h1 {
+    text-align: center;
+  }
+
+  margin: 30px;
+
+  .display {
+    margin: 20px;
+  }
+}
