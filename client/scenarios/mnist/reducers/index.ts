@@ -13,7 +13,8 @@ export const reducers =
           mnist: {
             ...state.mnist,
             caret: updateImageAction.payload.caret,
-            currentInput: {pixels: updateImageAction.payload.pixels}
+            currentInput: {pixels: updateImageAction.payload.pixels},
+            groundTruth: updateImageAction.payload.groundTruth.toString()
           }
         };
       } else if (action.type === Constants.UPDATE_PIXEL) {
@@ -23,18 +24,23 @@ export const reducers =
 
         const newPixels = state.mnist.currentInput.pixels.slice();
 
-        newPixels[payload.x] = newPixels[payload.x].slice();
-        newPixels[payload.x][payload.y] = payload.value;
+        newPixels[payload.y] = newPixels[payload.y].slice();
+        newPixels[payload.y][payload.x] = payload.value;
         return {
           ...state,
-          mnist: {...state.mnist, currentInput: {pixels: newPixels}}
+          mnist: {
+            ...state.mnist,
+            currentInput: {pixels: newPixels},
+            groundTruth: '-'
+          }
         };
       } else if (action.type === Constants.CLEAR_IMAGE) {
         return {
           ...state,
           mnist: {
             ...state.mnist,
-            currentInput: {pixels: _.times(28).map(r => _.times(28, c => 0))}
+            currentInput: {pixels: _.times(28).map(r => _.times(28, c => 0))},
+            groundTruth: '-'
           }
         };
       } else if (action.type === Constants.MNIST_LOAD_TRAINING_DATA_FINISHED) {

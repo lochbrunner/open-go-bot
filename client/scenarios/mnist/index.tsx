@@ -23,21 +23,24 @@ export namespace Mnist {
 
 const render = (props: Mnist.Props) => {
   const resolution = 28;
+  const enableStepping = !props.mnist.hasLoaded;
+  const { mnistActions } = props;
   return (
     <div className="mnist">
       <h1>MNIST coming soon...</h1>
       <div className="display">
-        <ImageEditor update={props.mnistActions.updatePixel}
+        <ImageEditor update={mnistActions.updatePixel}
           pixels={props.mnist.currentInput.pixels}
           size={{ height: 400, width: 400 }}
           resolution={{ height: resolution, width: resolution }} />
+        <p className="ground-truth">Ground Truth: {props.mnist.groundTruth}</p>
       </div>
       <div>
-        <Button onClicked={() => props.mnistActions.clearImage({})} >Clear</Button>
-        <Button onClicked={() => props.mnistActions.loadTrainigsData()} >Load</Button>
-        <Button disabled={!props.mnist.hasLoaded || props.mnist.caret <= 0} onClicked={() => props.mnistActions.showImage(props.mnist.caret - 1)} >Previous</Button>
-        <Button disabled={!props.mnist.hasLoaded} onClicked={() => props.mnistActions.showImage(props.mnist.caret)} >Reload</Button>
-        <Button disabled={!props.mnist.hasLoaded} onClicked={() => props.mnistActions.showImage(props.mnist.caret + 1)} >Next</Button>
+        <Button onClicked={() => mnistActions.clearImage({})} >Clear</Button>
+        <Button onClicked={() => mnistActions.loadTrainigsData()} >Load</Button>
+        <Button disabled={enableStepping || props.mnist.caret <= 0} onClicked={() => mnistActions.showImage(props.mnist.caret - 1)} >Previous</Button>
+        <Button disabled={enableStepping} onClicked={() => mnistActions.showImage(props.mnist.caret)} >Reload</Button>
+        <Button disabled={enableStepping} onClicked={() => mnistActions.showImage(props.mnist.caret + 1)} >Next</Button>
       </div>
     </div>
   );
@@ -65,6 +68,7 @@ export const createInitialState: () => MnistState = () => ({
   currentInput: {
     pixels: _.times(28).map(r => _.times(28, i => 0))
   },
+  groundTruth: '-',
   caret: -1,
   hasLoaded: false
 });

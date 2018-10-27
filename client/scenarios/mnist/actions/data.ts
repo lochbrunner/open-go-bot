@@ -143,7 +143,11 @@ export class MnistData {
   }
 
   getImage(index: number) {
-    return this.datasetImages.slice(
-        index * IMAGE_SIZE, (index + 1) * IMAGE_SIZE);
+    return {
+      image: this.datasetImages.slice(
+          index * IMAGE_SIZE, (index + 1) * IMAGE_SIZE),
+      label: this.datasetLabels.slice(
+          index * NUM_CLASSES, (index + 1) * NUM_CLASSES)
+    };
   }
 }

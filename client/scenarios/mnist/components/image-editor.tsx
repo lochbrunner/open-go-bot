@@ -1,5 +1,4 @@
 import React = require("react");
-import { sizeFromShape } from "@tensorflow/tfjs-core/dist/util";
 import _ = require("lodash");
 
 export interface Size {
@@ -57,7 +56,7 @@ export class ImageEditor extends React.Component<Props, {}> {
 
     private draw(element: HTMLCanvasElement) {
         if (element === null) return;
-        const { cache, props, state } = this;
+        const { cache, props } = this;
         if (!equalSize(cache.resolution, props.resolution) ||
             !equalSize(cache.size, props.size) ||
             !equalMatrix(cache.pixels, props.pixels)) {
@@ -71,7 +70,7 @@ export class ImageEditor extends React.Component<Props, {}> {
 
             for (let x = 0; x < props.resolution.width; ++x) {
                 for (let y = 0; y < props.resolution.height; ++y) {
-                    const value = Math.floor((1 - props.pixels[x][y]) * 225 + 30).toString(16);
+                    const value = Math.floor((1 - props.pixels[y][x]) * 225 + 30).toString(16);
                     ctx.fillStyle = `#${value}${value}${value}`;
                     const sx = marginX + 0.5 + Math.floor(dx * x);
                     const sy = marginY + 0.5 + Math.floor(dy * y);
@@ -97,7 +96,7 @@ export class ImageEditor extends React.Component<Props, {}> {
     }
 
     private onMouseMove(e: MouseEvent) {
-        const { state, props } = this;
+        const { props } = this;
         const marginX = 2;
         const marginY = 2;
         const dx = (props.size.width - marginX * 2) / props.resolution.width;
@@ -116,7 +115,7 @@ export class ImageEditor extends React.Component<Props, {}> {
         if (x < 0 || x >= props.resolution.width || y < 0 || y >= props.resolution.height) return;
         const value = leftDown ? 1 : 0;
         // console.log(`Mouse at ${x}x${y} left: ${leftDown} middle: ${middleDown}`);
-        if (this.props.pixels[x][y] !== value) {
+        if (this.props.pixels[y][x] !== value) {
             this.props.update({ x, y, value });
         }
         // e.cancelBubexpectble = true;
