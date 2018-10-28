@@ -1,6 +1,8 @@
 /// <reference path='./go.d.ts' />
 /// <reference path='./mnist.d.ts' />
 
+// import {Tensor} from '@tensorflow/tfjs-core/dist/tensor';
+
 declare interface TrainingsData {
   features: number[][][][];
   labels: number[][];  // sample * width * length * 1
@@ -8,7 +10,13 @@ declare interface TrainingsData {
 
 declare interface Training {
   trainingsData: TrainingsData;
+  // dataProvider: DataProvider;  // TODO(): where to provide the data?
   training: {progress: {finished: number, total: number}, description: string};
+}
+
+declare interface Prediction {
+  value: number;
+  uncertainty: number;
 }
 
 declare namespace Model {
@@ -57,4 +65,11 @@ declare interface RootState {
   graph: Model.Graph;
 
   training: Training;
+}
+
+declare interface DataProvider {
+  load(): Promise<void>;
+  nextTrainBatch(batchSize: number): {xs: any, labels: any};
+  getSample(index: number): {feature: any, label: any}
+  // nextTrainBatch(batchSize: number): {xs: Tensor, labels: Tensor};
 }

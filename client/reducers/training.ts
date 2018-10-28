@@ -1,14 +1,17 @@
 import {Action} from 'redux-actions';
 
 import * as Actions from '../constants/actions';
+import {MnistData} from '../scenarios/mnist/actions/data';
 import {Progress} from '../utilities/progress';
 
 class EmptyData implements Training {
   training: {progress: {finished: number, total: number}; description: string;};
   trainingsData: TrainingsData;
+  dataProvider: DataProvider;  // TODO(go): Generalize this
 
   constructor() {
     this.trainingsData = {features: [], labels: []};
+    this.dataProvider = new MnistData();
     this.training = {
       progress: {finished: 0, total: 1},
       description: 'No samples load yet'

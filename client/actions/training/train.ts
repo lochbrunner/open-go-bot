@@ -4,6 +4,7 @@ import {setTimeout} from 'timers';
 import {updateTrainingsProgress, updateWeights} from '../../actions/training';
 import {Progress} from '../../utilities/progress';
 import {createModel, writeWeightsToGraph} from '../../utilities/tf-model';
+import * as Mnist from './mnist';
 
 class BatchHandler {
   private caret: number;
@@ -22,19 +23,14 @@ class BatchHandler {
   }
 }
 
-async function interrupt() {
-  return new Promise((resolve, reject) => {
-    setImmediate(() => resolve());
-  });
-}
-
 async function sleep(duration: number) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     setTimeout(() => resolve(), duration);
   });
 }
 
-function updateGraph(dispatch: any, graph: Model.Graph, model: tf.Model) {
+function updateGraph(
+    dispatch: (ActionFunctions) => void, graph: Model.Graph, model: tf.Model) {
   tf.tidy(() => {
     graph = writeWeightsToGraph(graph, model);
     dispatch(updateWeights({...graph}));
@@ -51,7 +47,7 @@ export type Loader =
         Promise<TrainingData>;
 
 export async function trainOnRecords(
-    loader: Loader, dispatch: any, graph: Model.Graph) {
+    loader: Loader, dispatch: (ActionFunctions) => void, graph: Model.Graph) {
   const reporter = (progress: Progress) =>
       dispatch(updateTrainingsProgress(progress));
 
@@ -119,4 +115,13 @@ export async function trainOnRecords(
   }
 
   updateGraph(dispatch, graph, model);
+}
+
+export async function trainMnist(
+    data: DataProvider, dispatch: (ActionFunctions) => void) {
+  const reporter = (progress: Progress) =>
+      dispatch(updateTrainingsProgress(progress));
+  const log = text =>
+      reporter({description: text, progress: {finished: 0, total: 1}});
+  await Mnist.train(data, log);
 }

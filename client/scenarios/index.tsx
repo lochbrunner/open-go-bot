@@ -16,6 +16,8 @@ import { Loader } from '../actions/training/train';
 
 const { ProgressBar } = require('react-bootstrap');
 
+const style = require('./index.scss');
+
 interface MatchObject {
     scenario: 'go' | 'mnist' | 'ant';
 }
@@ -32,7 +34,7 @@ interface InnerScenarioProps {
 type ScenarioProps = OuterScenarioProps & InnerScenarioProps;
 
 const renderScenario = (props: ScenarioProps) => {
-    const { state, trainingActions, match, history, location } = props;
+    const { state, trainingActions, match, history } = props;
 
     history.listen((l, a) => {
         // console.log(`Location changed to ${l.pathname}`);
@@ -43,6 +45,7 @@ const renderScenario = (props: ScenarioProps) => {
     let legend: string[];
     let featureFactory: () => number[][][];
     let loader: Loader;
+    let dataProvider: DataProvider;
     if (match.params.scenario === 'go') {
         renderer = <Go.GoApp />;
         legend = Go.legend;
@@ -53,6 +56,7 @@ const renderScenario = (props: ScenarioProps) => {
         renderer = <Mnist.MnistApp />;
         legend = Mnist.legend;
         loader = Mnist.loader;
+        dataProvider = Mnist.dataProvider;
         featureFactory = () => [];
     }
     else {
@@ -61,13 +65,13 @@ const renderScenario = (props: ScenarioProps) => {
         legend = [];
     }
     return (
-        <div>
+        <div className="scenarios">
             {renderer}
             <div className="graph-section">
                 <Graph inputLegend={legend} createFeatures={featureFactory} graph={state.graph} />
             </div>
             <div className="train">
-                <Button onClicked={() => trainingActions.train(loader, state.graph)} style={{}} >Train</Button>
+                <Button onClicked={() => trainingActions.train(dataProvider, state.graph)} style={{}} >Train</Button>
                 <p>{training.training.description}</p>
                 <ProgressBar active={true} now={training.training.progress.finished / training.training.progress.total * 100} label={`${training.training.progress.finished} of ${training.training.progress.total} `} />
             </div>

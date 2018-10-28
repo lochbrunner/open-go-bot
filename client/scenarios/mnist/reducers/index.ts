@@ -5,7 +5,7 @@ import _ = require('lodash');
 
 export const reducers =
     (state: RootState, action: Action<Actions.ActionPayload>): RootState => {
-      if (action.type === Constants.UPDATE_IMAGE) {
+      if (action.type === Constants.MNIST_UPDATE_IMAGE) {
         const updateImageAction =
             action as Action<Actions.ActionUpdateImagePayload>;
         return {
@@ -14,10 +14,11 @@ export const reducers =
             ...state.mnist,
             caret: updateImageAction.payload.caret,
             currentInput: {pixels: updateImageAction.payload.pixels},
-            groundTruth: updateImageAction.payload.groundTruth.toString()
+            groundTruth: updateImageAction.payload.groundTruth.toString(),
+            prediction: undefined
           }
         };
-      } else if (action.type === Constants.UPDATE_PIXEL) {
+      } else if (action.type === Constants.MNIST_UPDATE_PIXEL) {
         const updateImageAction =
             action as Action<Actions.ActionUpdatePixelPayload>;
         const {payload} = updateImageAction;
@@ -31,20 +32,25 @@ export const reducers =
           mnist: {
             ...state.mnist,
             currentInput: {pixels: newPixels},
-            groundTruth: '-'
+            groundTruth: '-',
+            prediction: undefined
           }
         };
-      } else if (action.type === Constants.CLEAR_IMAGE) {
+      } else if (action.type === Constants.MNIST_CLEAR_IMAGE) {
         return {
           ...state,
           mnist: {
             ...state.mnist,
             currentInput: {pixels: _.times(28).map(r => _.times(28, c => 0))},
-            groundTruth: '-'
+            groundTruth: '-',
+            prediction: undefined
           }
         };
       } else if (action.type === Constants.MNIST_LOAD_TRAINING_DATA_FINISHED) {
         return {...state, mnist: {...state.mnist, hasLoaded: true}};
+      } else if (action.type === Constants.MNIST_UPDATE_PREDICTION) {
+        const payload = action.payload as Actions.ActionUpdatePrediction;
+        return {...state, mnist: {...state.mnist, prediction: payload}};
       }
       return state;
     };

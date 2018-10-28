@@ -21,35 +21,38 @@ export interface ActionUpdatePixelPayload {
   value: number;
 }
 
-export type ActionPayload =
-    ActionUpdateImagePayload|ActionUpdatePixelPayload|ActionEmptyPayload;
+export type ActionUpdatePrediction = Prediction;
+
+export type ActionPayload = ActionUpdateImagePayload|ActionUpdatePixelPayload|
+    ActionEmptyPayload|ActionUpdatePrediction;
 
 export const updateImage =
-    createAction<ActionUpdateImagePayload>(Actions.UPDATE_IMAGE);
+    createAction<ActionUpdateImagePayload>(Actions.MNIST_UPDATE_IMAGE);
 
 export const updatePixel =
-    createAction<ActionUpdatePixelPayload>(Actions.UPDATE_PIXEL);
+    createAction<ActionUpdatePixelPayload>(Actions.MNIST_UPDATE_PIXEL);
 
-export const clearImage = createAction<ActionEmptyPayload>(Actions.CLEAR_IMAGE);
+export const clearImage =
+    createAction<ActionEmptyPayload>(Actions.MNIST_CLEAR_IMAGE);
 
 export const mnistLoadTrainingDataFinished =
     createAction<ActionEmptyPayload>(Actions.MNIST_LOAD_TRAINING_DATA_FINISHED);
 
-// Data
-const data = new MnistData();
+export const updatePrediction =
+    createAction<ActionUpdatePrediction>(Actions.MNIST_UPDATE_PREDICTION);
 
-export const loadTrainigsData = () => {
+export const loadTrainingsData = (dataProvider: DataProvider) => {
   return dispatch => {
-    data.load().then(() => {
+    dataProvider.load().then(() => {
       dispatch(mnistLoadTrainingDataFinished({}));
     });
   };
 };
 
-export const showImage = (index: number) => {
+export const showImage = (dataProvider: DataProvider, index: number) => {
   return dispatch => {
-    const img = data.getImage(index);
-    const flatData = Array.prototype.slice.call(img.image) as number[];
+    const img = dataProvider.getSample(index);
+    const flatData = Array.prototype.slice.call(img.feature) as number[];
     const labels = Array.prototype.slice.call(img.label);
     const groundTruth = argMax(labels);
 

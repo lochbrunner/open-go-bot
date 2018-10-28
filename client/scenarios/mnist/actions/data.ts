@@ -23,7 +23,7 @@ const MNIST_LABELS_PATH =
  * NOTE: This will get much easier. For now, we do data fetching and
  * manipulation manually.
  */
-export class MnistData {
+export class MnistData implements DataProvider {
   shuffledTrainIndex: number;
   shuffledTestIndex: number;
   datasetImages: Float32Array;
@@ -69,8 +69,8 @@ export class MnistData {
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
           for (let j = 0; j < imageData.data.length / 4; j++) {
-            // All channels hold an equal value since the image is grayscale, so
-            // just read the red channel.
+            // All channels hold an equal value since the image is gray-scale,
+            // so just read the red channel.
             datasetBytesView[j] = imageData.data[j * 4] / 255;
           }
         }
@@ -103,7 +103,7 @@ export class MnistData {
         this.datasetLabels.slice(NUM_CLASSES * NUM_TRAIN_ELEMENTS);
   }
 
-  nextTrainBatch(batchSize) {
+  nextTrainBatch(batchSize: number) {
     return this.nextBatch(
         batchSize, [this.trainImages, this.trainLabels], () => {
           this.shuffledTrainIndex =
@@ -112,7 +112,7 @@ export class MnistData {
         });
   }
 
-  nextTestBatch(batchSize) {
+  nextTestBatch(batchSize: number) {
     return this.nextBatch(batchSize, [this.testImages, this.testLabels], () => {
       this.shuffledTestIndex =
           (this.shuffledTestIndex + 1) % this.testIndices.length;
@@ -120,7 +120,9 @@ export class MnistData {
     });
   }
 
-  nextBatch(batchSize, data, index) {
+  nextBatch(
+      batchSize: number, data: [Float32Array, Uint8Array],
+      index: () => number) {
     const batchImagesArray = new Float32Array(batchSize * IMAGE_SIZE);
     const batchLabelsArray = new Uint8Array(batchSize * NUM_CLASSES);
 
@@ -142,9 +144,9 @@ export class MnistData {
     return {xs, labels};
   }
 
-  getImage(index: number) {
+  getSample(index: number) {
     return {
-      image: this.datasetImages.slice(
+      feature: this.datasetImages.slice(
           index * IMAGE_SIZE, (index + 1) * IMAGE_SIZE),
       label: this.datasetLabels.slice(
           index * NUM_CLASSES, (index + 1) * NUM_CLASSES)

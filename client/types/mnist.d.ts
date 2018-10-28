@@ -3,4 +3,7 @@ declare interface MnistState {
   caret: number;
   hasLoaded: boolean;
   groundTruth: string;
+  prediction?: Prediction;
+
+  // dataProvider: DataProvider;
 }
