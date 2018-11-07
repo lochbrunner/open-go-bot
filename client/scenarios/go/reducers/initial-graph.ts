@@ -2,20 +2,16 @@ import {legend} from '../encoder';
 
 export default function createInitialState(): Model.Graph {
   let id = 0;
-  const output: Model.Node = {
-    id: (id++).toString(),
-    type: 'output',
-    name: 'output',
-    shape: [19 * 19],
-    outputs: []
-  };
+  const nodes = [];
+  const output: Model.Node =
+      {id: (id++).toString(), type: 'output', name: 'output', outputs: []};
+  nodes.push(output);
 
   const conv2d1: Model.Convolution = {
     type: 'convolution',
     name: 'conv',
     id: (id++).toString(),
-    shape: [19, 19, 1],
-    kernel: {size: 5},
+    kernel: [5, 5, 9],
     filters: 1,
     strides: 1,
     weights: {
@@ -23,8 +19,10 @@ export default function createInitialState(): Model.Graph {
       bias: Array(1).fill(0)
     },  // width*height*input_channel*output_channel (= filter)
     activation: 'relu',
+    depth: 999,
     outputs: []
   };
+  nodes.push(conv2d1);
 
   const input: Model.Input = {
     type: 'input',
@@ -34,23 +32,20 @@ export default function createInitialState(): Model.Graph {
     shape: [19, 19, 9],
     outputs: []
   };
+  nodes.push(input);
 
-  const flatten: Model.Flatten = {
-    type: 'flatten',
-    name: 'flatten',
-    id: (id++).toString(),
-    outputs: [],
-    shape: [19 * 19]
-  };
+  const flatten: Model.Flatten =
+      {type: 'flatten', name: 'flatten', id: (id++).toString(), outputs: []};
+  nodes.push(flatten);
 
-  conv2d1.input = input;
-  input.outputs.push(conv2d1);
+  conv2d1.input = input.id;
+  input.outputs.push(conv2d1.id);
 
-  flatten.input = conv2d1;
-  conv2d1.outputs.push(flatten);
+  flatten.input = conv2d1.id;
+  conv2d1.outputs.push(flatten.id);
 
-  output.input = flatten;
-  flatten.outputs.push(output);
+  output.input = flatten.id;
+  flatten.outputs.push(output.id);
 
-  return {input};
+  return {input: input.id, nodes};
 }

@@ -4,6 +4,7 @@ import {setTimeout} from 'timers';
 import {updateTrainingsProgress, updateWeights} from '../../actions/training';
 import {Progress} from '../../utilities/progress';
 import {createModel, writeWeightsToGraph} from '../../utilities/tf-model';
+
 import * as Mnist from './mnist';
 
 class BatchHandler {
@@ -118,10 +119,11 @@ export async function trainOnRecords(
 }
 
 export async function trainMnist(
-    data: DataProvider, dispatch: (ActionFunctions) => void) {
+    data: DataProvider, graph: Model.Graph,
+    dispatch: (ActionFunctions) => void) {
   const reporter = (progress: Progress) =>
       dispatch(updateTrainingsProgress(progress));
   const log = text =>
       reporter({description: text, progress: {finished: 0, total: 1}});
-  await Mnist.train(data, log);
+  await Mnist.train(data, graph, log);
 }

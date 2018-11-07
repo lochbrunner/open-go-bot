@@ -16,7 +16,7 @@ function createInitialState(): RootState {
     mnist: Mnist.createInitialState(),
     training: initialTraining(),
     // graph: Go.createInitialGraph()
-    graph: {input: undefined}
+    graph: {input: undefined, nodes: []}
   };
 }
 

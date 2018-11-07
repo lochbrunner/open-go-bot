@@ -9,14 +9,16 @@ import { Graph } from '../components/graph';
 import { Button } from '../components/button';
 
 import * as TrainingsActions from '../actions/training';
+import * as GraphActions from '../actions/graph';
 
 import * as Go from './go';
 import * as Mnist from './mnist';
 import { Loader } from '../actions/training/train';
+import { loadWeightsFromGraph } from '../utilities/tf-model';
 
 const { ProgressBar } = require('react-bootstrap');
 
-const style = require('./index.scss');
+require('./index.scss');
 
 interface MatchObject {
     scenario: 'go' | 'mnist' | 'ant';
@@ -29,33 +31,29 @@ interface OuterScenarioProps extends RouteComponentProps<MatchObject> {
 interface InnerScenarioProps {
     state: RootState;
     trainingActions: typeof TrainingsActions;
+    graphActions: typeof GraphActions;
 }
 
 type ScenarioProps = OuterScenarioProps & InnerScenarioProps;
 
 const renderScenario = (props: ScenarioProps) => {
-    const { state, trainingActions, match, history } = props;
-
-    history.listen((l, a) => {
-        // console.log(`Location changed to ${l.pathname}`);
-        // TODO: Load scenario
-    });
+    const { state, trainingActions, match } = props;
+    if (state.graph.loadedScenario !== match.params.scenario) {
+        setImmediate(() => props.graphActions.loadScenario(match.params.scenario));
+    }
     const { training } = state;
     let renderer: React.ComponentType<any> | JSX.Element;
     let legend: string[];
     let featureFactory: () => number[][][];
-    let loader: Loader;
     let dataProvider: DataProvider;
     if (match.params.scenario === 'go') {
         renderer = <Go.GoApp />;
         legend = Go.legend;
-        loader = Go.loader;
         featureFactory = () => Go.createFeatures(state.go.game);
     }
     else if (match.params.scenario === 'mnist') {
         renderer = <Mnist.MnistApp />;
         legend = Mnist.legend;
-        loader = Mnist.loader;
         dataProvider = Mnist.dataProvider;
         featureFactory = () => [];
     }
@@ -84,7 +82,8 @@ const mapStateToProps = (state: RootState): Partial<ScenarioProps> => ({
 });
 
 const mapDispatchToProps = (dispatch): Partial<ScenarioProps> => ({
-    trainingActions: bindActionCreators(TrainingsActions, dispatch)
+    trainingActions: bindActionCreators(TrainingsActions, dispatch),
+    graphActions: bindActionCreators(GraphActions, dispatch)
 });
 
 const mergeProps = (stateProps: Partial<ScenarioProps>, dispatchProps: Partial<ScenarioProps>, ownProps: Partial<ScenarioProps>) => {

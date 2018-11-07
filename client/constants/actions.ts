@@ -3,3 +3,4 @@ export const TRAIN = 'TRAIN';
 export const UPDATE_TRAINING_PROGRESS = 'UPDATE_TRAINING_PROGRESS';
 
 export const UPDATE_WEIGHTS = 'UPDATE_WEIGHTS';
+export const GRAPH_SET = 'GRAPH_SET';

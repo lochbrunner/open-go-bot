@@ -9,7 +9,7 @@ declare interface TrainingsData {
 }
 
 declare interface Training {
-  trainingsData: TrainingsData;
+  // trainingsData: TrainingsData;
   // dataProvider: DataProvider;  // TODO(): where to provide the data?
   training: {progress: {finished: number, total: number}, description: string};
 }
@@ -20,12 +20,13 @@ declare interface Prediction {
 }
 
 declare namespace Model {
-  type Node = Convolution|Input|Output|Flatten;
+  type Node = Convolution|Input|Output|Flatten|MaxPool|Relu|MatMul|Add|Reshape|
+      UniformVariable|NormalVariable;
   interface BaseNode {
     // type: 'convolution'|'output'|'input'
-    outputs: Node[];
-    input?: Node;
-    shape: number[];
+    outputs: string[];
+    input?: string;
+    // shape: number[];
     name: string;
     id: string;
   }
@@ -34,20 +35,64 @@ declare namespace Model {
     type: 'output';
   }
 
+  interface Variable extends BaseNode {
+    type: 'variable';
+    shape: number[];
+  }
+
+  interface NormalVariable extends Variable {
+    init: 'normal';
+    mean: number;
+    stdDev: number;
+  }
+
+  interface UniformVariable extends Variable {
+    init: 'uniform';
+    min: number;
+    max: number;
+  }
+
   interface Convolution extends BaseNode {
     type: 'convolution';
 
-    kernel: {size: number};
+    kernel: number[];
     filters: number;
     strides: number;
-    weights: {kernel: number[], bias: number[]};
-    activation: 'relu';
-    outputs: Node[];
+    depth: number;
+    weights?: {kernel: number[], bias: number[]};  // Deprecated
+    activation?: 'relu';                           // Deprecated
+  }
+
+  interface Relu extends BaseNode {
+    type: 'relu';
+  }
+
+  interface MaxPool extends BaseNode {
+    type: 'max-pool';
+    filterSize: number[];
+    strides: number;
+    pad: number;
+  }
+
+  interface MatMul extends BaseNode {
+    type: 'mat-mul';
+    shape?: number[];  // Deprecated
+  }
+
+  interface Add extends BaseNode {
+    type: 'add';
+    shape?: number[];  // Deprecated
+  }
+
+  interface Reshape extends BaseNode {
+    type: 'reshape';
+    shape?: number[];
   }
 
   interface Input extends BaseNode {
     type: 'input';
     legend: string[];
+    shape: number[];
   }
 
   interface Flatten extends BaseNode {
@@ -55,7 +100,9 @@ declare namespace Model {
   }
 
   interface Graph {
-    input?: Input;
+    loadedScenario?: string;
+    input?: string;
+    nodes: Node[];
   }
 }
 
@@ -70,6 +117,6 @@ declare interface RootState {
 declare interface DataProvider {
   load(): Promise<void>;
   nextTrainBatch(batchSize: number): {xs: any, labels: any};
-  getSample(index: number): {feature: any, label: any}
   // nextTrainBatch(batchSize: number): {xs: Tensor, labels: Tensor};
+  getSample(index: number): {feature: any, label: any}
 }

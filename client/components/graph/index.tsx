@@ -10,6 +10,12 @@ import { Tensor } from './tensor';
 
 import './index.scss';
 
+function createDict(graph: Model.Graph): Map<string, Model.Node> {
+  const dict = new Map<string, Model.Node>();
+  graph.nodes.forEach(node => dict.set(node.id, node));
+  return dict;
+}
+
 export namespace Graph {
   export interface Props {
     createFeatures: () => number[][][];
@@ -20,24 +26,26 @@ export namespace Graph {
   }
 }
 
-function findFirst(start: Model.Node, predicate: (node: Model.Node) => boolean) {
+function findFirst(dict: Map<string, Model.Node>, start: Model.Node, predicate: (node: Model.Node) => boolean) {
   const nodes = [start];
   while (nodes.length > 0) {
     const node = nodes.pop();
     if (predicate(node)) return node;
-    nodes.push(...node.outputs);
+    nodes.push(...node.outputs.map(output => dict.get(output)));
   }
   return undefined;
 }
 
-function traverseGraph(input: Model.Node, callback: (node: Model.Node) => void) {
-  if (!input)
+function traverseGraph(graph: Model.Graph, callback: (node: Model.Node) => void) {
+  if (graph === undefined || !graph.input)
     return;
+  const dict = createDict(graph);
   // Add an unique index to each
-  const queue = [input];
+  const queue = [dict.get(graph.input)];
   while (queue.length > 0) {
     const node = queue.shift();
-    queue.push(...node.outputs);
+    if (node === undefined) break;
+    queue.push(...node.outputs.map(output => dict.get(output)));
     callback(node);
   }
 }
@@ -50,7 +58,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     this.model = props.graph.input ? createModel(props.graph) : undefined;
   }
 
-  private resolver(payload: any): JSX.Element {
+  private resolver(dict: Map<string, Model.Node>, payload: any): JSX.Element {
     const { createFeatures, graph, inputLegend } = this.props;
     if (payload.id === 'input') {
       const features = createFeatures();
@@ -72,8 +80,8 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     }
     else if (payload.id === 'conv') {
       // Find the correct conv node
-      const convNode = findFirst(graph.input, node => node.type === 'convolution') as Model.Convolution;
-      return <Tensor width={100} height={100} legend={inputLegend} features={{ shape: [convNode.kernel.size, convNode.kernel.size, 9], array: convNode.weights.kernel }} />;
+      const convNode = findFirst(dict, dict.get(graph.input), node => node.type === 'convolution') as Model.Convolution;
+      return <Tensor width={100} height={100} legend={inputLegend} features={{ shape: convNode.kernel, array: convNode.weights.kernel }} />;
     }
     return <span>Nothing to display</span>;
   }
@@ -87,10 +95,11 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
   render(): JSX.Element {
     const { graph } = this.props;
     loadWeightsFromGraph(graph, this.model);
+    const dict = createDict(graph);
 
     const nodes: Node[] = [];
 
-    traverseGraph(graph.input, node => {
+    traverseGraph(graph, node => {
       const id = `${node.name}.${node.id}`;
       const createId = (n: Model.Node) => `${n.name}.${n.id}`;
       nodes.push({
@@ -98,13 +107,13 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
         name: node.name,
         payload: { id: node.name },
         type: node.type,
-        inputs: node.input ? [{ connection: [{ nodeId: createId(node.input), port: 0 }], name: '' }] : [],
-        outputs: node.outputs.map((o, i) => ({ connection: [{ nodeId: createId(o), port: i }], name: '' }))
+        inputs: node.input ? [{ connection: [{ nodeId: createId(dict.get(node.input)), port: 0 }], name: '' }] : [],
+        outputs: node.outputs.filter(o => o !== 'result').map((o, i) => ({ connection: [{ nodeId: createId(dict.get(o)), port: i }], name: '' }))
       });
     });
 
     const graphConfig: Config = {
-      resolver: this.resolver.bind(this),
+      resolver: this.resolver.bind(this, dict),
       connectionType: 'bezier',
       onChanged: this.onGraphChanged.bind(this),
       grid: false,
@@ -113,8 +122,8 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
 
     return (
       <div className="workspace">
-        <Editor style={{ height: '100%', width: '100%' }}
-          config={graphConfig} nodes={nodes} />
+        {/* <Editor style={{ height: '100%', width: '100%' }}
+          config={graphConfig} nodes={nodes} /> */}
       </div>
     );
   }

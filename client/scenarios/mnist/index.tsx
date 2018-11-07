@@ -21,6 +21,7 @@ export namespace Mnist {
   export interface Props {
     mnist: MnistState;
     training: Training;
+    graph: Model.Graph;
     mnistActions: typeof MnistActions;
     trainingActions: typeof TrainingActions;
   }
@@ -63,7 +64,7 @@ const render = (props: Mnist.Props) => {
         <Button disabled={!enableStepping || props.mnist.caret <= 0} onClicked={() => showImage(props.mnist.caret - 1)} >Previous</Button>
         <Button disabled={!enableStepping} onClicked={() => showImage(props.mnist.caret)} >Reload</Button>
         <Button disabled={!enableStepping} onClicked={() => showImage(props.mnist.caret + 1)} >Next</Button>
-        <Button onClicked={() => props.trainingActions.predictAction(props.mnistActions.updatePrediction, props.mnist.currentInput.pixels)}>Predict</Button>
+        <Button onClicked={() => props.trainingActions.predictAction(props.graph, props.mnistActions.updatePrediction, props.mnist.currentInput.pixels)}>Predict</Button>
       </div>
     </div >
   );
@@ -71,7 +72,8 @@ const render = (props: Mnist.Props) => {
 
 const mapStateToProps: (state: RootState) => Partial<Mnist.Props> = (state: RootState) => ({
   mnist: state.mnist,
-  training: state.training
+  training: state.training,
+  graph: state.graph
 });
 
 const mapDispatchToProps = (dispatch): Partial<Mnist.Props> => ({

@@ -6,12 +6,8 @@ import {Progress} from '../utilities/progress';
 
 class EmptyData implements Training {
   training: {progress: {finished: number, total: number}; description: string;};
-  trainingsData: TrainingsData;
-  dataProvider: DataProvider;  // TODO(go): Generalize this
 
   constructor() {
-    this.trainingsData = {features: [], labels: []};
-    this.dataProvider = new MnistData();
     this.training = {
       progress: {finished: 0, total: 1},
       description: 'No samples load yet'
