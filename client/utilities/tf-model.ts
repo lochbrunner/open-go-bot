@@ -29,11 +29,12 @@ export function createModel(graph: Model.Graph, rate: number = 0.03) {
   while (nodes.length > 0) {
     const node = nodes.pop();
     if (node.type === 'convolution') {
+      const kernelModel = (dict.get(node.inputs[1]) as Model.Variable);
       model.add(tf.layers.conv2d({
         // inputShape: dict.get(node.input).shape,
         inputShape: [19, 19, 9],  // TODO(): Find this out
         filters: node.filters,
-        kernelSize: node.kernel,
+        kernelSize: kernelModel.shape.slice(0, kernelModel.shape.length - 2),
         strides: node.strides,
         activation: node.activation,
         padding: 'same',
@@ -80,12 +81,13 @@ export function writeWeightsToGraph(graph: Model.Graph, model: tf.Model) {
   for (let layer of model.layers) {
     if (layer.trainable) {
       const node = nodes.get(layer.name);
-      const input = dict.get(node.input);
+      const input = node['inputs'] ? dict.get(node['inputs'][0]) : [];
       if (node.type === 'convolution') {
+        const kernelModel = (dict.get(node.inputs[1]) as Model.Variable);
         // First is kernel, second bias
         const [kernel, bias] = layer.getWeights(true) as Variable[];
         // const inputChannels = input.shape[input.shape.length - 1];
-        assertShapesMatch(kernel.shape, [...node.kernel, node.filters]);
+        assertShapesMatch(kernel.shape, kernelModel.shape);
         assertShapesMatch(bias.shape, [node.filters]);
         assert(
             kernel.name.indexOf(`${layer.name}/kernel`) === 0,
@@ -124,11 +126,11 @@ export function loadWeightsFromGraph(graph: Model.Graph, model: tf.Model) {
     if (layer.trainable) {
       const node = nodes.get(layer.name);
       const dict = createDict(graph);
-      const input = dict.get(node.input);
+      const input = node['inputs'] ? dict.get(node['inputs'][0]) : [];
       if (node.type === 'convolution') {
+        const kernelModel = (dict.get(node.inputs[1]) as Model.Variable);
         // const inputChannels = input.shape[input.shape.length - 1];
-        const kernel =
-            tf.tensor(node.weights.kernel, [...node.kernel, node.filters]);
+        const kernel = tf.tensor(node.weights.kernel, kernelModel.shape);
         const bias = tf.tensor(node.weights.bias, [node.filters]);
         // First is kernel, second bias
         layer.setWeights([kernel, bias]);

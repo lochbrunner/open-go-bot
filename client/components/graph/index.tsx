@@ -81,7 +81,8 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     else if (payload.id === 'conv') {
       // Find the correct conv node
       const convNode = findFirst(dict, dict.get(graph.input), node => node.type === 'convolution') as Model.Convolution;
-      return <Tensor width={100} height={100} legend={inputLegend} features={{ shape: convNode.kernel, array: convNode.weights.kernel }} />;
+      const kernelNode = dict.get(convNode.inputs[1]) as Model.Variable;
+      return <Tensor width={100} height={100} legend={inputLegend} features={{ shape: kernelNode.shape, array: convNode.weights.kernel }} />;
     }
     return <span>Nothing to display</span>;
   }
@@ -107,7 +108,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
         name: node.name,
         payload: { id: node.name },
         type: node.type,
-        inputs: node.input ? [{ connection: [{ nodeId: createId(dict.get(node.input)), port: 0 }], name: '' }] : [],
+        inputs: node['input'] !== undefined && node['input'].length > 0 ? (node as Model.OperationNode).inputs.map(input => ({ connection: [{ nodeId: createId(dict.get(input)), port: 0 }], name: '' })) : [],
         outputs: node.outputs.filter(o => o !== 'result').map((o, i) => ({ connection: [{ nodeId: createId(dict.get(o)), port: i }], name: '' }))
       });
     });

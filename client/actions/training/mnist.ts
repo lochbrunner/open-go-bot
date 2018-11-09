@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
-import {Rank, Tensor} from '@tensorflow/tfjs';
+import {Model, Rank, Tensor} from '@tensorflow/tfjs';
 
 import {MnistData} from '../../scenarios/mnist/actions/data';
 
@@ -25,7 +25,7 @@ function createDict(graph: Model.Graph): Map<string, Model.Node> {
 
 const cache = new Map<string, tf.Variable>();
 
-const getVariable = (id: string, factory: () => tf.Tensor): tf.Tensor => {
+const getVariable = (id: string, factory: () => tf.Tensor): tf.Variable => {
   if (cache.has(id)) return cache.get(id);
   const variable = tf.variable(factory());
   cache.set(id, variable);
@@ -35,28 +35,25 @@ const getVariable = (id: string, factory: () => tf.Tensor): tf.Tensor => {
 const generateModel = (graph: Model.Graph) => {
   const dict = createDict(graph);
   const input = dict.get(graph.input);
-  {
-    let node: Model.Node = input;
 
-    while (node.outputs[0] !== 'result') {
-      if (node.type === 'convolution') {
-        const shape = [...node.kernel, node.depth];
-        const variable =
-            getVariable(node.id, () => tf.randomNormal(shape, 0, 0.1));
-      } else if (node.type === 'mat-mul') {
-        const shape = node.shape;
-        const variable =
-            getVariable(node.id, () => tf.randomNormal(shape, 0, 0.1));
-      } else if (node.type === 'add') {
-        const shape = node.shape;
-        const variable = getVariable(node.id, () => tf.zeros(shape));
-      }
-      node = dict.get(node.outputs[0]);
-    }
-  }
+  const variables =
+      graph.nodes.filter(node => node.type === 'variable').map(node => {
+        const v = node as Model.Variable;
+        const {shape} = v;
+        if (v.init === 'normal') {
+          const {mean, stdDev} = v;
+          return getVariable(v.id, () => tf.randomNormal(shape, mean, stdDev));
+        } else if (v.init === 'uniform') {
+          const {min, max} = v;
+          return getVariable(v.id, () => tf.randomUniform(shape, min, max));
+        } else if (v.init === 'zero') {
+          return getVariable(v.id, () => tf.zeros(shape));
+        }
+      });
 
   // Create Model
-  return (inputXs: Tensor) => {
+  // TODO: Traverse from output to input
+  const model = (inputXs: Tensor) => {
     let node: Model.Node = input;
     let prevTensor: any;
     while (node.outputs[0] !== 'result') {
@@ -70,9 +67,7 @@ const generateModel = (graph: Model.Graph) => {
           prevTensor = inputXs.as2D(-1, node.shape[0]);
         }
       } else if (node.type === 'convolution') {
-        const shape = [...node.kernel, node.depth];
-        const variable =
-            getVariable(node.id, () => tf.randomNormal(shape, 0, 0.1));
+        const variable = cache.get(node.inputs[1]);
         prevTensor = prevTensor.conv2d(variable, 1, 'same');
       } else if (node.type === 'relu') {
         prevTensor = prevTensor.relu();
@@ -89,13 +84,10 @@ const generateModel = (graph: Model.Graph) => {
               prevTensor.as4D(-1, node.shape[0], node.shape[1], node.shape[2]);
         }
       } else if (node.type === 'mat-mul') {
-        const shape = node.shape;
-        const variable =
-            getVariable(node.id, () => tf.randomNormal(shape, 0, 0.1));
+        const variable = cache.get(node.inputs[1]);
         prevTensor = prevTensor.matMul(variable);
       } else if (node.type === 'add') {
-        const shape = node.shape;
-        const variable = getVariable(node.id, () => tf.zeros(shape));
+        const variable = cache.get(node.inputs[1]);
         prevTensor = prevTensor.add(variable);
       }
       // Assuming only one output node
@@ -103,6 +95,7 @@ const generateModel = (graph: Model.Graph) => {
     }
     return prevTensor;
   };
+  return {model, variables};
 };
 
 // Train the model.
@@ -110,13 +103,13 @@ export async function train(
     data: DataProvider, graph: Model.Graph, log: (text: string) => void) {
   const returnCost = true;
 
-  const model = generateModel(graph);
+  const {model, variables} = generateModel(graph);
 
   for (let i = 0; i < TRAIN_STEPS; i++) {
     const cost = optimizer.minimize(() => {
       const batch = data.nextTrainBatch(BATCH_SIZE);
       return loss(batch.labels, model(batch.xs)) as any;
-    }, returnCost, Array.from(cache.values()));
+    }, returnCost, variables);
 
     log(`loss[${i}]: ${cost.dataSync()}`);
 
@@ -126,7 +119,7 @@ export async function train(
 
 // Predict the digit number from a batch of input images.
 export function predict(graph: Model.Graph, x): Prediction {
-  const m = generateModel(graph)(x);
+  const m = generateModel(graph).model(x);
   const pred = tf.tidy(() => {
     const axis = 1;
     return m.argMax(axis);

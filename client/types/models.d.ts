@@ -20,42 +20,47 @@ declare interface Prediction {
 }
 
 declare namespace Model {
-  type Node = Convolution|Input|Output|Flatten|MaxPool|Relu|MatMul|Add|Reshape|
-      UniformVariable|NormalVariable;
+  type Node =
+      Convolution|Input|Output|Flatten|MaxPool|Relu|MatMul|Add|Reshape|Variable;
   interface BaseNode {
-    // type: 'convolution'|'output'|'input'
     outputs: string[];
-    input?: string;
-    // shape: number[];
     name: string;
     id: string;
   }
 
-  interface Output extends BaseNode {
+  interface OperationNode extends BaseNode {
+    inputs: string[];
+  }
+
+  interface Output extends OperationNode {
     type: 'output';
   }
 
-  interface Variable extends BaseNode {
+  interface VariableBase extends BaseNode {
     type: 'variable';
-    shape: number[];
+    shape?: number[];
   }
 
-  interface NormalVariable extends Variable {
+  type Variable = UniformVariable|NormalVariable|ZeroVariable;
+
+  interface NormalVariable extends VariableBase {
     init: 'normal';
     mean: number;
     stdDev: number;
   }
 
-  interface UniformVariable extends Variable {
+  interface UniformVariable extends VariableBase {
     init: 'uniform';
     min: number;
     max: number;
   }
 
-  interface Convolution extends BaseNode {
-    type: 'convolution';
+  interface ZeroVariable extends VariableBase {
+    init: 'zero';
+  }
 
-    kernel: number[];
+  interface Convolution extends OperationNode {
+    type: 'convolution';
     filters: number;
     strides: number;
     depth: number;
@@ -63,28 +68,26 @@ declare namespace Model {
     activation?: 'relu';                           // Deprecated
   }
 
-  interface Relu extends BaseNode {
+  interface Relu extends OperationNode {
     type: 'relu';
   }
 
-  interface MaxPool extends BaseNode {
+  interface MaxPool extends OperationNode {
     type: 'max-pool';
     filterSize: number[];
     strides: number;
     pad: number;
   }
 
-  interface MatMul extends BaseNode {
+  interface MatMul extends OperationNode {
     type: 'mat-mul';
-    shape?: number[];  // Deprecated
   }
 
-  interface Add extends BaseNode {
+  interface Add extends OperationNode {
     type: 'add';
-    shape?: number[];  // Deprecated
   }
 
-  interface Reshape extends BaseNode {
+  interface Reshape extends OperationNode {
     type: 'reshape';
     shape?: number[];
   }
@@ -95,7 +98,7 @@ declare namespace Model {
     shape: number[];
   }
 
-  interface Flatten extends BaseNode {
+  interface Flatten extends OperationNode {
     type: 'flatten';
   }
 
