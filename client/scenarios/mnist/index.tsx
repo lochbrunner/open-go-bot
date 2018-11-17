@@ -49,7 +49,7 @@ const render = (props: Mnist.Props) => {
 
   return (
     <div className="mnist">
-      <h1>MNIST coming soon...</h1>
+      <h1>MNIST</h1>
       <div className="display">
         <ImageEditor update={mnistActions.updatePixel}
           pixels={props.mnist.currentInput.pixels}

@@ -8,7 +8,7 @@ export default function createInitialState(): Model.Graph {
     type: 'output',
     name: 'output',
     outputs: [],
-    inputs: []
+    inputs: {'input': ''}
   };
   nodes.push(output);
 
@@ -25,7 +25,7 @@ export default function createInitialState(): Model.Graph {
     activation: 'relu',
     depth: 999,
     outputs: [],
-    inputs: []
+    inputs: {kernel: '', orig: ''}
   };
   nodes.push(conv2d1);
 
@@ -44,17 +44,17 @@ export default function createInitialState(): Model.Graph {
     name: 'flatten',
     id: (id++).toString(),
     outputs: [],
-    inputs: []
+    inputs: {}
   };
   nodes.push(flatten);
 
-  conv2d1.inputs = [input.id];
+  conv2d1.inputs.orig = input.id;
   input.outputs.push(conv2d1.id);
 
-  flatten.inputs = [conv2d1.id];
+  // flatten.inputs.orig = conv2d1.id;
   conv2d1.outputs.push(flatten.id);
 
-  output.inputs = [flatten.id];
+  // output.inputs. = [flatten.id];
   flatten.outputs.push(output.id);
 
   return {input: input.id, nodes};

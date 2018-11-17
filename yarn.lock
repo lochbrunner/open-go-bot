@@ -4157,9 +4157,9 @@ react-dom@^15.6.1:
     object-assign "^4.1.0"
     prop-types "^15.5.10"
 
-react-flow-editor@0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/react-flow-editor/-/react-flow-editor-0.2.1.tgz#40b0514aaa0f6daa36b5c47e75227179756754e1"
+react-flow-editor@0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/react-flow-editor/-/react-flow-editor-0.3.0.tgz#ed58d3ffe8dee9e209208b2abfa87af432271e82"
   dependencies:
     lodash "^4.17.10"
 

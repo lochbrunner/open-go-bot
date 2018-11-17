@@ -20,14 +20,14 @@ export const Home = (props: Props) => {
 
     const scenariosInfos: ScenarioInfo[] = [
         {
-            title: 'Go',
-            description: 'An abstract strategy board game for two players, in which the aim is to surround more territory than the opponent.',
-            link: 'go'
-        },
-        {
             title: 'Mnist',
             description: 'A large database of handwritten digits that is commonly used for training various image processing systems.',
             link: 'mnist'
+        },
+        {
+            title: 'Go',
+            description: 'An abstract strategy board game for two players, in which the aim is to surround more territory than the opponent. Coming soon!',
+            link: 'go'
         },
         {
             title: 'Ant',

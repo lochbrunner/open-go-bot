@@ -29,11 +29,12 @@ declare namespace Model {
   }
 
   interface OperationNode extends BaseNode {
-    inputs: string[];
+    inputs: {[key: string]: string};
   }
 
   interface Output extends OperationNode {
     type: 'output';
+    inputs: {'input': string}
   }
 
   interface VariableBase extends BaseNode {
@@ -64,12 +65,14 @@ declare namespace Model {
     filters: number;
     strides: number;
     depth: number;
+    inputs: {'orig': string, 'kernel': string};
     weights?: {kernel: number[], bias: number[]};  // Deprecated
     activation?: 'relu';                           // Deprecated
   }
 
   interface Relu extends OperationNode {
     type: 'relu';
+    inputs: {'orig': string}
   }
 
   interface MaxPool extends OperationNode {
@@ -77,19 +80,23 @@ declare namespace Model {
     filterSize: number[];
     strides: number;
     pad: number;
+    inputs: {'orig': string}
   }
 
   interface MatMul extends OperationNode {
     type: 'mat-mul';
+    inputs: {'multiplicand': string, 'multiplier': string}
   }
 
   interface Add extends OperationNode {
     type: 'add';
+    inputs: {'first-addend': string, 'second-addend': string}
   }
 
   interface Reshape extends OperationNode {
     type: 'reshape';
     shape?: number[];
+    inputs: {'orig': string},
   }
 
   interface Input extends BaseNode {
@@ -104,7 +111,8 @@ declare namespace Model {
 
   interface Graph {
     loadedScenario?: string;
-    input?: string;
+    input?: string;  // Or should that be always the same -> convention?
+    // output?: string;  // Or should that be always the same -> convention?
     nodes: Node[];
   }
 }

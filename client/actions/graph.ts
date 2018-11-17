@@ -14,6 +14,7 @@ export const loadScenario = (scenario: string) => dispatch => {
   if (scenario === 'mnist') {
     const conv2OutputDepth = 16;
     const conv1OutputDepth = 8;
+    const inputDepth = 1;
 
     graph.newGraph.nodes = [
       {
@@ -21,7 +22,7 @@ export const loadScenario = (scenario: string) => dispatch => {
         legend: [],
         name: 'input',
         outputs: ['conv2d-1'],
-        shape: [28, 28, 1],
+        shape: [28, 28, inputDepth],
         type: 'input'
       },
       {
@@ -30,7 +31,7 @@ export const loadScenario = (scenario: string) => dispatch => {
         name: 'Conv 1 Kernel Weights',
         init: 'normal',
         outputs: ['conv2d-1'],
-        shape: [5, 5, 1, conv1OutputDepth],
+        shape: [5, 5, inputDepth, conv1OutputDepth],
         mean: 0.0,
         stdDev: 0.1
       },
@@ -38,7 +39,7 @@ export const loadScenario = (scenario: string) => dispatch => {
         type: 'convolution',
         id: 'conv2d-1',
         filters: 8,
-        inputs: ['input', 'conv2d-1-weights'],
+        inputs: {'orig': 'input', 'kernel': 'conv2d-1-weights'},
         name: 'Conv 1',
         outputs: ['relu-1'],
         strides: 1,
@@ -49,7 +50,7 @@ export const loadScenario = (scenario: string) => dispatch => {
         id: 'relu-1',
         name: 'ReLu 1',
         outputs: ['max-pool-1'],
-        inputs: ['conv2d-1']
+        inputs: {'orig': 'conv2d-1'}
       },
       {
         type: 'max-pool',
@@ -59,7 +60,7 @@ export const loadScenario = (scenario: string) => dispatch => {
         pad: 0,
         strides: 2,
         outputs: ['conv2d-2'],
-        inputs: ['relu-1']
+        inputs: {'orig': 'relu-1'}
       },
       {
         type: 'variable',
@@ -75,7 +76,7 @@ export const loadScenario = (scenario: string) => dispatch => {
         type: 'convolution',
         id: 'conv2d-2',
         filters: 8,
-        inputs: ['max-pool-1', 'conv2d-2-weights'],
+        inputs: {'orig': 'max-pool-1', 'kernel': 'conv2d-2-weights'},
         name: 'Conv 2',
         outputs: ['relu-2'],
         strides: 1,
@@ -86,7 +87,7 @@ export const loadScenario = (scenario: string) => dispatch => {
         id: 'relu-2',
         name: 'ReLu 2',
         outputs: ['max-pool-2'],
-        inputs: ['conv2d-2']
+        inputs: {'orig': 'conv2d-2'}
       },
       {
         type: 'max-pool',
@@ -96,13 +97,13 @@ export const loadScenario = (scenario: string) => dispatch => {
         pad: 0,
         strides: 2,
         outputs: ['reshape-3'],
-        inputs: ['relu-2']
+        inputs: {'orig': 'relu-2'}
       },
       {
         type: 'reshape',
         id: 'reshape-3',
         name: 'Reshape',
-        inputs: ['max-pool-2'],
+        inputs: {'orig': 'max-pool-2'},
         outputs: ['mat-mul-3'],
         shape: [7 * 7 * conv2OutputDepth]
       },
@@ -122,7 +123,8 @@ export const loadScenario = (scenario: string) => dispatch => {
         id: 'mat-mul-3',
         name: 'Multiplication',
         outputs: ['add-3'],
-        inputs: ['reshape-3', 'mat-mul-3-weight']
+        inputs:
+            {'multiplicand': 'reshape-3', 'multiplier': 'mat-mul-3-weight'}
       },
       {
         // Not uses yet
@@ -137,8 +139,16 @@ export const loadScenario = (scenario: string) => dispatch => {
         type: 'add',
         id: 'add-3',
         name: 'Add',
-        outputs: ['result'],
-        inputs: ['mat-mul-3', 'add-3-weights']
+        outputs: ['output'],
+        inputs:
+            {'first-addend': 'mat-mul-3', 'second-addend': 'add-3-weights'}
+      },
+      {
+        type: 'output',
+        id: 'output',
+        inputs: {input: 'add-3'},
+        name: 'Output',
+        outputs: []
       }
     ];
 

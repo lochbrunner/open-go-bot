@@ -56,7 +56,7 @@ const generateModel = (graph: Model.Graph) => {
   const model = (inputXs: Tensor) => {
     let node: Model.Node = input;
     let prevTensor: any;
-    while (node.outputs[0] !== 'result') {
+    while (node.type !== 'output') {
       if (node.type === 'input') {
         if (node.shape.length === 3) {
           prevTensor =
@@ -67,7 +67,7 @@ const generateModel = (graph: Model.Graph) => {
           prevTensor = inputXs.as2D(-1, node.shape[0]);
         }
       } else if (node.type === 'convolution') {
-        const variable = cache.get(node.inputs[1]);
+        const variable = cache.get(node.inputs['kernel']);
         prevTensor = prevTensor.conv2d(variable, 1, 'same');
       } else if (node.type === 'relu') {
         prevTensor = prevTensor.relu();
@@ -84,10 +84,10 @@ const generateModel = (graph: Model.Graph) => {
               prevTensor.as4D(-1, node.shape[0], node.shape[1], node.shape[2]);
         }
       } else if (node.type === 'mat-mul') {
-        const variable = cache.get(node.inputs[1]);
+        const variable = cache.get(node.inputs['multiplier']);
         prevTensor = prevTensor.matMul(variable);
       } else if (node.type === 'add') {
-        const variable = cache.get(node.inputs[1]);
+        const variable = cache.get(node.inputs['second-addend']);
         prevTensor = prevTensor.add(variable);
       }
       // Assuming only one output node
