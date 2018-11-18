@@ -1,7 +1,8 @@
+import * as _ from 'lodash';
 import {Action} from 'redux-actions';
+
 import * as Actions from '../actions';
 import * as Constants from '../actions/constants';
-import _ = require('lodash');
 
 export const reducers =
     (state: RootState, action: Action<Actions.ActionPayload>): RootState => {
@@ -50,7 +51,19 @@ export const reducers =
         return {...state, mnist: {...state.mnist, hasLoaded: true}};
       } else if (action.type === Constants.MNIST_UPDATE_PREDICTION) {
         const payload = action.payload as Actions.ActionUpdatePrediction;
-        return {...state, mnist: {...state.mnist, prediction: payload}};
+        // TODO: Refactor
+        // Update graph activations
+        const newNodes = state.graph.nodes.map(node => {
+          if (payload.activations.has(node.id))
+            (node as Model.OperationNode).activations =
+                payload.activations.get(node.id);
+          return node;
+        });
+        return {
+          ...state,
+          graph: {...state.graph, nodes: newNodes},
+          mnist: {...state.mnist, prediction: payload}
+        };
       }
       return state;
     };

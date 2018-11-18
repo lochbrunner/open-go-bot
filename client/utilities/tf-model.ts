@@ -20,6 +20,7 @@ function createDict(graph: Model.Graph): Map<string, Model.Node> {
   return dict;
 }
 
+// Deprecated
 export function createModel(graph: Model.Graph, rate: number = 0.03) {
   const model = tf.sequential();
 
@@ -73,6 +74,7 @@ function nodesMap(graph: Model.Graph) {
   return map;
 }
 
+// Deprecated
 export function writeWeightsToGraph(graph: Model.Graph, model: tf.Model) {
   if (!graph.input) return;
   const dict = createDict(graph);
@@ -114,10 +116,10 @@ export function writeWeightsToGraph(graph: Model.Graph, model: tf.Model) {
   return graph;
 }
 
+// Deprecated
 export function loadWeightsFromGraph(graph: Model.Graph, model: tf.Model) {
   if (!graph.input) return;
   if (model === undefined) {
-    console.warn('model was not defined');
     return;
   }
   const nodes = nodesMap(graph);

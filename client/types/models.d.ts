@@ -17,6 +17,8 @@ declare interface Training {
 declare interface Prediction {
   value: number;
   uncertainty: number;
+
+  activations: Map<string, Model.ActivationInfo>;
 }
 
 declare namespace Model {
@@ -28,13 +30,19 @@ declare namespace Model {
     id: string;
   }
 
+  interface ActivationInfo {
+    shape: number[];
+    values: number[];
+  }
+
   interface OperationNode extends BaseNode {
     inputs: {[key: string]: string};
+    activations?: ActivationInfo;
   }
 
   interface Output extends OperationNode {
     type: 'output';
-    inputs: {'input': string}
+    inputs: {'input': string};
   }
 
   interface VariableBase extends BaseNode {
@@ -80,7 +88,7 @@ declare namespace Model {
 
   interface MaxPool extends OperationNode {
     type: 'max-pool';
-    filterSize: number[];
+    filterSize: number|[number, number];
     strides: number;
     pad: number;
     inputs: {'orig': string}

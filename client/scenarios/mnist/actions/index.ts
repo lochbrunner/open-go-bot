@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import {createAction} from 'redux-actions';
 
 import {argMax, make2d} from '../../../commons/utils';
@@ -5,8 +6,6 @@ import load from '../../go/load';
 
 import * as Actions from './constants';
 import {MnistData} from './data';
-
-import _ = require('lodash');
 
 export interface ActionUpdateImagePayload {
   pixels: number[][];

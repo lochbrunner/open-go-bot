@@ -6,7 +6,6 @@ Allows to design deep-learnings models for various problems, training them in th
 
 This project is still work in progress. That means some important features are still missing:
 
-* Introspection of hidden units
 * Editing graphs
 * Deployment to AWS
 * OpenAuth integration
@@ -20,6 +19,8 @@ This project is still work in progress. That means some important features are s
 A large database of handwritten digits that is commonly used for training various image processing systems.
 
 ![Mnist screenshot](./docs/assets/screenshot-mnist.png)
+
+Demo go to https://lochbrunner.github.io/demos/social-ai and navigate to the mnist example. Press the *Load* button, after you can step through the samples press *Train*. Move the nodes from the upper left corner and view the activations after pressing the *Predict* button.
 
 ### Go
 

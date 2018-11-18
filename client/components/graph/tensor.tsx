@@ -7,13 +7,13 @@ import { shape } from "prop-types";
 
 export namespace Tensor {
   export interface Props {
-    features: number[][][] | number[][] | { shape: number[], array: number[] };
+    features: number[][][] | number[][] | number[] | { shape: number[], array: number[] };
     width: number;
     height: number;
     legend?: string[];
   }
   export interface State {
-    selection: number;
+    selection: number[];
   }
 }
 
@@ -55,10 +55,10 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     super(props, context);
 
     this.state = {
-      selection: 0
+      selection: [0, 0, 0, 0]
     };
 
-    this.onSelectionChanged = this.onSelectionChanged.bind(this);
+    // this.onSelectionChanged = this.onSelectionChanged.bind(this);
   }
 
   private static calcColor(value: number, min: number, max: number) {
@@ -69,16 +69,19 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     return `hsl(${v}, ${70}%, ${60}%)`;
   }
 
-  private onSelectionChanged(e: number) {
+  private onSelectionChanged(id: number, e: number) {
     this.setState(prev => {
-      return { ...prev, selection: e };
+      const selection = [...prev.selection];
+      selection[id] = e;
+      return { ...prev, selection };
     });
   }
 
   render(): JSX.Element {
     const { width, height, features, legend } = this.props;
     const { selection } = this.state;
-    let [rows, columns, channels1, channels2] = features instanceof Array ? getRank(features) : features.shape;
+    const shape = features instanceof Array ? getRank(features) : features.shape;
+    let [rows, columns, channels1, channels2] = shape.filter(s => s > 1);
 
     const pick = (full: number[], shape: number[], selection: number[][]): number[] => {
       const picked: number[] = [];
@@ -102,11 +105,11 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     let min: number;
     let max: number;
     let selectedFeature: number[];
-    let slider: JSX.Element | '' = '';
+    let slider: JSX.Element | JSX.Element[] = [];
     if (columns === undefined) {
       // Rank 1 tensor
       columns = 1;
-      selectedFeature = features instanceof Array ? (features as []) : features.array;
+      selectedFeature = features instanceof Array ? (features as number[]) : features.array;
     }
     else if (channels1 === undefined) {
       // Rank 2 tensor
@@ -118,8 +121,11 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
       // Rank 3 tensor
       const flatFeatures = features instanceof Array ? _.flatten(features as number[][][]) : createDimension(features.array, channels1);
       const marks = legend ? _.fromPairs(legend.map((key, i) => [i, key])) : _.times(channels1).map((v, i) => i.toString());
-      slider = legend || channels1 > 1 ? <Slider style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={8} marks={marks} step={1} included={false} onChange={this.onSelectionChanged} defaultValue={0} vertical /> : '';
-      selectedFeature = flatFeatures.map(feature => feature[selection]);
+      slider = legend || channels1 > 1 ? <Slider
+        style={{ height, float: 'left', marginLeft: '10px' }}
+        min={0} max={channels1} step={1} included={false}
+        onChange={this.onSelectionChanged.bind(this, 0)} defaultValue={0} vertical /> : [];
+      selectedFeature = flatFeatures.map(feature => feature[selection[0]]);
     }
     else {
       // Rank 4 tensor
@@ -128,7 +134,10 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
       }
       else {
         const flatFeatures = features.array;
-        selectedFeature = pick(flatFeatures, [rows, columns, channels1, channels2], [[0, rows], [0, columns], [0, 1], [0, 1]]);
+        selectedFeature = pick(flatFeatures, [rows, columns, channels1, channels2], [[0, rows], [0, columns], [selection[0], selection[0] + 1], [selection[1], selection[1] + 1]]);
+
+        slider.push(<Slider style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={channels1} step={1} defaultValue={0} onChange={this.onSelectionChanged.bind(this, 0)} vertical />);
+        slider.push(<Slider style={{ height, float: 'left', marginLeft: '30px' }} min={0} max={channels2} step={1} defaultValue={0} onChange={this.onSelectionChanged.bind(this, 1)} vertical />);
       }
     }
     [min, max] = selectedFeature.reduce((p, s) => [Math.min(p[0], s), Math.max(p[1], s)], [Number.MAX_VALUE, Number.MIN_VALUE]);

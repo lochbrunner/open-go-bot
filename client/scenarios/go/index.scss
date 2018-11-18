@@ -2,6 +2,9 @@ body {
   overflow-x: hidden;
 }
 
+$game-width: 500px;
+$train-height: 120px;
+
 body>div#root>div {
   >div.game-section {
     // display: inline-block;
@@ -9,7 +12,7 @@ body>div#root>div {
     left: 0px;
     bottom: 0px;
     top: 0px;
-    width: 700px;
+    width: $game-width;
     padding: 20px;
 
     button {
@@ -19,11 +22,11 @@ body>div#root>div {
 
   >div.graph-section {
     position: absolute;
-    left: 700px;
-    bottom: 200px;
+    left: $game-width;
+    bottom: $train-height;
     top: 0px;
     right: 0px;
-    padding-top: 20px;
+    // padding-top: 20px;
     box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 10px 0px;
     margin-top: 20px;
     margin-right: 10px;
@@ -36,9 +39,9 @@ body>div#root>div {
 
   >div.train {
     position: absolute;
-    left: 700px;
+    left: $game-width;
     bottom: 000px;
-    height: 200px;
+    height: $train-height;
     right: 0px;
     padding: 20px;
   }

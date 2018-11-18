@@ -31,7 +31,7 @@ const getVariable = (id: string, factory: () => tf.Tensor): tf.Variable => {
   return variable;
 };
 
-const generateModel = (graph: Model.Graph) => {
+const generateModel = (graph: Model.Graph, nodeOfInterest?: string) => {
   const dict = createDict(graph);
   const input = dict.get(graph.input);
 
@@ -54,7 +54,7 @@ const generateModel = (graph: Model.Graph) => {
   // TODO: Traverse from output to input
   const model = (inputXs: Tensor) => {
     let node: Model.Node = input;
-    let prevTensor: any;
+    let prevTensor: tf.Tensor<any>;
     while (node.type !== 'output') {
       if (node.type === 'input') {
         if (node.shape.length === 3) {
@@ -67,7 +67,7 @@ const generateModel = (graph: Model.Graph) => {
         }
       } else if (node.type === 'convolution') {
         const variable = cache.get(node.inputs['kernel']);
-        prevTensor = prevTensor.conv2d(variable, 1, 'same');
+        prevTensor = prevTensor.conv2d(variable as any, 1, 'same');
       } else if (node.type === 'relu') {
         prevTensor = prevTensor.relu();
       } else if (node.type === 'max-pool') {
@@ -89,6 +89,8 @@ const generateModel = (graph: Model.Graph) => {
         const variable = cache.get(node.inputs['second-addend']);
         prevTensor = prevTensor.add(variable);
       }
+      if (nodeOfInterest !== undefined && node.id === nodeOfInterest)
+        return prevTensor;
       // Assuming only one output node
       node = dict.get(node.outputs[0]);
     }
@@ -128,9 +130,11 @@ export function predict(graph: Model.Graph, x): Prediction {
     const axis = 1;
     return m.max(axis);
   });
+  const activations = getActivations(graph, x);
   return {
     value: Array.from(pred.dataSync())[0] as number,
-    uncertainty: Array.from(uncertaintyPred.dataSync())[0] as number
+    uncertainty: Array.from(uncertaintyPred.dataSync())[0] as number,
+    activations
   };
 }
 
@@ -140,6 +144,31 @@ export function classesFromLabel(y) {
   const pred = y.argMax(axis);
 
   return Array.from(pred.dataSync());
+}
+
+function getActivations(
+    graph: Model.Graph, x): Map<string, Model.ActivationInfo> {
+  const activations = new Map<string, Model.ActivationInfo>();
+  {
+    // For now only the output
+    const outputNode =
+        graph.nodes.find(n => n.type === 'output') as Model.Output;
+    const pred = tf.tidy(() => {
+      return generateModel(graph).model(x);
+    });
+    const values = Array.from(pred.dataSync()) as number[];
+    activations.set(outputNode.id, {shape: pred.shape, values});
+  }
+  for (let node of graph.nodes) {
+    if (node['inputs'] !== undefined) {
+      const pred = tf.tidy(() => {
+        return generateModel(graph, node.id).model(x);
+      });
+      const values = Array.from(pred.dataSync()) as number[];
+      activations.set(node.id, {shape: pred.shape, values});
+    }
+  }
+  return activations;
 }
 
 function writeWeightsToGraph(graph: Model.Graph): WeightUpdateInfo[] {

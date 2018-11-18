@@ -66,12 +66,12 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
   private resolver(dict: Map<string, Model.Node>, payload: { node: Model.Node }): JSX.Element {
     const { createFeatures, graph, inputLegend } = this.props;
     const { node } = payload;
+    const blank = <span>No Tensor data available</span>;
     if (node.id === 'input') {
       const features = createFeatures();
       return <Tensor width={200} height={200} legend={inputLegend} features={features} />;
     }
     else if (node.type === 'variable') {
-      const blank = <span>No Tensor data available</span>;
       const tensor = node.content ? <Tensor width={200} height={200} features={{ array: node.content, shape: node.shape }} /> : blank;
 
       const config = () => {
@@ -112,74 +112,64 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
         </Tabs>
       </div>;
     }
-    else if (node.type === 'convolution') {
-      return (
-        <div className={node.type}>
-          <h2>{node.type}</h2>
-          <ul>
-            <li>filters {node.filters}</li>
-            <li>strides: {node.strides}</li>
-            <li>depth: {node.depth}</li>
-          </ul>
-        </div>
-      );
+    else {
+      // Operators
+      const { activations } = (node as Model.Output | Model.Add | Model.MatMul);
+      const tensor = activations ? <Tensor height={200} width={200} features={{ shape: activations.shape, array: activations.values }} /> : blank;
+      if (node.id === 'output' || node.type === 'mat-mul' || node.type === 'add' || node.type === 'relu') {
+        // Operators without config
+        return (
+          <div className={node.type}>
+            {tensor}
+          </div>
+        );
+      }
+      else {
+        // Operators with config
+        const config = () => {
+          if (node.type === 'convolution') {
+            return (
+              <ul>
+                <li>filters {node.filters}</li>
+                <li>strides: {node.strides}</li>
+                <li>depth: {node.depth}</li>
+              </ul>
+            );
+          }
+          else if (node.type === 'max-pool') {
+            return (
+              <ul>
+                <li>filterSize {typeof node.filterSize === 'number' ? node.filterSize.toString() : node.filterSize.join(' x ')}</li>
+                <li>strides: {node.strides}</li>
+                <li>padding: {node.pad}</li>
+              </ul>
+            );
+          }
+          else if (node.type === 'reshape') {
+            return (
+              <ul>
+                <li>shape: {node.shape.join(' x ')}</li>
+              </ul>
+            );
+          }
+        };
+        return <div className={`${node.type}`}>
+          <Tabs>
+            <TabList>
+              <Tab>Config</Tab>
+              <Tab>Weights</Tab>
+            </TabList>
+            <TabPanel>
+              <h2>{node.type}</h2>
+              {config()}
+            </TabPanel>
+            <TabPanel>
+              {tensor}
+            </TabPanel>
+          </Tabs>
+        </div>;
+      }
     }
-    else if (node.type === 'relu') {
-      return (
-        <div className={node.type}>
-          <h2>{node.type}</h2>
-        </div>
-      );
-    }
-    else if (node.type === 'max-pool') {
-      return (
-        <div className={node.type}>
-          <h2>{node.type}</h2>
-          <ul>
-            <li>filterSize {node.filterSize.join(' x ')}</li>
-            <li>strides: {node.strides}</li>
-            <li>padding: {node.pad}</li>
-          </ul>
-        </div>
-      );
-    }
-    else if (node.type === 'mat-mul' || node.type === 'add') {
-      return (
-        <div className={node.type}>
-          <h2>{node.type}</h2>
-        </div>
-      );
-    }
-    else if (node.type === 'reshape') {
-      return (
-        <div className={node.type}>
-          <h2>{node.type}</h2>
-          <ul>
-            <li>shape: {node.shape.join(' x ')}</li>
-          </ul>
-        </div>
-      );
-    }
-    // else if (node.id === 'output') {
-    //   const features = createFeatures();
-    //   const predictionTensor = this.model.predict(tf.tensor3d(features).reshape([-1, 19, 19, 9]));
-    //   let prediction: { array: number[], shape: number[] } = { array: [], shape: [] };
-    //   if (predictionTensor instanceof Array) {
-    //     prediction.array = Array.from(predictionTensor[0].dataSync());
-    //     prediction.shape = [19, 19, 1];
-    //   }
-    //   else {
-    //     prediction.array = Array.from(predictionTensor.dataSync());
-    //     prediction.shape = [19, 19, 1];
-    //   }
-    //   return <Tensor width={200} height={200} features={prediction} />;
-    // }
-    // else if (node.id === 'conv') {
-    //   // Find the correct conv node
-    //   const convNode = findFirst(dict, dict.get(graph.input), n => n.type === 'convolution') as Model.Convolution;
-    //   const kernelNode = dict.get(convNode.inputs[1]) as Model.Variable;
-    //   return <Tensor width={100} height={100} legend={inputLegend} features={{ shape: kernelNode.shape, array: convNode.weights.kernel }} />;
-    // }
     return <span style={{ width: '140px' }}>Nothing to display</span>;
   }
 
