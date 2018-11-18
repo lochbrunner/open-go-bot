@@ -4,6 +4,15 @@
 
 Allows to design deep-learnings models for various problems, training them in the browser and sharing them with others.
 
+This project is still work in progress. That means some important features are still missing:
+
+* Introspection of hidden units
+* Editing graphs
+* Deployment to AWS
+* OpenAuth integration
+* Upload models (inclusive weights)
+* Generic architecture in order to support multiple scenarios
+
 ## Scenarios
 
 ### MNIST

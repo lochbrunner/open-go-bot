@@ -2,7 +2,7 @@ import * as tf from '@tensorflow/tfjs';
 import {setTimeout} from 'timers';
 
 import {updateTrainingsProgress, updateWeights} from '../../actions/training';
-import {Progress} from '../../utilities/progress';
+import {Progress, WeightUpdateInfo} from '../../utilities/progress';
 import {createModel, writeWeightsToGraph} from '../../utilities/tf-model';
 
 import * as Mnist from './mnist';
@@ -96,7 +96,8 @@ export async function trainOnRecords(
       if (loss > 10 || loss < .01) {
         reporter({
           description: `Aborted`,
-          progress: {total: TRAIN_BATCHES, finished: 0}
+          progress: {total: TRAIN_BATCHES, finished: 0},
+          newWeights: []
         });
         break;
       }
@@ -108,7 +109,8 @@ export async function trainOnRecords(
             `Training loss: ${
                               (loss as number).toFixed(3)
                             } accuracy: ${(accuracy * 100).toFixed(2)}%`,
-        progress: {total: TRAIN_BATCHES, finished: i}
+        progress: {total: TRAIN_BATCHES, finished: i},
+        newWeights: []
       });
     }
     tf.dispose([features, labels, validationData]);
@@ -123,7 +125,7 @@ export async function trainMnist(
     dispatch: (ActionFunctions) => void) {
   const reporter = (progress: Progress) =>
       dispatch(updateTrainingsProgress(progress));
-  const log = text =>
-      reporter({description: text, progress: {finished: 0, total: 1}});
+  const log = (text: string, newWeights: WeightUpdateInfo[]) => reporter(
+      {description: text, progress: {finished: 0, total: 1}, newWeights});
   await Mnist.train(data, graph, log);
 }

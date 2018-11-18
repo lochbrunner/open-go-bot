@@ -1,6 +1,8 @@
 import * as React from "react";
 import * as _ from 'lodash';
 import * as tf from '@tensorflow/tfjs';
+import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import "react-tabs/style/react-tabs.css";
 
 import { Editor, Node, Config, ChangeAction } from 'react-flow-editor';
 
@@ -18,7 +20,7 @@ function createDict(graph: Model.Graph): Map<string, Model.Node> {
 
 export namespace Graph {
   export interface Props {
-    createFeatures: () => number[][][];
+    createFeatures: () => number[][][] | number[][];
     inputLegend: string[];
     graph: Model.Graph;
   }
@@ -69,43 +71,46 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
       return <Tensor width={200} height={200} legend={inputLegend} features={features} />;
     }
     else if (node.type === 'variable') {
-      if (node.init === 'normal') {
-        return (
-          <div className={`${node.type} ${node.init}`}>
+      const blank = <span>No Tensor data available</span>;
+      const tensor = node.content ? <Tensor width={200} height={200} features={{ array: node.content, shape: node.shape }} /> : blank;
+
+      const config = () => {
+        if (node.init === 'normal')
+          return <ul>
+            <li>distribution {node.init}</li>
+            <li>shape: {node.shape.join(' x ')}</li>
+            <li>mean: {node.mean}</li>
+            <li>stdDev: {node.stdDev}</li>
+          </ul>;
+        else if (node.init === 'uniform')
+          return <ul>
+            <li>distribution {node.init}</li>
+            <li>shape: {node.shape.join(' x ')}</li>
+            <li>min: {node.min}</li>
+            <li>max: {node.max}</li>
+          </ul>;
+        else if (node.init === 'zero')
+          return <ul>
+            <li>distribution {node.init}</li>
+            <li>shape: {node.shape.join(' x ')}</li>
+          </ul>;
+      };
+
+      return <div className={`${node.type} ${node.init}`}>
+        <Tabs>
+          <TabList>
+            <Tab>Config</Tab>
+            <Tab>Weights</Tab>
+          </TabList>
+          <TabPanel>
             <h2>{node.type}</h2>
-            <ul>
-              <li>distribution {node.init}</li>
-              <li>shape: {node.shape.join(' x ')}</li>
-              <li>mean: {node.mean}</li>
-              <li>stdDev: {node.stdDev}</li>
-            </ul>
-          </div>
-        );
-      }
-      else if (node.init === 'uniform') {
-        return (
-          <div className={`${node.type} ${node.init}`}>
-            <h2>{node.type}</h2>
-            <ul>
-              <li>distribution {node.init}</li>
-              <li>shape: {node.shape.join(' x ')}</li>
-              <li>min: {node.min}</li>
-              <li>max: {node.max}</li>
-            </ul>
-          </div>
-        );
-      }
-      else if (node.init === 'zero') {
-        return (
-          <div className={`${node.type} ${node.init}`}>
-            <h2>{node.type}</h2>
-            <ul>
-              <li>distribution {node.init}</li>
-              <li>shape: {node.shape.join(' x ')}</li>
-            </ul>
-          </div>
-        );
-      }
+            {config()}
+          </TabPanel>
+          <TabPanel>
+            {tensor}
+          </TabPanel>
+        </Tabs>
+      </div>;
     }
     else if (node.type === 'convolution') {
       return (
@@ -169,12 +174,12 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     //   }
     //   return <Tensor width={200} height={200} features={prediction} />;
     // }
-    else if (node.id === 'conv') {
-      // Find the correct conv node
-      const convNode = findFirst(dict, dict.get(graph.input), n => n.type === 'convolution') as Model.Convolution;
-      const kernelNode = dict.get(convNode.inputs[1]) as Model.Variable;
-      return <Tensor width={100} height={100} legend={inputLegend} features={{ shape: kernelNode.shape, array: convNode.weights.kernel }} />;
-    }
+    // else if (node.id === 'conv') {
+    //   // Find the correct conv node
+    //   const convNode = findFirst(dict, dict.get(graph.input), n => n.type === 'convolution') as Model.Convolution;
+    //   const kernelNode = dict.get(convNode.inputs[1]) as Model.Variable;
+    //   return <Tensor width={100} height={100} legend={inputLegend} features={{ shape: kernelNode.shape, array: convNode.weights.kernel }} />;
+    // }
     return <span style={{ width: '140px' }}>Nothing to display</span>;
   }
 

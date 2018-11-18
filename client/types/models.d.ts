@@ -48,16 +48,19 @@ declare namespace Model {
     init: 'normal';
     mean: number;
     stdDev: number;
+    content?: number[];
   }
 
   interface UniformVariable extends VariableBase {
     init: 'uniform';
     min: number;
     max: number;
+    content?: number[];
   }
 
   interface ZeroVariable extends VariableBase {
     init: 'zero';
+    content?: number[];
   }
 
   interface Convolution extends OperationNode {

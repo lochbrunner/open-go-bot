@@ -3,10 +3,11 @@ import * as _ from 'lodash';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import './tensor.scss';
+import { shape } from "prop-types";
 
 export namespace Tensor {
   export interface Props {
-    features: number[][][] | { shape: number[], array: number[] };
+    features: number[][][] | number[][] | { shape: number[], array: number[] };
     width: number;
     height: number;
     legend?: string[];
@@ -77,33 +78,84 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
   render(): JSX.Element {
     const { width, height, features, legend } = this.props;
     const { selection } = this.state;
-    const [rows, columns, channels] = features instanceof Array ? getRank(features) : features.shape;
-    const flatFeatures = features instanceof Array ? _.flatten(features) : createDimension(features.array, channels);
+    let [rows, columns, channels1, channels2] = features instanceof Array ? getRank(features) : features.shape;
+
+    const pick = (full: number[], shape: number[], selection: number[][]): number[] => {
+      const picked: number[] = [];
+      if (shape.length === 4) {
+        for (let x = selection[0][0]; x < selection[0][1]; ++x) {
+          for (let y = selection[1][0]; y < selection[1][1]; ++y) {
+            for (let z = selection[2][0]; z < selection[2][1]; ++z) {
+              for (let u = selection[3][0]; u < selection[3][1]; ++u) {
+                picked.push(full[x * shape[1] * shape[2] * shape[3] + y * shape[2] * shape[3] + z * shape[3] + u]);
+              }
+            }
+          }
+        }
+      }
+      else {
+        // TODO
+      }
+      return picked;
+    };
+
+    let min: number;
+    let max: number;
+    let selectedFeature: number[];
+    let slider: JSX.Element | '' = '';
+    if (columns === undefined) {
+      // Rank 1 tensor
+      columns = 1;
+      selectedFeature = features instanceof Array ? (features as []) : features.array;
+    }
+    else if (channels1 === undefined) {
+      // Rank 2 tensor
+      const flatFeatures = features instanceof Array ? _.flatten(features as number[][]) : features.array;
+
+      selectedFeature = flatFeatures;
+    }
+    else if (channels2 === undefined) {
+      // Rank 3 tensor
+      const flatFeatures = features instanceof Array ? _.flatten(features as number[][][]) : createDimension(features.array, channels1);
+      const marks = legend ? _.fromPairs(legend.map((key, i) => [i, key])) : _.times(channels1).map((v, i) => i.toString());
+      slider = legend || channels1 > 1 ? <Slider style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={8} marks={marks} step={1} included={false} onChange={this.onSelectionChanged} defaultValue={0} vertical /> : '';
+      selectedFeature = flatFeatures.map(feature => feature[selection]);
+    }
+    else {
+      // Rank 4 tensor
+      if (features instanceof Array) {
+        // TODO
+      }
+      else {
+        const flatFeatures = features.array;
+        selectedFeature = pick(flatFeatures, [rows, columns, channels1, channels2], [[0, rows], [0, columns], [0, 1], [0, 1]]);
+      }
+    }
+    [min, max] = selectedFeature.reduce((p, s) => [Math.min(p[0], s), Math.max(p[1], s)], [Number.MAX_VALUE, Number.MIN_VALUE]);
+
     const dx = (width - 1) / rows;
     const dy = (height - 1) / columns;
-    const [min, max] = flatFeatures.reduce((p, s) => [Math.min(p[0], s[selection]), Math.max(p[1], s[selection])], [Number.MAX_VALUE, Number.MIN_VALUE]);
-
-    const marks = legend ? _.fromPairs(legend.map((key, i) => [i, key])) : _.times(channels).map((v, i) => i.toString());
-    const slider = legend || channels > 1 ? <Slider style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={8} marks={marks} step={1} included={false} onChange={this.onSelectionChanged} defaultValue={0} vertical /> : '';
-
     const fillCanvas = (element: HTMLCanvasElement) => {
       if (element === null) return;
-      const selectedFeature = flatFeatures.map(feature => feature[selection]);
       if (comapareArrays(this.lastRenderedData, selectedFeature)) return;
 
       const ctx = element.getContext('2d');
       ctx.clearRect(0, 0, element.width, element.height);
       ctx.beginPath();
       ctx.strokeStyle = 'rgb(0,0,0)';
-      for (let iy = 0; iy < rows + 1; ++iy) {
-        const y = Math.floor(iy * dy) + 0.5;
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
+      if (dy > 2) {
+        for (let iy = 0; iy < rows + 1; ++iy) {
+          const y = Math.floor(iy * dy) + 0.5;
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+        }
       }
-      for (let ix = 0; ix < columns + 1; ++ix) {
-        const x = Math.floor(ix * dx) + 0.5;
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
+      if (dx > 2) {
+        for (let ix = 0; ix < columns + 1; ++ix) {
+          const x = Math.floor(ix * dx) + 0.5;
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+        }
       }
       ctx.stroke();
       // The features

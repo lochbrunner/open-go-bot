@@ -83,7 +83,8 @@ const mapDispatchToProps = (dispatch): Partial<Mnist.Props> => ({
 
 export const MnistApp = connect(mapStateToProps, mapDispatchToProps)(render);
 
-export const legend = _.times(10).map((v, i) => i.toString());
+export const outputLegend = _.times(10).map((v, i) => i.toString());
+export const inputLegend = ['gray value'];
 
 export const loader: Loader = (reporter, maxSamples) => {
   return new Promise<TrainingData>((resolve, reject) => {
@@ -99,3 +100,5 @@ export const createInitialState: () => MnistState = () => ({
   caret: -1,
   hasLoaded: false
 });
+
+export const createFeatures = (mnist: MnistState) => mnist.currentInput.pixels;

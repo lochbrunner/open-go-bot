@@ -22,7 +22,14 @@ export const createInitialState: () => Training = () => new EmptyData();
 export const reducers: (state: RootState, action: Action<actionTypes>) =>
     RootState = (state: RootState, action: Action<actionTypes>) => {
       if (action.type === Actions.UPDATE_TRAINING_PROGRESS) {
-        state.training.training = action.payload as Progress;
+        const payload = action.payload as Progress;
+        state.training.training.description = payload.description;
+        state.training.training.progress = payload.progress;
+        const dict = new Map<string, Model.Variable>();
+        state.graph.nodes.filter(n => n.type === 'variable')
+            .forEach((v: Model.Variable) => dict.set(v.id, v));
+        const {newWeights} = payload;
+        newWeights.forEach(n => dict.get(n.nodeId).content = n.values);
         return {...state};
       }
 

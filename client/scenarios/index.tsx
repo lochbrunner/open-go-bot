@@ -43,30 +43,31 @@ const renderScenario = (props: ScenarioProps) => {
     }
     const { training } = state;
     let renderer: React.ComponentType<any> | JSX.Element;
-    let legend: string[];
-    let featureFactory: () => number[][][];
+    let inputLegend: string[];
+    let outputLegend: string[];
+    let featureFactory: () => number[][][] | number[][];
     let dataProvider: DataProvider;
     if (match.params.scenario === 'go') {
         renderer = <Go.GoApp />;
-        legend = Go.legend;
+        inputLegend = Go.legend;
         featureFactory = () => Go.createFeatures(state.go.game);
     }
     else if (match.params.scenario === 'mnist') {
         renderer = <Mnist.MnistApp />;
-        legend = Mnist.legend;
+        outputLegend = Mnist.outputLegend;
+        inputLegend = Mnist.inputLegend;
         dataProvider = Mnist.dataProvider;
-        featureFactory = () => [];
+        featureFactory = () => Mnist.createFeatures(state.mnist);
     }
     else {
         renderer = <p>No scenario found with name {match.params.scenario}</p>;
         featureFactory = () => [];
-        legend = [];
     }
     return (
         <div className="scenarios">
             {renderer}
             <div className="graph-section">
-                <Graph inputLegend={legend} createFeatures={featureFactory} graph={state.graph} />
+                <Graph inputLegend={inputLegend} createFeatures={featureFactory} graph={state.graph} />
             </div>
             <div className="train">
                 <Button onClicked={() => trainingActions.train(dataProvider, state.graph)} style={{}} >Train</Button>

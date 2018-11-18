@@ -2,8 +2,7 @@ import * as tf from '@tensorflow/tfjs';
 import {Model, Rank, Tensor} from '@tensorflow/tfjs';
 
 import {MnistData} from '../../scenarios/mnist/actions/data';
-
-// import {MnistData} from './data';
+import {WeightUpdateInfo} from '../../utilities/progress';
 
 // Hyper-parameters.
 const LEARNING_RATE = .1;
@@ -100,7 +99,8 @@ const generateModel = (graph: Model.Graph) => {
 
 // Train the model.
 export async function train(
-    data: DataProvider, graph: Model.Graph, log: (text: string) => void) {
+    data: DataProvider, graph: Model.Graph,
+    log: (text: string, weights: WeightUpdateInfo[]) => void) {
   const returnCost = true;
 
   const {model, variables} = generateModel(graph);
@@ -111,7 +111,7 @@ export async function train(
       return loss(batch.labels, model(batch.xs)) as any;
     }, returnCost, variables);
 
-    log(`loss[${i}]: ${cost.dataSync()}`);
+    log(`loss[${i}]: ${cost.dataSync()}`, writeWeightsToGraph(graph));
 
     await tf.nextFrame();
   }
@@ -140,4 +140,13 @@ export function classesFromLabel(y) {
   const pred = y.argMax(axis);
 
   return Array.from(pred.dataSync());
+}
+
+function writeWeightsToGraph(graph: Model.Graph): WeightUpdateInfo[] {
+  return graph.nodes.filter(n => n.type === 'variable')
+      .map((node: Model.Variable) => {
+        const v = cache.get(node.id);
+        const values = Array.from(v.dataSync());
+        return {nodeId: node.id, values};
+      });
 }
