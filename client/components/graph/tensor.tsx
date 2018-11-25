@@ -105,7 +105,7 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
     let min: number;
     let max: number;
     let selectedFeature: number[];
-    let slider: JSX.Element | JSX.Element[] = [];
+    let slider: JSX.Element[] = [];
     if (columns === undefined) {
       // Rank 1 tensor
       columns = 1;
@@ -121,10 +121,11 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
       // Rank 3 tensor
       const flatFeatures = features instanceof Array ? _.flatten(features as number[][][]) : createDimension(features.array, channels1);
       const marks = legend ? _.fromPairs(legend.map((key, i) => [i, key])) : _.times(channels1).map((v, i) => i.toString());
-      slider = legend || channels1 > 1 ? <Slider
+      slider = legend || channels1 > 1 ? [<Slider
+        key={0}
         style={{ height, float: 'left', marginLeft: '10px' }}
         min={0} max={channels1} step={1} included={false}
-        onChange={this.onSelectionChanged.bind(this, 0)} defaultValue={0} vertical /> : [];
+        onChange={this.onSelectionChanged.bind(this, 0)} defaultValue={0} vertical />] : [];
       selectedFeature = flatFeatures.map(feature => feature[selection[0]]);
     }
     else {
@@ -136,8 +137,8 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
         const flatFeatures = features.array;
         selectedFeature = pick(flatFeatures, [rows, columns, channels1, channels2], [[0, rows], [0, columns], [selection[0], selection[0] + 1], [selection[1], selection[1] + 1]]);
 
-        slider.push(<Slider style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={channels1} step={1} defaultValue={0} onChange={this.onSelectionChanged.bind(this, 0)} vertical />);
-        slider.push(<Slider style={{ height, float: 'left', marginLeft: '30px' }} min={0} max={channels2} step={1} defaultValue={0} onChange={this.onSelectionChanged.bind(this, 1)} vertical />);
+        slider.push(<Slider key={0} style={{ height, float: 'left', marginLeft: '10px' }} min={0} max={channels1} step={1} defaultValue={0} onChange={this.onSelectionChanged.bind(this, 0)} vertical />);
+        slider.push(<Slider key={1} style={{ height, float: 'left', marginLeft: '30px' }} min={0} max={channels2} step={1} defaultValue={0} onChange={this.onSelectionChanged.bind(this, 1)} vertical />);
       }
     }
     [min, max] = selectedFeature.reduce((p, s) => [Math.min(p[0], s), Math.max(p[1], s)], [Number.MAX_VALUE, Number.MIN_VALUE]);
@@ -182,10 +183,10 @@ export class Tensor extends React.Component<Tensor.Props, Tensor.State> {
       }
     };
 
-    return <div className="tensor" style={{ width: `${width + (slider ? 100 : 0)}px` }}>
+    return <div className="tensor" style={{ width: `${width + slider.length * 35}px` }}>
       <canvas ref={fillCanvas} style={{ float: 'left' }} width={width} height={height} />
       {slider}
-      <div className="legend" style={{ width: '100%', marginTop: `${slider ? 15 : 10}px` }}>
+      <div className="legend" style={{ width: '100%', marginTop: `${slider ? 15 : 10} px` }}>
         <div className="range" >
           <span className="min label">{min.toPrecision(3)}</span>
           <span className="max label">{max.toPrecision(3)}</span>

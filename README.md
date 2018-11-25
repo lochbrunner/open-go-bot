@@ -53,3 +53,11 @@ Run
 ```sh
 yarn install
 ```
+
+## Build
+
+Run
+
+```sh
+yarn build
+```

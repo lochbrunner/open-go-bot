@@ -56,7 +56,7 @@ const render = (props: Mnist.Props) => {
           size={{ height: 400, width: 400 }}
           resolution={{ height: resolution, width: resolution }} />
         <p className="ground-truth">Ground Truth: {props.mnist.groundTruth}</p>
-        <p className="prediction">Prediction{prediction ? ` ${prediction.value} (${prediction.uncertainty * 100}%)` : ''}</p>
+        <p className="prediction">Prediction{prediction ? ` ${prediction.value}` : ''}</p>
       </div>
       <div tabIndex={0} onKeyDown={onKeyDown.bind(this)}>
         <Button onClicked={() => mnistActions.clearImage({})} >Clear</Button>

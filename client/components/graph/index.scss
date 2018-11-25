@@ -114,13 +114,35 @@ body {
     }
 
     >.body {
+      min-width: 190px;
+
       h2 {
         text-align: center;
         font-size: 21px;
         margin-top: 3px;
       }
 
-      min-width: 200px;
+      .node-config {
+        width: 200px;
+
+        ul {
+          list-style-type: none;
+          padding-left: 0;
+
+          label {
+            display: inline-block;
+            width: 40%;
+            text-align: right;
+          }
+
+          input,
+          select {
+            display: inline-block;
+            width: 50%;
+            margin-left: 10px;
+          }
+        }
+      }
     }
 
     // .variable {}

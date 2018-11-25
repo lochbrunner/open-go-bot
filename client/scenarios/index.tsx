@@ -67,7 +67,7 @@ const renderScenario = (props: ScenarioProps) => {
         <div className="scenarios">
             {renderer}
             <div className="graph-section">
-                <Graph inputLegend={inputLegend} createFeatures={featureFactory} graph={state.graph} />
+                <Graph inputLegend={inputLegend} createFeatures={featureFactory} graph={state.graph} graphActions={props.graphActions} />
             </div>
             <div className="train">
                 <Button onClicked={() => trainingActions.train(dataProvider, state.graph)} style={{}} >Train</Button>

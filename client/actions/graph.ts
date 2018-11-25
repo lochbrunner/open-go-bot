@@ -3,11 +3,21 @@ import * as Actions from '../constants/actions';
 
 export interface SetGraphPayload { newGraph: Model.Graph; }
 
-export type GraphPayload = SetGraphPayload;
+export interface UpdateGraphNode {
+  nodeId: string;
+  nodeType: Model.Node['type'];
+  propertyName: string;
+  newValue: number|string;
+}
+export type GraphPayload = SetGraphPayload|UpdateGraphNode;
 
 export const setGraph = createAction<SetGraphPayload>(Actions.GRAPH_SET);
 
+export const updateGraphNode =
+    createAction<UpdateGraphNode>(Actions.GRAPH_UPDATE_NODE);
+
 export const loadScenario = (scenario: string) => dispatch => {
+  // TODO: Load this from server
   const graph:
       SetGraphPayload = {newGraph: {loadedScenario: scenario, nodes: []}};
   console.log(`Loading scenario ${scenario}`);
