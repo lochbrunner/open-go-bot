@@ -1,7 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
 import {Model, Rank, Tensor} from '@tensorflow/tfjs';
 
-import {MnistData} from '../../scenarios/mnist/actions/data';
 import {WeightUpdateInfo} from '../../utilities/progress';
 
 // Hyper-parameters.
@@ -18,7 +17,7 @@ function loss(labels, ys) {
 
 function createDict(graph: Model.Graph): Map<string, Model.Node> {
   const dict = new Map<string, Model.Node>();
-  graph.nodes.forEach(node => dict.set(node.id, node));
+  graph.nodes.forEach(c => dict.set(c.node.id, c.node));
   return dict;
 }
 
@@ -33,22 +32,26 @@ const getVariable = (id: string, factory: () => tf.Tensor): tf.Variable => {
 
 const generateModel = (graph: Model.Graph, nodeOfInterest?: string) => {
   const dict = createDict(graph);
-  const input = dict.get(graph.input);
+  // const input = dict.get(graph.input);
+  const input = graph.nodes.find(c => c.node.type === 'input').node;
 
   const variables =
-      graph.nodes.filter(node => node.type === 'variable').map(node => {
-        const v = node as Model.Variable;
-        const {shape} = v;
-        if (v.init === 'normal') {
-          const {mean, stdDev} = v;
-          return getVariable(v.id, () => tf.randomNormal(shape, mean, stdDev));
-        } else if (v.init === 'uniform') {
-          const {min, max} = v;
-          return getVariable(v.id, () => tf.randomUniform(shape, min, max));
-        } else if (v.init === 'zero') {
-          return getVariable(v.id, () => tf.zeros(shape));
-        }
-      });
+      graph.nodes.filter(c => c.node.type === 'variable')
+          .map(c => c.node)
+          .map(node => {
+            const v = node as Model.Variable;
+            const {shape} = v;
+            if (v.init === 'normal') {
+              const {mean, stdDev} = v;
+              return getVariable(
+                  v.id, () => tf.randomNormal(shape, mean, stdDev));
+            } else if (v.init === 'uniform') {
+              const {min, max} = v;
+              return getVariable(v.id, () => tf.randomUniform(shape, min, max));
+            } else if (v.init === 'zero') {
+              return getVariable(v.id, () => tf.zeros(shape));
+            }
+          });
 
   // Create Model
   // TODO: Traverse from output to input
@@ -67,7 +70,8 @@ const generateModel = (graph: Model.Graph, nodeOfInterest?: string) => {
         }
       } else if (node.type === 'convolution') {
         const variable = cache.get(node.inputs['kernel']);
-        prevTensor = prevTensor.conv2d(variable as any, 1, 'same');
+        prevTensor =
+            prevTensor.conv2d(variable as any, node.strides, node.padding);
       } else if (node.type === 'relu') {
         prevTensor = prevTensor.relu();
       } else if (node.type === 'max-pool') {
@@ -152,14 +156,15 @@ function getActivations(
   {
     // For now only the output
     const outputNode =
-        graph.nodes.find(n => n.type === 'output') as Model.Output;
+        graph.nodes.find(n => n.node.type === 'output').node as Model.Output;
     const pred = tf.tidy(() => {
       return generateModel(graph).model(x);
     });
     const values = Array.from(pred.dataSync()) as number[];
     activations.set(outputNode.id, {shape: pred.shape, values});
   }
-  for (let node of graph.nodes) {
+  for (let container of graph.nodes) {
+    const {node} = container;
     if (node['inputs'] !== undefined) {
       const pred = tf.tidy(() => {
         return generateModel(graph, node.id).model(x);
@@ -172,7 +177,8 @@ function getActivations(
 }
 
 function writeWeightsToGraph(graph: Model.Graph): WeightUpdateInfo[] {
-  return graph.nodes.filter(n => n.type === 'variable')
+  return graph.nodes.filter(n => n.node.type === 'variable')
+      .map(n => n.node)
       .map((node: Model.Variable) => {
         const v = cache.get(node.id);
         const values = Array.from(v.dataSync());

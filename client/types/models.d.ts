@@ -1,7 +1,10 @@
 /// <reference path='./go.d.ts' />
 /// <reference path='./mnist.d.ts' />
 
-// import {Tensor} from '@tensorflow/tfjs-core/dist/tensor';
+declare interface Vector2 {
+  x: number;
+  y: number;
+}
 
 declare interface TrainingsData {
   features: number[][][][];
@@ -24,6 +27,21 @@ declare interface Prediction {
 declare namespace Model {
   type Node =
       Convolution|Input|Output|Flatten|MaxPool|Relu|MatMul|Add|Reshape|Variable;
+
+  interface ConnectionConstraints {
+    shape: (number|undefined)[];  // Undefined means that there is no constraint
+                                  // for that rank
+    valid: {state: 'invalid', reason: string}|{state: 'valid'};
+  }
+
+  interface NodeContainer {
+    node: Model.Node;
+    position: Vector2;
+
+    connections?:
+        {inputs: ConnectionConstraints[], outputs: ConnectionConstraints[]};
+  }
+
   interface BaseNode {
     outputs: string[];
     name: string;
@@ -73,9 +91,10 @@ declare namespace Model {
 
   interface Convolution extends OperationNode {
     type: 'convolution';
-    filters: number;
+    filters: number;  // Given by weight variable
     strides: number;
-    depth: number;
+    padding: 'valid'|'same';
+    rank: number;  // Convolution1 or Convolution2, ... ?
     inputs: {'orig': string, 'kernel': string};
     weights?: {kernel: number[], bias: number[]};  // Deprecated
     activation?: 'relu';                           // Deprecated
@@ -122,9 +141,10 @@ declare namespace Model {
 
   interface Graph {
     loadedScenario?: string;
-    input?: string;  // Or should that be always the same -> convention?
+    isValid: boolean;
+    // input?: string;  // Or should that be always the same -> convention?
     // output?: string;  // Or should that be always the same -> convention?
-    nodes: Node[];
+    nodes: NodeContainer[];
   }
 }
 

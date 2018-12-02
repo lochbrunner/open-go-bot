@@ -23,7 +23,8 @@ export default function createInitialState(): Model.Graph {
       bias: Array(1).fill(0)
     },  // width*height*input_channel*output_channel (= filter)
     activation: 'relu',
-    depth: 999,
+    rank: 2,
+    padding: 'same',
     outputs: [],
     inputs: {kernel: '', orig: ''}
   };
@@ -57,5 +58,5 @@ export default function createInitialState(): Model.Graph {
   // output.inputs. = [flatten.id];
   flatten.outputs.push(output.id);
 
-  return {input: input.id, nodes};
+  return {isValid: false, nodes};
 }

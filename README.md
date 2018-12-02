@@ -9,7 +9,7 @@ This project is still work in progress. That means some important features are s
 * Editing graphs
 * Deployment to AWS
 * OpenAuth integration
-* Upload models (inclusive weights)
+* Sync models (inclusive weights) and share
 * Generic architecture in order to support multiple scenarios
 
 ## Scenarios

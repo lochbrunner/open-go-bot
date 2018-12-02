@@ -26,7 +26,8 @@ export const reducers: (state: RootState, action: Action<actionTypes>) =>
         state.training.training.description = payload.description;
         state.training.training.progress = payload.progress;
         const dict = new Map<string, Model.Variable>();
-        state.graph.nodes.filter(n => n.type === 'variable')
+        state.graph.nodes.map(c => c.node)
+            .filter(node => node.type === 'variable')
             .forEach((v: Model.Variable) => dict.set(v.id, v));
         const {newWeights} = payload;
         newWeights.forEach(n => dict.get(n.nodeId).content = n.values);

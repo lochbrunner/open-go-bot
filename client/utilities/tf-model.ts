@@ -16,7 +16,7 @@ import {assert, assertShapesMatch} from '@tensorflow/tfjs-core/dist/util';
 
 function createDict(graph: Model.Graph): Map<string, Model.Node> {
   const dict = new Map<string, Model.Node>();
-  graph.nodes.forEach(node => dict.set(node.id, node));
+  graph.nodes.forEach(c => dict.set(c.node.id, c.node));
   return dict;
 }
 
@@ -25,7 +25,8 @@ export function createModel(graph: Model.Graph, rate: number = 0.03) {
   const model = tf.sequential();
 
   const dict = createDict(graph);
-  let nodes: Model.Node[] = [dict.get(graph.input)];
+  let nodes: Model.Node[] =
+      graph.nodes.filter(c => c.node.type === 'input').map(c => c.node);
 
   while (nodes.length > 0) {
     const node = nodes.pop();
@@ -64,7 +65,8 @@ export function createModel(graph: Model.Graph, rate: number = 0.03) {
 function nodesMap(graph: Model.Graph) {
   const dict = createDict(graph);
   const map = new Map<string, Model.Node>();
-  const nodes: Model.Node[] = [dict.get(graph.input)];
+  const nodes: Model.Node[] =
+      graph.nodes.filter(c => c.node.type === 'input').map(c => c.node);
   while (nodes.length > 0) {
     const node = nodes.pop();
     if (node === undefined) break;
@@ -76,7 +78,6 @@ function nodesMap(graph: Model.Graph) {
 
 // Deprecated
 export function writeWeightsToGraph(graph: Model.Graph, model: tf.Model) {
-  if (!graph.input) return;
   const dict = createDict(graph);
   const nodes = nodesMap(graph);
 
@@ -118,7 +119,6 @@ export function writeWeightsToGraph(graph: Model.Graph, model: tf.Model) {
 
 // Deprecated
 export function loadWeightsFromGraph(graph: Model.Graph, model: tf.Model) {
-  if (!graph.input) return;
   if (model === undefined) {
     return;
   }

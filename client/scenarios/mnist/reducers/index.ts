@@ -53,11 +53,11 @@ export const reducers =
         const payload = action.payload as Actions.ActionUpdatePrediction;
         // TODO: Refactor
         // Update graph activations
-        const newNodes = state.graph.nodes.map(node => {
-          if (payload.activations.has(node.id))
-            (node as Model.OperationNode).activations =
-                payload.activations.get(node.id);
-          return node;
+        const newNodes = state.graph.nodes.map(c => {
+          if (payload.activations.has(c.node.id))
+            (c.node as Model.OperationNode).activations =
+                payload.activations.get(c.node.id);
+          return c;
         });
         return {
           ...state,

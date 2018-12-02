@@ -33,7 +33,7 @@ export const reducers: (state: RootState, action: ActionTypes) => RootState =
         return {...state, graph: payload.newGraph};
       } else if (action.type === Constants.GRAPH_UPDATE_NODE) {
         const nodeDict = new Map<string, Model.Node>();
-        for (let node of state.graph.nodes) nodeDict.set(node.id, node);
+        for (let c of state.graph.nodes) nodeDict.set(c.node.id, c.node);
         const payload = action.payload as UpdateGraphNode;
         const shape = calculateShape(
             nodeDict.get(payload.nodeId), payload.propertyName,

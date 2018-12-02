@@ -1,23 +1,16 @@
 import * as React from "react";
 import * as _ from 'lodash';
-import * as tf from '@tensorflow/tfjs';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import "react-tabs/style/react-tabs.css";
 
 import { Editor, Node, Config, ChangeAction } from 'react-flow-editor';
-
-import { createModel, loadWeightsFromGraph } from '../../utilities/tf-model';
+import { Port } from "react-flow-editor/dist/types";
 
 import { Tensor } from './tensor';
 import * as GraphActions from '../../actions/graph';
 
 import './index.scss';
-
-function createDict(graph: Model.Graph): Map<string, Model.Node> {
-  const dict = new Map<string, Model.Node>();
-  graph.nodes.forEach(node => dict.set(node.id, node));
-  return dict;
-}
+import { createDictFromGraph } from "../../utilities/toolbox";
 
 export namespace Graph {
   export interface Props {
@@ -30,30 +23,20 @@ export namespace Graph {
   }
 }
 
-// function findFirst(dict: Map<string, Model.Node>, start: Model.Node, predicate: (node: Model.Node) => boolean) {
-//   const nodes = [start];
-//   while (nodes.length > 0) {
-//     const node = nodes.pop();
-//     if (predicate(node)) return node;
-//     nodes.push(...node.outputs.map(output => dict.get(output)));
-//   }
-//   return undefined;
-// }
-
-function traverseGraphBackwards(graph: Model.Graph, callback: (node: Model.Node) => void) {
-  if (graph === undefined || !graph.input)
+function traverseGraphBackwards(graph: Model.Graph, callback: (node: Model.NodeContainer) => void) {
+  if (graph === undefined)
     return;
-  const dict = createDict(graph);
+  const dict = createDictFromGraph(graph);
   // Add an unique index to each
-  const queue: Model.Node[] = [graph.nodes.find(n => n.type === 'output')];
+  const queue: Model.NodeContainer[] = [graph.nodes.find(n => n.node.type === 'output')];
   while (queue.length > 0) {
-    const node = queue.shift();
-    if (node === undefined) break;
-    if (node['inputs'] !== undefined) {
+    const container = queue.shift();
+    if (container === undefined) break;
+    if (container.node['inputs'] !== undefined) {
 
-      queue.push(..._.values(node['inputs']).map(input => dict.get(input)));
+      queue.push(..._.values(container.node['inputs']).map(input => dict.get(input)));
     }
-    callback(node);
+    callback(container);
   }
 }
 
@@ -93,9 +76,9 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     // this.model = props.graph.input ? createModel(props.graph) : undefined;
   }
 
-  private resolver(dict: Map<string, Model.Node>, updateConfig: UpdateConfig, flowNode: { payload: { node: Model.Node } }): JSX.Element {
+  private resolver(dict: Map<string, Model.Node>, updateConfig: UpdateConfig, flowNode: { payload: { node: Model.NodeContainer } }): JSX.Element {
     const { createFeatures, graph, inputLegend } = this.props;
-    const { node } = flowNode.payload;
+    const { node } = flowNode.payload.node;
     const blank = <span>No Tensor data available</span>;
     if (node.id === 'input') {
       const features = createFeatures();
@@ -162,7 +145,9 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
               <ul>
                 <li>{numberGroup('filters', node.filters, 1, updateConfig.bind(this, node.id, node.type, 'filters'))}</li>
                 <li>{numberGroup('strides', node.strides, 1, updateConfig.bind(this, node.id, node.type, 'strides'))}</li>
-                <li>{numberGroup('depth', node.depth, 1, updateConfig.bind(this, node.id, node.type, 'depth'))}</li>
+                <li>{checkBox('padding', ['same', 'valid'], 0, updateConfig.bind(this, node.id, node.type, 'padding'))}</li>
+                <li>{numberGroup('rank', node.rank, 1, updateConfig.bind(this, node.id, node.type, 'rank'))}</li>
+
               </ul>
             );
           }
@@ -224,48 +209,47 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
 
   render(): JSX.Element {
     const { graph } = this.props;
-    // loadWeightsFromGraph(graph, this.model);
-    const dict = createDict(graph);
+    const dict = createDictFromGraph(graph);
 
     const nodes: Node[] = [];
 
-    // TODO: Find better location of that
-    const positioning = new Map<string, Vector2d>();
-    positioning.set('input', { x: 50, y: 100 });
-    positioning.set('conv2d-1-weights', { x: 50, y: 200 });
-    positioning.set('conv2d-1', { x: 400, y: 100 });
-    positioning.set('relu-1', { x: 700, y: 100 });
-    positioning.set('max-pool-1', { x: 1000, y: 100 });
-
-    positioning.set('conv2d-2-weights', { x: 50, y: 400 });
-    positioning.set('conv2d-2', { x: 400, y: 300 });
-    positioning.set('relu-2', { x: 700, y: 300 });
-    positioning.set('max-pool-2', { x: 1000, y: 300 });
-
-    positioning.set('reshape-3', { x: 400, y: 500 });
-    positioning.set('mat-mul-3', { x: 700, y: 500 });
-    positioning.set('add-3', { x: 1000, y: 500 });
-    positioning.set('output', { x: 1200, y: 500 });
-
-    positioning.set('mat-mul-3-weight', { x: 400, y: 700 });
-    positioning.set('add-3-weights', { x: 700, y: 700 });
-
-    traverseGraphBackwards(graph, node => {
-      const id = `${node.name}.${node.id}`;
+    traverseGraphBackwards(graph, c => {
+      const id = `${c.node.name}.${c.node.id}`;
       const createId = (n: Model.Node) => `${n.name}.${n.id}`;
-      const inputs = node['inputs'] !== undefined ? _.toPairs((node as Model.OperationNode).inputs).map(([inputName, inputNode]) => ({ connection: [{ nodeId: createId(dict.get(inputNode)), port: 0 }], name: inputName })) : [];
-      const outputs = node.outputs.filter(o => o !== 'result').map((o, i) => ({ connection: [{ nodeId: createId(dict.get(o)), port: i }], name: 'output' }));
-      const position = positioning.get(node.id) || { x: 0, y: 0 };
+      const connectionLabel = (name: string, i: number, connections: Model.ConnectionConstraints[]) => `${name} ${connections[i] ? connections[i].shape.map(d => d === undefined ? '?' : d.toString()).join('x') : ''}`;
+      const inputs = c.node['inputs'] !== undefined ?
+        _.toPairs((c.node as Model.OperationNode).inputs)
+          .map(([inputName, inputNode], i): Port => ({
+            connection: [{
+              nodeId: createId(dict.get(inputNode).node),
+              port: 0,
+              classNames: [c.connections.inputs.length > i ? c.connections.inputs[i].valid.state : 'invalid'],
+              notes: c.connections.inputs.length > i ? c.connections.inputs[i].valid['reason'] : 'Not found'
+            }],
+            name: connectionLabel(inputName, i, c.connections.inputs)
+          })) : [];
+      const outputs: Node['outputs'] = c.node.outputs
+        .filter(o => o !== 'result')
+        .map((o, i): Port => ({
+          connection: [{
+            nodeId: createId(dict.get(o).node),
+            port: i,
+            classNames: [c.connections.outputs[i].valid.state],
+            notes: c.connections.outputs[i].valid['reason']
+          }],
+          name: connectionLabel('output', i, c.connections ? c.connections.outputs : [])
+        }));
+
       nodes.push({
         id,
         properties: { display: 'only-dots' },
-        classNames: [node.type],
-        name: node.name,
-        payload: { node },
-        type: node.type,
+        classNames: [c.node.type],
+        name: c.node.name,
+        payload: { node: c },
+        type: c.node.type,
         inputs,
         outputs,
-        position
+        position: c.position
       });
     });
 

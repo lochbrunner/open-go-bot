@@ -53,8 +53,6 @@ body {
 }
 
 @mixin node-type($hue) {
-  $hue-add: 0;
-
   border-color: hsl($hue, 100%, 91%);
 
   >.header {
@@ -64,8 +62,6 @@ body {
 
 
 .react-flow-editor {
-  // height: 500px; // Override this in our app
-  // width: 800px; // Override this in our app
   position: absolute;
   top: 0;
   bottom: 0;
@@ -144,8 +140,6 @@ body {
         }
       }
     }
-
-    // .variable {}
   }
 }
 
@@ -185,4 +179,10 @@ body {
 
 div.icon::before {
   box-sizing: content-box;
+}
+
+svg.connections {
+  path.invalid {
+    stroke: #f98;
+  }
 }
