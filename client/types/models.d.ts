@@ -34,12 +34,15 @@ declare namespace Model {
     valid: {state: 'invalid', reason: string}|{state: 'valid'};
   }
 
-  interface NodeContainer {
-    node: Model.Node;
+
+  interface NodeContainer<T = Model.Node> {
+    node: T;
     position: Vector2;
 
-    connections?:
-        {inputs: ConnectionConstraints[], outputs: ConnectionConstraints[]};
+    connections?: {
+      inputs: Map<string, ConnectionConstraints>,
+      outputs: Map<string, ConnectionConstraints>
+    };
   }
 
   interface BaseNode {

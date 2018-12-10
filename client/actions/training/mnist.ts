@@ -1,5 +1,6 @@
 import * as tf from '@tensorflow/tfjs';
-import {Model, Rank, Tensor} from '@tensorflow/tfjs';
+import {Tensor} from '@tensorflow/tfjs';
+import * as _ from 'lodash';
 
 import {WeightUpdateInfo} from '../../utilities/progress';
 
@@ -22,6 +23,7 @@ function createDict(graph: Model.Graph): Map<string, Model.Node> {
 }
 
 const cache = new Map<string, tf.Variable>();
+let lastHash = '';
 
 const getVariable = (id: string, factory: () => tf.Tensor): tf.Variable => {
   if (cache.has(id)) return cache.get(id);
@@ -30,9 +32,27 @@ const getVariable = (id: string, factory: () => tf.Tensor): tf.Variable => {
   return variable;
 };
 
+const hashModel = (graph: Model.Graph): string => {
+  let hash = '';
+  for (let c of graph.nodes) {
+    const {node} = c;
+    hash += _.values(_.omit(node, ['content'])).map(k => k.toString()).join();
+  }
+
+  return hash;
+};
+
 const generateModel = (graph: Model.Graph, nodeOfInterest?: string) => {
+  const hash = hashModel(graph);
+  if (hash !== lastHash) {
+    console.log('Clearing cache');
+    lastHash = hash;
+    cache.forEach(v => v.dispose());
+    cache.clear();
+  }
+  // console.log(`hash: ${hash}`);
   const dict = createDict(graph);
-  // const input = dict.get(graph.input);
+
   const input = graph.nodes.find(c => c.node.type === 'input').node;
 
   const variables =
@@ -107,6 +127,10 @@ const generateModel = (graph: Model.Graph, nodeOfInterest?: string) => {
 export async function train(
     data: DataProvider, graph: Model.Graph,
     log: (text: string, weights: WeightUpdateInfo[]) => void) {
+  if (!graph.isValid) {
+    console.warn('Training broken graph');
+    return;
+  }
   const returnCost = true;
 
   const {model, variables} = generateModel(graph);
@@ -125,6 +149,10 @@ export async function train(
 
 // Predict the digit number from a batch of input images.
 export function predict(graph: Model.Graph, x): Prediction {
+  if (!graph.isValid) {
+    console.warn('Evaluating broken graph');
+    return;
+  }
   const m = generateModel(graph).model(x);
   const pred = tf.tidy(() => {
     const axis = 1;

@@ -14,6 +14,7 @@ export { reducers } from './reducers';
 import { Button } from '../../components/button';
 import { KEY_CODE_ARROW_LEFT, KEY_CODE_ARROW_RIGHT } from '../../commons/constants';
 import { MnistData } from './actions/data';
+import { CheckButton } from '../../components/check-button';
 
 require('./index.scss');
 
@@ -33,7 +34,14 @@ const render = (props: Mnist.Props) => {
   const resolution = 28;
   const enableStepping = props.mnist.hasLoaded;
   const { mnistActions } = props;
-  const showImage = index => mnistActions.showImage(dataProvider, index);
+  const predict = (pixels: number[][]) => props.trainingActions.predictAction(props.graph, props.mnistActions.updatePrediction, pixels);
+  const showImage = index => {
+    if (props.mnist.autoPredict)
+      mnistActions.showImage(dataProvider, index, predict);
+
+    else
+      mnistActions.showImage(dataProvider, index);
+  };
   const onKeyDown = (event: KeyboardEvent) => {
     switch (event.keyCode) {
       case KEY_CODE_ARROW_RIGHT:
@@ -64,7 +72,8 @@ const render = (props: Mnist.Props) => {
         <Button disabled={!enableStepping || props.mnist.caret <= 0} onClicked={() => showImage(props.mnist.caret - 1)} >Previous</Button>
         <Button disabled={!enableStepping} onClicked={() => showImage(props.mnist.caret)} >Reload</Button>
         <Button disabled={!enableStepping} onClicked={() => showImage(props.mnist.caret + 1)} >Next</Button>
-        <Button onClicked={() => props.trainingActions.predictAction(props.graph, props.mnistActions.updatePrediction, props.mnist.currentInput.pixels)}>Predict</Button>
+        <Button onClicked={() => predict(props.mnist.currentInput.pixels)}>Predict</Button>
+        <CheckButton onSwitched={mnistActions.toggleAutoPredict} checked={props.mnist.autoPredict}>Auto Predict</CheckButton>
       </div>
     </div >
   );
@@ -98,7 +107,8 @@ export const createInitialState: () => MnistState = () => ({
   },
   groundTruth: '-',
   caret: -1,
-  hasLoaded: false
+  hasLoaded: false,
+  autoPredict: false
 });
 
 export const createFeatures = (mnist: MnistState) => mnist.currentInput.pixels;

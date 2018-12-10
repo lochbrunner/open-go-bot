@@ -40,7 +40,7 @@ function traverseGraphBackwards(graph: Model.Graph, callback: (node: Model.NodeC
   }
 }
 
-const checkBox = (label: string, options: string[], value: number, onUpdate: (value: string) => void) => (
+const checkBox = (label: string, options: string[], value: string, onUpdate: (value: string) => void) => (
   <div className="form-group">
     <label htmlFor={`${label}Select`}>{label}</label>
     <select className="form-control" value={value} id={`${label}Select`} onChange={e => onUpdate(e.target.value)}>
@@ -69,11 +69,9 @@ const numberGroup = (label: string, value: number, step: number, onUpdate: (valu
 type UpdateConfig = (nodeId: string, nodeType: Model.Node['type'], property: string, value: string | number) => void;
 
 export class Graph extends React.Component<Graph.Props, Graph.State> {
-  // private model: tf.Model;
 
   constructor(props?: Graph.Props, context?: any) {
     super(props, context);
-    // this.model = props.graph.input ? createModel(props.graph) : undefined;
   }
 
   private resolver(dict: Map<string, Model.Node>, updateConfig: UpdateConfig, flowNode: { payload: { node: Model.NodeContainer } }): JSX.Element {
@@ -90,21 +88,21 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
       const config = () => {
         if (node.init === 'normal')
           return <ul>
-            <li>{checkBox('distribution', ['normal', 'uniform', 'zero'], 0, updateConfig.bind(this, node.id, node.type, 'distribution'))}</li>
+            <li>{checkBox('distribution', ['normal', 'uniform', 'zero'], 'normal', updateConfig.bind(this, node.id, node.type, 'init'))}</li>
             <li>{inputGroup('shape', node.shape.join(' x '), updateConfig.bind(this, node.id, node.type, 'shape'))}</li>
             <li>{numberGroup('mean', node.mean, 0.01, updateConfig.bind(this, node.id, node.type, 'mean'))}</li>
             <li>{numberGroup('stdDev', node.stdDev, 0.01, updateConfig.bind(this, node.id, node.type, 'stdDev'))}</li>
           </ul >;
         else if (node.init === 'uniform')
           return <ul>
-            <li>{checkBox('distribution', ['normal', 'uniform', 'zero'], 1, updateConfig.bind(this, node.id, node.type, 'distribution'))}</li>
+            <li>{checkBox('distribution', ['normal', 'uniform', 'zero'], 'uniform', updateConfig.bind(this, node.id, node.type, 'init'))}</li>
             <li>{inputGroup('shape', node.shape.join(' x '), updateConfig.bind(this, node.id, node.type, 'shape'))}</li>
             <li>{numberGroup('min', node.min, 0.01, updateConfig.bind(this, node.id, node.type, 'min'))}</li>
             <li>{numberGroup('max', node.max, 0.01, updateConfig.bind(this, node.id, node.type, 'max'))}</li>
           </ul>;
         else if (node.init === 'zero')
           return <ul>
-            <li>{checkBox('distribution', ['normal', 'uniform', 'zero'], 2, updateConfig.bind(this, node.id, node.type, 'distribution'))}</li>
+            <li>{checkBox('distribution', ['normal', 'uniform', 'zero'], 'zero', updateConfig.bind(this, node.id, node.type, 'init'))}</li>
             <li>{inputGroup('shape', node.shape.join(' x '), updateConfig.bind(this, node.id, node.type, 'shape'))}</li>
           </ul>;
       };
@@ -145,9 +143,8 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
               <ul>
                 <li>{numberGroup('filters', node.filters, 1, updateConfig.bind(this, node.id, node.type, 'filters'))}</li>
                 <li>{numberGroup('strides', node.strides, 1, updateConfig.bind(this, node.id, node.type, 'strides'))}</li>
-                <li>{checkBox('padding', ['same', 'valid'], 0, updateConfig.bind(this, node.id, node.type, 'padding'))}</li>
+                <li>{checkBox('padding', ['same', 'valid'], node.padding, updateConfig.bind(this, node.id, node.type, 'padding'))}</li>
                 <li>{numberGroup('rank', node.rank, 1, updateConfig.bind(this, node.id, node.type, 'rank'))}</li>
-
               </ul>
             );
           }
@@ -216,17 +213,17 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     traverseGraphBackwards(graph, c => {
       const id = `${c.node.name}.${c.node.id}`;
       const createId = (n: Model.Node) => `${n.name}.${n.id}`;
-      const connectionLabel = (name: string, i: number, connections: Model.ConnectionConstraints[]) => `${name} ${connections[i] ? connections[i].shape.map(d => d === undefined ? '?' : d.toString()).join('x') : ''}`;
+      const connectionLabel = (name: string, connections: Map<string, Model.ConnectionConstraints>) => `${name} ${connections.has(name) ? connections.get(name).shape.map(d => d === undefined ? '?' : d.toString()).join('x') : ''}`;
       const inputs = c.node['inputs'] !== undefined ?
         _.toPairs((c.node as Model.OperationNode).inputs)
-          .map(([inputName, inputNode], i): Port => ({
+          .map(([inputName, inputNode]): Port => ({
             connection: [{
               nodeId: createId(dict.get(inputNode).node),
               port: 0,
-              classNames: [c.connections.inputs.length > i ? c.connections.inputs[i].valid.state : 'invalid'],
-              notes: c.connections.inputs.length > i ? c.connections.inputs[i].valid['reason'] : 'Not found'
+              classNames: [c.connections.inputs.has(inputName) ? c.connections.inputs.get(inputName).valid.state : 'invalid'],
+              notes: c.connections.inputs.has(inputName) ? c.connections.inputs.get(inputName).valid['reason'] : 'Not found'
             }],
-            name: connectionLabel(inputName, i, c.connections.inputs)
+            name: connectionLabel(inputName, c.connections.inputs)
           })) : [];
       const outputs: Node['outputs'] = c.node.outputs
         .filter(o => o !== 'result')
@@ -234,10 +231,10 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
           connection: [{
             nodeId: createId(dict.get(o).node),
             port: i,
-            classNames: [c.connections.outputs[i].valid.state],
-            notes: c.connections.outputs[i].valid['reason']
+            classNames: [c.connections.outputs.get('output').valid.state],
+            notes: c.connections.outputs.get('output').valid['reason']
           }],
-          name: connectionLabel('output', i, c.connections ? c.connections.outputs : [])
+          name: connectionLabel('output', c.connections ? c.connections.outputs : new Map())
         }));
 
       nodes.push({
@@ -254,7 +251,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     });
 
     const updateConfig: UpdateConfig = (nodeId: string, nodeType: Model.Node['type'], property: string, value: string | number) => {
-      this.props.graphActions.updateGraphNode({ nodeId, newValue: value, nodeType, propertyName: property });
+      this.props.graphActions.checkUpdateGraphNode({ nodeId, newValue: value, nodeType, propertyName: property }, graph, dict);
     };
 
     const graphConfig: Config = {

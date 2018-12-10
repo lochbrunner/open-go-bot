@@ -20,10 +20,12 @@ export interface ActionUpdatePixelPayload {
   value: number;
 }
 
+export interface ToggleAutoPredictPayload { nextValue: boolean; }
+
 export type ActionUpdatePrediction = Prediction;
 
 export type ActionPayload = ActionUpdateImagePayload|ActionUpdatePixelPayload|
-    ActionEmptyPayload|ActionUpdatePrediction;
+    ActionEmptyPayload|ActionUpdatePrediction|ToggleAutoPredictPayload;
 
 export const updateImage =
     createAction<ActionUpdateImagePayload>(Actions.MNIST_UPDATE_IMAGE);
@@ -40,6 +42,9 @@ export const mnistLoadTrainingDataFinished =
 export const updatePrediction =
     createAction<ActionUpdatePrediction>(Actions.MNIST_UPDATE_PREDICTION);
 
+export const toggleAutoPredict =
+    createAction<ToggleAutoPredictPayload>(Actions.MNIST_TOGGLE_AUTO_PREDICT);
+
 export const loadTrainingsData = (dataProvider: DataProvider) => {
   return dispatch => {
     dataProvider.load().then(() => {
@@ -48,14 +53,18 @@ export const loadTrainingsData = (dataProvider: DataProvider) => {
   };
 };
 
-export const showImage = (dataProvider: DataProvider, index: number) => {
-  return dispatch => {
-    const img = dataProvider.getSample(index);
-    const flatData = Array.prototype.slice.call(img.feature) as number[];
-    const labels = Array.prototype.slice.call(img.label);
-    const groundTruth = argMax(labels);
+export const showImage =
+    (dataProvider: DataProvider, index: number,
+     callback?: (pixels: number[][]) => void) => {
+      return dispatch => {
+        const img = dataProvider.getSample(index);
+        const flatData = Array.prototype.slice.call(img.feature) as number[];
+        const labels = Array.prototype.slice.call(img.label);
+        const groundTruth = argMax(labels);
 
-    dispatch(
-        updateImage({pixels: make2d(flatData, 28), caret: index, groundTruth}));
-  };
-};
+        const pixels = make2d(flatData, 28);
+
+        dispatch(updateImage({pixels, caret: index, groundTruth}));
+        if (callback) callback(pixels);
+      };
+    };

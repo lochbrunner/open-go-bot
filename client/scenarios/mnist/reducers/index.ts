@@ -64,6 +64,12 @@ export const reducers =
           graph: {...state.graph, nodes: newNodes},
           mnist: {...state.mnist, prediction: payload}
         };
+      } else if (action.type === Constants.MNIST_TOGGLE_AUTO_PREDICT) {
+        const payload = action.payload as Actions.ToggleAutoPredictPayload;
+        return {
+          ...state,
+          mnist: {...state.mnist, autoPredict: payload.nextValue}
+        };
       }
       return state;
     };

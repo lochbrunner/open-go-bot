@@ -4,6 +4,7 @@ declare interface MnistState {
   hasLoaded: boolean;
   groundTruth: string;
   prediction?: Prediction;
+  autoPredict: boolean;
 
   // dataProvider: DataProvider;
 }

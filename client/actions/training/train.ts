@@ -47,6 +47,7 @@ export type Loader =
     (reporter: (progress: Progress) => any, maxSamples: number) =>
         Promise<TrainingData>;
 
+// Deprecated
 export async function trainOnRecords(
     loader: Loader, dispatch: (ActionFunctions) => void, graph: Model.Graph) {
   const reporter = (progress: Progress) =>
