@@ -70,7 +70,10 @@ const renderScenario = (props: ScenarioProps) => {
                 <Graph inputLegend={inputLegend} createFeatures={featureFactory} graph={state.graph} graphActions={props.graphActions} />
             </div>
             <div className="train">
-                <Button onClicked={() => trainingActions.train(dataProvider, state.graph)} style={{}} >Train</Button>
+                <Button
+                    disabled={!state.graph.isValid}
+                    onClicked={() => trainingActions.train(dataProvider, state.graph)}
+                    style={{}} >Train</Button>
                 <p>{training.training.description}</p>
                 <ProgressBar active={true} now={training.training.progress.finished / training.training.progress.total * 100} label={`${training.training.progress.finished} of ${training.training.progress.total} `} />
             </div>

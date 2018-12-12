@@ -1,7 +1,7 @@
 {
-  "name": "open-go-bot",
+  "name": "ai-platform",
   "version": "0.0.0",
-  "description": "",
+  "description": "A platform for designing, training and sharing AI models",
   "scripts": {
     "start": "webpack-dev-server --debug --devtool cheap-module-source-map --output-pathinfo --history-api-fallback --hot --inline --progress --colors --port 3000",
     "build": "webpack -p",

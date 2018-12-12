@@ -68,6 +68,7 @@ const numberGroup = (label: string, value: number, step: number, onUpdate: (valu
 
 type UpdateConfig = (nodeId: string, nodeType: Model.Node['type'], property: string, value: string | number) => void;
 
+// TODO: Use make a pure function out of it and use React.memo() when upgraded to React@16.6
 export class Graph extends React.Component<Graph.Props, Graph.State> {
 
   constructor(props?: Graph.Props, context?: any) {
@@ -213,7 +214,9 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     traverseGraphBackwards(graph, c => {
       const id = `${c.node.name}.${c.node.id}`;
       const createId = (n: Model.Node) => `${n.name}.${n.id}`;
-      const connectionLabel = (name: string, connections: Map<string, Model.ConnectionConstraints>) => `${name} ${connections.has(name) ? connections.get(name).shape.map(d => d === undefined ? '?' : d.toString()).join('x') : ''}`;
+      const createShapeLabel = (shape: number[]) => shape.length === 0 ? '?' : shape.map(d => d === undefined ? '?' : d.toString()).join('x');
+      const connectionLabel = (name: string, connections: Map<string, Model.ConnectionConstraints>) =>
+        `${name} ${connections.has(name) ? `[${createShapeLabel(connections.get(name).shape)}]` : ''}`;
       const inputs = c.node['inputs'] !== undefined ?
         _.toPairs((c.node as Model.OperationNode).inputs)
           .map(([inputName, inputNode]): Port => ({
@@ -221,7 +224,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
               nodeId: createId(dict.get(inputNode).node),
               port: 0,
               classNames: [c.connections.inputs.has(inputName) ? c.connections.inputs.get(inputName).valid.state : 'invalid'],
-              notes: c.connections.inputs.has(inputName) ? c.connections.inputs.get(inputName).valid['reason'] : 'Not found'
+              notes: c.connections.inputs.has(inputName) ? c.connections.inputs.get(inputName).valid['reason'] : `Not found: '${inputName}'`
             }],
             name: connectionLabel(inputName, c.connections.inputs)
           })) : [];

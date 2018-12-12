@@ -34,15 +34,26 @@ declare namespace Model {
     valid: {state: 'invalid', reason: string}|{state: 'valid'};
   }
 
+  // TODO: Add a dict of connection information
+  interface ConnectionsInfo {
+    inputs: Map<string, ConnectionConstraints>;
+    outputs: Map<string, ConnectionConstraints>;
+  }
+
+  interface Property<T> {
+    name: string;
+    value: T;
+    type: 'string'|'number'|'number[]';
+    readonly: boolean;
+  }
 
   interface NodeContainer<T = Model.Node> {
+    // TODO(#1): dont store the raw node but the unrolled property information
+    // Property
     node: T;
     position: Vector2;
 
-    connections?: {
-      inputs: Map<string, ConnectionConstraints>,
-      outputs: Map<string, ConnectionConstraints>
-    };
+    connections?: ConnectionsInfo;
   }
 
   interface BaseNode {

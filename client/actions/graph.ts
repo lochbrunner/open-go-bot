@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import {Connection} from 'react-flow-editor';
 import {createAction} from 'redux-actions';
 
 import * as Actions from '../constants/actions';
@@ -10,7 +11,16 @@ export interface UpdateGraphNode {
   nodeId: string;
   nodeType: Model.Node['type'];
   propertyName: string;
-  newValue: number|string;
+  newValue: number|string|number[];
+  connectionsPatch?: Model.ConnectionsInfo;
+  valid: boolean;
+}
+
+export interface TryUpdateGraphNode {
+  nodeId: string;
+  nodeType: Model.Node['type'];
+  propertyName: string;
+  newValue: string|number;
 }
 export type GraphPayload = SetGraphPayload|UpdateGraphNode;
 
@@ -27,26 +37,356 @@ export const parseShape = (shapeString: string): number[] | undefined => {
   }
 };
 
-const validateShape = (constraint: (number|undefined)[], shape: number[]) => {
-  if (constraint.length === 0) return true;
-  if (constraint.length !== shape.length) return false;
-  for (let i = 0; i < constraint.length; ++i) {
-    if (constraint[i] === undefined) continue;
-    if (constraint[i] !== shape[i]) return false;
-  }
-  return true;
+const englishEnumerate = (i: number) => {
+  if (i === 1) return 'first';
+  if (i === 2) return 'second';
+  return `${i}th`;
 };
 
-const validateVariableOrInput =
-    (container: Model.NodeContainer, node: Model.Variable | Model.Input) => {
-      container.connections.outputs.set(
-          'output', {shape: node.shape, valid: {state: 'valid'}});
+const validateShape =
+    (constraint: (number|undefined)[], shape: number[]): string => {
+      if (constraint.length === 0) return 'valid';
+      if (constraint.length !== shape.length) return 'Wrong rank';
+      for (let i = 0; i < constraint.length; ++i) {
+        if (constraint[i] === undefined) continue;
+        if (constraint[i] !== shape[i])
+          return `${
+                    englishEnumerate(i + 1)
+                  } index does not match (${shape[i]} ≠ ${constraint[i]})`;
+      }
+      return 'valid';
     };
 
-const validateNode =
+// TODO: Make this function pure (do not change the input)
+const validateMaxPooling = (dict: Map<string, Model.NodeContainer>,
+                            container: Model.NodeContainer,
+                            node: Model.MaxPool): 'valid' |
+    'invalid' | 'postpone' => {
+  let valid: 'valid'|'invalid' = 'valid';
+
+  const orig = dict.get(node.inputs.orig);
+  if (orig.connections === undefined || orig.connections.outputs.size < 1) {
+    return 'postpone';
+  }
+
+  // TODO(Matthias): Validate input shape
+
+  const {strides} = node;
+  const origShape = orig.connections.outputs.get('output').shape;
+  let shape: number[];
+
+  if (typeof node.filterSize === 'number') {
+    shape = [
+      Math.floor(origShape[0] / strides) - node.pad * 2, origShape[1],
+      origShape[2]
+    ];
+
+  } else {
+    shape = [
+      Math.floor(origShape[0] / strides) - node.pad * 2,
+      Math.floor(origShape[1] / strides) - node.pad * 2, origShape[2]
+    ];
+  }
+  container.connections.outputs.set('output', {shape, valid: {state: 'valid'}});
+  // TODO(Matthias): Validate Max Pooling
+  container.connections.inputs.set(
+      'orig', {shape: [undefined], valid: {state: 'valid'}});
+
+  return valid;
+};
+
+const validateRelu =
+    (dict: Map<string, Model.NodeContainer>, container: Model.NodeContainer,
+     node: Model.Relu): 'valid' |
+    'invalid' | 'postpone' => {
+      let valid: 'valid'|'invalid' = 'valid';
+
+      const orig = dict.get(node.inputs.orig);
+      if (orig.connections === undefined || orig.connections.outputs.size < 1) {
+        // Do it later
+        console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
+        return 'postpone';
+      }
+      container.connections.inputs.set(
+          'orig', {shape: [], valid: {state: 'valid'}});
+      container.connections.outputs.set('output', {
+        shape: [...orig.connections.outputs.get('output').shape],
+        valid: {state: 'valid'}
+      });
+      return valid;
+    };
+
+const validateResharp =
+    (dict: Map<string, Model.NodeContainer>, container: Model.NodeContainer,
+     node: Model.Reshape): 'valid' |
+    'invalid' | 'postpone' => {
+      let valid: 'valid'|'invalid' = 'valid';
+
+      // Is the input dividable by the new shape?
+      const orig = dict.get(node.inputs.orig);
+      const origShape = orig.connections.outputs.get('output').shape;
+      const inputDimension = origShape.reduce((p, r) => r * p, 1);
+      const outputDimension = node.shape.reduce((p, r) => r * p, 1);
+      container.connections.outputs.set(
+          'output', {shape: node.shape, valid: {state: 'valid'}});
+      if (inputDimension % outputDimension === 0) {
+        container.connections.inputs.set(
+            'orig', {shape: [], valid: {state: 'valid'}});
+      } else {
+        valid = 'invalid';
+        container.connections.inputs.set(
+            'output',
+            {shape: [], valid: {state: 'invalid', reason: 'Not validated'}});
+      }
+
+      return valid;
+    };
+
+const validateConvolution = (dict: Map<string, Model.NodeContainer>,
+                             container: Model.NodeContainer,
+                             node: Model.Convolution): 'valid' |
+    'invalid' | 'postpone' => {
+  // If the shape of one input is not there enqueue it.
+  const orig = dict.get(node.inputs.orig);
+  const kernel = dict.get(node.inputs.kernel);
+  if (orig.connections === undefined || orig.connections.outputs.size < 1 ||
+      kernel.connections === undefined || kernel.connections.outputs.size < 1) {
+    // Do it later
+    console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
+    return 'postpone';
+  }
+  let valid: 'valid'|'invalid' = 'valid';
+  const {strides} = node;
+  const origShape = orig.connections.outputs.get('output').shape;
+  const kernelShape = kernel.connections.outputs.get('output').shape;
+  if (node.rank === 2) {
+    if (node.padding === 'same') {
+      // Ignore own filter settings
+      const shape = [
+        Math.floor(origShape[0] / strides), Math.floor(origShape[1] / strides),
+        kernelShape[3]
+      ];
+      container.connections.outputs.set(
+          'output', {shape, valid: {state: 'valid'}});
+
+      // Validate orig and kernel shape
+      container.connections.inputs.set(
+          'orig', {shape: [], valid: {state: 'valid'}});
+      container.connections.inputs.set(
+          'kernel', {shape: [], valid: {state: 'valid'}});
+      // Any of have wrong rank ?
+      if (kernelShape.length !== 4 || origShape.length !== 3) {
+        if (kernelShape.length !== 4) {
+          valid = 'invalid';
+          container.connections.inputs.get('kernel').valid = {
+            state: 'invalid',
+            reason: 'Kernel must be of rank 4'
+          };
+        } else {  // => if (origShape.length !== 3)
+          valid = 'invalid';
+          container.connections.inputs.get('orig').valid = {
+            state: 'invalid',
+            reason: 'Input must be of rank 3'
+          };
+        }
+      }
+      // Do they fit together?
+      else {
+        container.connections.inputs.get('orig').shape = [];
+        if (kernelShape[3] !== node.filters) {
+          container.connections.inputs.get('kernel').valid = {
+            state: 'invalid',
+            reason: `Last dimension must be ${
+                                              node.filters
+                                            } and not ${kernelShape[3]}`
+          };
+          valid = 'invalid';
+        } else if (origShape[2] !== kernelShape[2]) {
+          container.connections.inputs.get('kernel').valid = {
+            state: 'invalid',
+            reason: `Third dimension must be ${origShape[2]}`
+          };
+          container.connections.inputs.get('orig').valid = {
+            state: 'invalid',
+            reason: `Third dimension must be ${kernelShape[2]}`
+          };
+          valid = 'invalid';
+        } else {
+          // Everything is fine
+          container.connections.inputs.get('orig').shape =
+              [undefined, undefined, kernelShape[2]];
+          container.connections.inputs.get('kernel').shape =
+              [undefined, undefined, kernelShape[2], node.filters];
+        }
+      }
+
+    } else {
+      valid = 'invalid';
+      console.error(
+          `Convolution with padding ${node.padding} not supported yet!`);
+    }
+  } else {
+    valid = 'invalid';
+    console.error(`Convolution of rank ${node.rank} not supported yet!`);
+  }
+  return valid;
+};
+
+const validateVariableOrInput = (container: Model.NodeContainer,
+                                 node: Model.Variable | Model.Input): 'valid' |
+    'invalid' | 'postpone' => {
+  container.connections.outputs.set(
+      'output', {shape: node.shape, valid: {state: 'valid'}});
+  return 'valid';
+};
+
+const validateMatMul = (dict: Map<string, Model.NodeContainer>,
+                        container: Model.NodeContainer,
+                        node: Model.MatMul): 'valid' |
+    'invalid' | 'postpone' => {
+  let valid: 'valid'|'invalid' = 'valid';
+  const multiplier = dict.get(node.inputs.multiplier);
+  const multiplicand = dict.get(node.inputs.multiplicand);
+  if (multiplier.connections === undefined ||
+      multiplier.connections.outputs.size < 1) {
+    // Do it later
+    console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
+    return 'postpone';
+  }
+
+  if (multiplicand.connections === undefined ||
+      multiplicand.connections.outputs.size < 1) {
+    // Do it later
+    console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
+    return 'postpone';
+  }
+
+  const multiplierShape = multiplier.connections.outputs.get('output').shape;
+  const multiplicandShape =
+      multiplicand.connections.outputs.get('output').shape;
+
+  container.connections.inputs.set(
+      'multiplicand', {shape: [], valid: {state: 'valid'}});
+  container.connections.inputs.set(
+      'multiplier', {shape: [], valid: {state: 'valid'}});
+
+  if (multiplierShape.length === 2) {
+    container.connections.outputs.set('output', {
+      shape: [multiplierShape[multiplierShape.length - 1]],
+      valid: {state: 'valid'}
+    });
+
+    container.connections.inputs.get('multiplicand').shape =
+        [multiplierShape[0]];
+    container.connections.inputs.get('multiplier').shape =
+        [multiplicandShape[0], undefined];
+
+    if (multiplicandShape.length !== 1) {
+      valid = 'invalid';
+      container.connections.inputs.get('multiplicand').valid = {
+        state: 'invalid',
+        reason:
+            `Multiplicand must not have rank ${
+                                               multiplicandShape.length
+                                             } with multiplier of rank ${
+                                                                         multiplierShape
+                                                                             .length
+                                                                       }`
+      };
+    } else {
+      // First ranks dimension of multiplicand must mach first match first
+      // ranks dimension of multiplier
+      if (multiplierShape[0] !== multiplicandShape[0]) {
+        valid = 'invalid';
+        container.connections.inputs.get('multiplicand').valid = {
+          state: 'invalid',
+          reason:
+              `Dimension of multiplier ${
+                                         multiplierShape[0]
+                                       } and multiplicand ${
+                                                            multiplicandShape[0]
+                                                          } do not match!`
+        };
+      }
+    }
+  } else {
+    valid = 'invalid';
+    console.error(
+        `Multiplier of rank ${multiplierShape.length} not supported yet!`);
+  }
+  return valid;
+};
+
+const validateAdd = (dict: Map<string, Model.NodeContainer>,
+                     container: Model.NodeContainer, node: Model.Add): 'valid' |
+    'invalid' | 'postpone' => {
+  let valid: 'valid'|'invalid' = 'valid';
+  const first = dict.get(node.inputs['first-addend']);
+  if (first.connections === undefined || first.connections.outputs.size < 1) {
+    // Do it later
+    console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
+    return 'postpone';
+  }
+
+  const second = dict.get(node.inputs['second-addend']);
+  if (second.connections === undefined || second.connections.outputs.size < 1) {
+    // Do it later
+    console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
+    return 'postpone';
+  }
+
+  const firstShape = first.connections.outputs.get('output').shape;
+  const secondShape = second.connections.outputs.get('output').shape;
+
+  if (equalVector(firstShape, secondShape)) {
+    container.connections.inputs.set(
+        'second-addend', {shape: firstShape, valid: {state: 'valid'}});
+    container.connections.inputs.set(
+        'first-addend', {shape: secondShape, valid: {state: 'valid'}});
+  } else {
+    valid = 'invalid';
+    const reason = `Dimensions do not match ${
+                                              firstShape.join('x')
+                                            } and ${secondShape.join('x')}`;
+
+    container.connections.inputs.set(
+        'second-addend', {shape: [], valid: {state: 'invalid', reason}});
+    container.connections.inputs.set(
+        'first-addend', {shape: [], valid: {state: 'invalid', reason}});
+  }
+
+  container.connections.outputs.set(
+      'output', {shape: [...firstShape], valid: {state: 'valid'}});
+  return valid;
+};
+
+const validateOutput =
+    (dict: Map<string, Model.NodeContainer>, container: Model.NodeContainer,
+     node: Model.Output): 'valid' |
+    'invalid' | 'postpone' => {
+      let valid: 'valid'|'invalid' = 'valid';
+      container.connections.inputs.set(
+          'input', {shape: [], valid: {state: 'valid'}});
+      return valid;
+    };
+
+interface ValidationResponse {
+  valid: boolean;
+  connectionsWarnings:
+      {inputs: Map<string, string>, outputs: Map<string, string>};
+}
+
+const validateShapesOfNode =
     (graph: Model.Graph, dict: Map<string, Model.NodeContainer>,
      container: Model.NodeContainer, outputShape: number[],
-     inputShape?: number[]): boolean => {
+     inputShape?: number[]): ValidationResponse => {
+      let validInSum = true;
+      // const connectionsPatch:
+      //     Model.ConnectionsInfo = {inputs: new Map(), outputs: new Map()};
+      const connectionsWarnings: ValidationResponse['connectionsWarnings'] = {
+        inputs: new Map(),
+        outputs: new Map()
+      };
       // Check processor
       if (inputShape !== undefined) {
         // TODO
@@ -61,51 +401,121 @@ const validateNode =
                 .filter(s => s[1] === container.node.id)[0][0];
         const successorShapeConstraint =
             successorContainer.connections.inputs.get(inputName).shape;
-        const valid = validateShape(successorShapeConstraint, outputShape);
-        const shapeString = successorShapeConstraint
-                                .map(s => s !== undefined ? s.toString() : '?')
-                                .join('x');
-        console.log(`Successor Shape Constraint: ${shapeString}`);
-        console.log(`Shape is ${outputShape.join('x')}`);
-        console.log(`Is ${valid ? 'valid' : 'invalid'}`);
-        if (!valid) return false;
+        const validationMsg =
+            validateShape(successorShapeConstraint, outputShape);
+        if (validationMsg !== 'valid') {
+          validInSum = false;
+          connectionsWarnings.outputs.set('output', validationMsg);
+        }
+        // const shapeString = successorShapeConstraint
+        //                         .map(s => s !== undefined ? s.toString() :
+        //                         '?') .join('x');
+        // console.log(`Successor Shape Constraint: ${shapeString}`);
+        // console.log(`Shape is ${outputShape.join('x')}`);
+        // console.log(`Is ${valid ? 'valid' : 'invalid'}`);
+        // if (!valid) return {valid: false, connectionsWarnings};
       }
-      return true;
+      return {valid: validInSum, connectionsWarnings};
     };
 
 export const checkUpdateGraphNode =
-    (payload: UpdateGraphNode, graph: Model.Graph,
+    (payload: TryUpdateGraphNode, graph: Model.Graph,
      dict: Map<string, Model.NodeContainer>) => dispatch => {
+      // TODO: If a shape mismatch gets changed check the whole chain down to
+      // output
+      // TODO(#1): Change the representation of the node such that his can be
+      // done automatically
       console.log(payload);
       const container = dict.get(payload.nodeId);
       const {node} = container;
       if (payload.nodeType === 'convolution') {
+        if (payload.propertyName === 'rank') {
+          console.warn(`Convolution nodes of rank ${
+                                                    payload.newValue
+                                                  } are not implemented yet`);
+        } else {
+          const newNode: Model.Convolution = {...node as Model.Convolution};
+          newNode[payload.propertyName] = payload.newValue;
+
+          const state = validateConvolution(dict, container, newNode);
+          const valid = state === 'valid';
+          const connectionsPatch:
+              Model.ConnectionsInfo = {inputs: new Map(), outputs: new Map()};
+          dispatch(updateGraphNode({...payload, valid, connectionsPatch}));
+        }
+      } else if (payload.nodeType === 'reshape') {
+        const newNode = {...node as Model.Reshape};
+        let newValue: [number, number]|string|number;
+        if (payload.propertyName === 'shape') {
+          newValue = parseShape(payload.newValue as string) as [number, number];
+        } else {
+          newValue = payload.newValue;
+        }
+        newNode[payload.propertyName] = newValue;
+        const state = validateResharp(dict, container, newNode);
+        const valid = state === 'valid';
+        const connectionsPatch:
+            Model.ConnectionsInfo = {inputs: new Map(), outputs: new Map()};
+        dispatch(
+            updateGraphNode({...payload, newValue, valid, connectionsPatch}));
+      }
+
+      else if (payload.nodeType === 'max-pool') {
+        const newNode: Model.MaxPool = {...node as Model.MaxPool};
+        let newValue: [number, number]|string|number;
+        if (payload.propertyName === 'filterSize') {
+          newValue = parseShape(payload.newValue as string) as [number, number];
+        } else {
+          newValue = payload.newValue;
+        }
+        newNode[payload.propertyName] = newValue;
+
+        const state = validateMaxPooling(dict, container, newNode);
+        const valid = state === 'valid';
+        const connectionsPatch:
+            Model.ConnectionsInfo = {inputs: new Map(), outputs: new Map()};
+        dispatch(
+            updateGraphNode({...payload, newValue, valid, connectionsPatch}));
       } else if (payload.nodeType === 'variable') {
         if (payload.propertyName === 'shape') {
           // Validate new node
           const shape = parseShape(payload.newValue as string);
           if (shape === undefined) return;
-          if (!validateNode(graph, dict, container, shape, undefined)) return;
-          dispatch(updateGraphNode(payload));
+          const {valid, connectionsWarnings} =
+              validateShapesOfNode(graph, dict, container, shape, undefined);
+          // if (valid) return;
+          const connectionsPatch:
+              Model.ConnectionsInfo = {inputs: new Map(), outputs: new Map()};
+          connectionsPatch.outputs.set(
+              'output', {shape, valid: {state: 'valid'}});
+          for (const k of connectionsWarnings.outputs.keys()) {
+            connectionsPatch.outputs.get(k).valid = {
+              state: 'invalid',
+              reason: connectionsWarnings.outputs.get(k)
+            };
+          }
+
+          dispatch(updateGraphNode(
+              {...payload, newValue: shape, valid, connectionsPatch}));
         } else if (payload.propertyName === 'min') {
           if (node['max'] >= payload.newValue)
-            dispatch(updateGraphNode(payload));
+            dispatch(updateGraphNode({...payload, valid: true}));
         } else if (payload.propertyName === 'max') {
           if (node['min'] <= payload.newValue)
-            dispatch(updateGraphNode(payload));
+            dispatch(updateGraphNode({...payload, valid: true}));
         } else if (payload.propertyName === 'stdDev') {
-          if (payload.newValue >= 0) dispatch(updateGraphNode(payload));
+          if (payload.newValue >= 0)
+            dispatch(updateGraphNode({...payload, valid: true}));
         } else if (
             payload.propertyName === 'mean' ||
             payload.propertyName === 'init') {
-          dispatch(updateGraphNode(payload));
+          dispatch(updateGraphNode({...payload, valid: true}));
         } else {
           // dispatch(updateGraphNode(payload));
           console.warn(
               `Not implemented property change of ${payload.propertyName}`);
         }
       }
-
     };
 
 const equalVector = (a: number[], b: number[]): boolean => {
@@ -130,284 +540,30 @@ const calculateShapes = (containers: Model.Graph['nodes']) => {
     container.connections = {inputs: new Map(), outputs: new Map()};
     const {node} = container;
 
+    let state: 'valid'|'invalid'|'postpone';
     if (node.type === 'input' || node.type === 'variable') {
-      validateVariableOrInput(container, node);
+      state = validateVariableOrInput(container, node);
+    } else if (node.type === 'convolution') {
+      state = validateConvolution(dict, container, node);
+    } else if (node.type === 'relu') {
+      state = validateRelu(dict, container, node);
+    } else if (node.type === 'max-pool') {
+      state = validateMaxPooling(dict, container, node);
+    } else if (node.type === 'reshape') {
+      state = validateResharp(dict, container, node);
+    } else if (node.type === 'mat-mul') {
+      state = validateMatMul(dict, container, node);
+    } else if (node.type === 'add') {
+      state = validateAdd(dict, container, node);
+    } else if (node.type === 'output') {
+      state = validateOutput(dict, container, node);
     }
-
-    else if (node.type === 'convolution') {
-      // If the shape of one input is not there enqueue it.
-      const orig = dict.get(node.inputs.orig);
-      const kernel = dict.get(node.inputs.kernel);
-      if (orig.connections === undefined || orig.connections.outputs.size < 1 ||
-          kernel.connections === undefined ||
-          kernel.connections.outputs.size < 1) {
-        // Do it later
-        console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
-        continue;
-      }
-      const {strides} = node;
-      const origShape = orig.connections.outputs.get('output').shape;
-      const kernelShape = kernel.connections.outputs.get('output').shape;
-      if (node.rank === 2) {
-        if (node.padding === 'same') {
-          // Ignore own filter settings
-          const shape = [
-            Math.floor(origShape[0] / strides),
-            Math.floor(origShape[1] / strides), kernelShape[3]
-          ];
-          container.connections.outputs.set(
-              'output', {shape, valid: {state: 'valid'}});
-
-          // Validate orig and kernel shape
-          // orig
-          container.connections.inputs.set(
-              'orig', {shape: [], valid: {state: 'valid'}});
-          // kernel
-          container.connections.inputs.set(
-              'kernel', {shape: [], valid: {state: 'valid'}});
-          // Any of them broken ?
-          if (kernelShape.length !== 4 || origShape.length !== 3) {
-            if (kernelShape.length !== 4) {
-              isValid = false;
-              container.connections.inputs.get('kernel').valid = {
-                state: 'invalid',
-                reason: 'Kernel must be of rank 4'
-              };
-            } else {  // => if (origShape.length !== 3)
-              isValid = false;
-              container.connections.inputs.get('orig').valid = {
-                state: 'invalid',
-                reason: 'Input must be of rank 3'
-              };
-            }
-          }
-          // Do they fit together?
-          else {
-            container.connections.inputs.get('orig').shape = [undefined];
-            if (origShape[2] !== kernelShape[2]) {
-              container.connections.inputs.get('kernel').valid = {
-                state: 'invalid',
-                reason: `Third dimension must be ${origShape[2]}`
-              };
-              container.connections.inputs.get('orig').valid = {
-                state: 'invalid',
-                reason: `Third dimension must be ${kernelShape[2]}`
-              };
-              isValid = false;
-            } else {
-              // Everything is fine
-              // orig
-              container.connections.inputs.get('orig').shape =
-                  [undefined, undefined, kernelShape[2]];
-              // kernel
-              container.connections.inputs.get('kernel').shape =
-                  [undefined, undefined, kernelShape[2], node.filters];
-            }
-          }
-
-        } else {
-          isValid = false;
-          console.error(
-              `Convolution with padding ${node.padding} not supported yet!`);
-        }
-      } else {
-        isValid = false;
-        console.error(`Convolution of rank ${node.rank} not supported yet!`);
-      }
-    }
-
-    else if (node.type === 'relu') {
-      const orig = dict.get(node.inputs.orig);
-      if (orig.connections === undefined || orig.connections.outputs.size < 1) {
-        // Do it later
-        console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
-        continue;
-      }
-      container.connections.inputs.set(
-          'orig', {shape: [], valid: {state: 'valid'}});
-      container.connections.outputs.set('output', {
-        shape: [...orig.connections.outputs.get('output').shape],
-        valid: {state: 'valid'}
-      });
-    }
-
-    else if (node.type === 'max-pool') {
-      const orig = dict.get(node.inputs.orig);
-      if (orig.connections === undefined || orig.connections.outputs.size < 1) {
-        // Do it later
-        console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
-        continue;
-      }
-
-      // TODO(Matthias): Validate input shape
-
-      const {strides} = node;
-      const origShape = orig.connections.outputs.get('output').shape;
-      let shape: number[];
-
-      if (typeof node.filterSize === 'number') {
-        shape = [
-          Math.floor(origShape[0] / strides) - node.pad * 2, origShape[1],
-          origShape[2]
-        ];
-
-      } else {
-        shape = [
-          Math.floor(origShape[0] / strides) - node.pad * 2,
-          Math.floor(origShape[1] / strides) - node.pad * 2, origShape[2]
-        ];
-      }
-      container.connections.outputs.set(
-          'output', {shape, valid: {state: 'valid'}});
-      // TODO(Matthias): Validate Max Pooling
-      container.connections.inputs.set(
-          'orig', {shape: [undefined], valid: {state: 'valid'}});
-    }
-
-    else if (node.type === 'reshape') {
-      // Is the input dividable by the new shape?
-      const orig = dict.get(node.inputs.orig);
-      const origShape = orig.connections.outputs.get('output').shape;
-      const inputDimension = origShape.reduce((p, r) => r * p, 1);
-      const outputDimension = node.shape.reduce((p, r) => r * p, 1);
-      container.connections.outputs.set(
-          'output', {shape: node.shape, valid: {state: 'valid'}});
-      if (inputDimension % outputDimension === 0) {
-        container.connections.inputs.set(
-            'orig', {shape: [], valid: {state: 'valid'}});
-      } else {
-        isValid = false;
-        container.connections.inputs.set(
-            'output',
-            {shape: [], valid: {state: 'invalid', reason: 'Not validated'}});
-      }
-    }
-
-    else if (node.type === 'mat-mul') {
-      const multiplier = dict.get(node.inputs.multiplier);
-      const multiplicand = dict.get(node.inputs.multiplicand);
-      if (multiplier.connections === undefined ||
-          multiplier.connections.outputs.size < 1) {
-        // Do it later
-        console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
-        continue;
-      }
-
-      if (multiplicand.connections === undefined ||
-          multiplicand.connections.outputs.size < 1) {
-        // Do it later
-        console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
-        continue;
-      }
-
-      const multiplierShape =
-          multiplier.connections.outputs.get('output').shape;
-      const multiplicandShape =
-          multiplicand.connections.outputs.get('output').shape;
-
-      // multiplicand
-      container.connections.inputs.set(
-          'multiplicand', {shape: [], valid: {state: 'valid'}});
-      // multiplier
-      container.connections.inputs.set(
-          'multiplier', {shape: [], valid: {state: 'valid'}});
-
-      if (multiplierShape.length === 2) {
-        container.connections.outputs.set('output', {
-          shape: [multiplierShape[multiplierShape.length - 1]],
-          valid: {state: 'valid'}
-        });
-
-        // multiplicand
-        container.connections.inputs.get('multiplicand').shape =
-            [multiplierShape[0]];
-        // multiplier
-        container.connections.inputs.get('multiplier').shape =
-            [multiplicandShape[0], undefined];
-
-        if (multiplicandShape.length !== 1) {
-          isValid = false;
-          container.connections.inputs.get('multiplicand').valid = {
-            state: 'invalid',
-            reason:
-                `Multiplicand must not have rank ${
-                                                   multiplicandShape.length
-                                                 } with multiplier of rank ${
-                                                                             multiplierShape
-                                                                                 .length
-                                                                           }`
-          };
-        } else {
-          // First ranks dimension of multiplicand must mach first match first
-          // ranks dimension of multiplier
-          if (multiplierShape[0] !== multiplicandShape[0]) {
-            isValid = false;
-            container.connections.inputs.get('multiplicand').valid = {
-              state: 'invalid',
-              reason:
-                  `Dimension of multiplier ${
-                                             multiplierShape[0]
-                                           } and multiplicand ${
-                                                                multiplicandShape
-                                                                    [0]
-                                                              } do not match!`
-            };
-          }
-        }
-      } else {
-        isValid = false;
-        console.error(
-            `Multiplier of rank ${multiplierShape.length} not supported yet!`);
-      }
-    }
-
-    else if (node.type === 'add') {
-      const first = dict.get(node.inputs['first-addend']);
-      if (first.connections === undefined ||
-          first.connections.outputs.size < 1) {
-        // Do it later
-        console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
-        continue;
-      }
-
-      const second = dict.get(node.inputs['second-addend']);
-      if (second.connections === undefined ||
-          second.connections.outputs.size < 1) {
-        // Do it later
-        console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
-        continue;
-      }
-
-      const firstShape = first.connections.outputs.get('output').shape;
-      const secondShape = second.connections.outputs.get('output').shape;
-
-      if (equalVector(firstShape, secondShape)) {
-        // second
-        container.connections.inputs.set(
-            'second', {shape: firstShape, valid: {state: 'valid'}});
-        // first
-        container.connections.inputs.set(
-            'first', {shape: secondShape, valid: {state: 'valid'}});
-      } else {
-        isValid = false;
-        const reason = `Dimensions do not match ${
-                                                  firstShape.join('x')
-                                                } and ${secondShape.join('x')}`;
-        // second
-        container.connections.inputs.set(
-            'second', {shape: [], valid: {state: 'invalid', reason}});
-        // first
-        container.connections.inputs.set(
-            'first', {shape: [], valid: {state: 'invalid', reason}});
-      }
-
-      container.connections.outputs.set(
-          'output', {shape: [...firstShape], valid: {state: 'valid'}});
-    }
-
-    else if (node.type === 'output') {
-      container.connections.inputs.set(
-          'orig', {shape: [], valid: {state: 'valid'}});
+    if (state === 'invalid')
+      isValid = false;
+    else if (state === 'postpone') {
+      // Do it later
+      console.warn(`Skipped re-evaluating ${node.name} of type ${node.type}`);
+      continue;
     }
 
     queue.push(..._.values(node['outputs']).map(input => dict.get(input)));

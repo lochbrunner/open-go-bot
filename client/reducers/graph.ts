@@ -1,7 +1,6 @@
 import {Action} from 'redux-actions';
 
 import {GraphPayload, parseShape, SetGraphPayload, UpdateGraphNode} from '../actions/graph';
-import {Graph} from '../components/graph';
 import * as Constants from '../constants/actions';
 
 // See
@@ -15,10 +14,11 @@ export const reducers: (state: RootState, action: ActionTypes) => RootState =
         const payload = action.payload as SetGraphPayload;
         return {...state, graph: payload.newGraph};
       } else if (action.type === Constants.GRAPH_UPDATE_NODE) {
-        const nodeDict = new Map<string, Model.Node>();
-        for (let c of state.graph.nodes) nodeDict.set(c.node.id, c.node);
+        const dict = new Map<string, Model.NodeContainer>();
+        for (let c of state.graph.nodes) dict.set(c.node.id, c);
         const payload = action.payload as UpdateGraphNode;
-        const node = nodeDict.get(payload.nodeId);
+        const container = dict.get(payload.nodeId);
+        const {node} = container;
         if (payload.propertyName === 'init') {
           const v = node as Model.Variable;
           if (v.init === 'uniform') {
@@ -35,13 +35,20 @@ export const reducers: (state: RootState, action: ActionTypes) => RootState =
             v['mean'] = 0;
             v['stdDev'] = 0.1;
           }
-        } else if (payload.propertyName === 'shape') {
-          const shape = parseShape(payload.newValue as string);
-          node[payload.propertyName] = shape;
         } else {
           node[payload.propertyName] = payload.newValue;
         }
-        console.log(payload);
+        if (payload.connectionsPatch !== undefined) {
+          // Update connections
+          const {inputs, outputs} = payload.connectionsPatch;
+          container.connections.inputs =
+              new Map<string, Model.ConnectionConstraints>(
+                  [...container.connections.inputs, ...inputs]);
+          container.connections.outputs =
+              new Map<string, Model.ConnectionConstraints>(
+                  [...container.connections.outputs, ...outputs]);
+        }
+        state.graph.isValid = payload.valid;
         return {...state};
       }
       return state;
