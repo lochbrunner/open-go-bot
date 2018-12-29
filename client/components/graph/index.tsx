@@ -23,23 +23,6 @@ export namespace Graph {
   }
 }
 
-function traverseGraphBackwards(graph: Model.Graph, callback: (node: Model.NodeContainer) => void) {
-  if (graph === undefined)
-    return;
-  const dict = createDictFromGraph(graph);
-  // Add an unique index to each
-  const queue: Model.NodeContainer[] = [graph.nodes.find(n => n.node.type === 'output')];
-  while (queue.length > 0) {
-    const container = queue.shift();
-    if (container === undefined) break;
-    if (container.node['inputs'] !== undefined) {
-
-      queue.push(..._.values(container.node['inputs']).map(input => dict.get(input)));
-    }
-    callback(container);
-  }
-}
-
 const checkBox = (label: string, options: string[], value: string, onUpdate: (value: string) => void) => (
   <div className="form-group">
     <label htmlFor={`${label}Select`}>{label}</label>
@@ -190,11 +173,11 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     }
   }
 
-  private onGraphChanged(action: ChangeAction, updateProps: () => void) {
+  private onGraphChanged(dict: Map<string, Model.NodeContainer>, action: ChangeAction, updateProps: () => void) {
     if (action.type === 'ConnectionRemoved') {
-      // TODO
+      this.props.graphActions.removeConnection(dict, action);
     } else if (action.type === 'ConnectionCreated') {
-      // TODO
+      this.props.graphActions.addConnection(action);
     } else if (action.type === 'NodeRemoved') {
       // TODO
     } else if (action.type === 'NodeCreated') {
@@ -211,17 +194,16 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
 
     const nodes: Node[] = [];
 
-    traverseGraphBackwards(graph, c => {
-      const id = `${c.node.name}.${c.node.id}`;
-      const createId = (n: Model.Node) => `${n.name}.${n.id}`;
+    graph.nodes.forEach(c => {
+      const { id } = c.node;
       const createShapeLabel = (shape: number[]) => shape.length === 0 ? '?' : shape.map(d => d === undefined ? '?' : d.toString()).join('x');
       const connectionLabel = (name: string, connections: Map<string, Model.ConnectionConstraints>) =>
         `${name} ${connections.has(name) ? `[${createShapeLabel(connections.get(name).shape)}]` : ''}`;
       const inputs = c.node['inputs'] !== undefined ?
         _.toPairs((c.node as Model.OperationNode).inputs)
           .map(([inputName, inputNode]): Port => ({
-            connection: [{
-              nodeId: createId(dict.get(inputNode).node),
+            connection: inputNode === undefined ? [] : [{
+              nodeId: inputNode,
               port: 0,
               classNames: [c.connections.inputs.has(inputName) ? c.connections.inputs.get(inputName).valid.state : 'invalid'],
               notes: c.connections.inputs.has(inputName) ? c.connections.inputs.get(inputName).valid['reason'] : `Not found: '${inputName}'`
@@ -231,8 +213,8 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
       const outputs: Node['outputs'] = c.node.outputs
         .filter(o => o !== 'result')
         .map((o, i): Port => ({
-          connection: [{
-            nodeId: createId(dict.get(o).node),
+          connection: o === undefined ? [] : [{
+            nodeId: o,
             port: i,
             classNames: [c.connections.outputs.get('output').valid.state],
             notes: c.connections.outputs.get('output').valid['reason']
@@ -243,7 +225,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
       nodes.push({
         id,
         properties: { display: 'only-dots' },
-        classNames: [c.node.type],
+        classNames: [c.node.type, c.valid ? 'valid' : 'invalid'],
         name: c.node.name,
         payload: { node: c },
         type: c.node.type,
@@ -260,7 +242,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     const graphConfig: Config = {
       resolver: this.resolver.bind(this, dict, updateConfig),
       connectionType: 'bezier',
-      onChanged: this.onGraphChanged.bind(this),
+      onChanged: this.onGraphChanged.bind(this, dict),
       grid: false,
       direction: 'ew'
     };

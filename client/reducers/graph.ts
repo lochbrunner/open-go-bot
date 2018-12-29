@@ -1,12 +1,45 @@
 import {Action} from 'redux-actions';
 
-import {GraphPayload, parseShape, SetGraphPayload, UpdateGraphNode} from '../actions/graph';
+import {GraphPayload, parseShape, SetGraphPayload, UpdateGraphNodeConnections, UpdateGraphNodeProperty} from '../actions/graph';
 import * as Constants from '../constants/actions';
 
 // See
 // https://stackoverflow.com/questions/40463060/turn-a-string-literal-type-to-a-literal-value
 
 type ActionTypes = Action<GraphPayload>;
+
+const patchConnections =
+    // TODO: Make this immutable
+    (container: Model.NodeContainer,
+     connectionsPatch: Model.ConnectionsInfo) => {
+      if (connectionsPatch.removeInputs !== undefined) {
+        for (const k of connectionsPatch.removeInputs) {
+          container.connections.inputs.delete(k);
+          if (container.node['inputs'] !== undefined) {
+            const op = container.node as Model.OperationNode;
+            // delete op.inputs[k];
+            op.inputs[k] = undefined;
+          }
+        }
+      }
+      if (connectionsPatch.removeOutputs !== undefined) {
+        for (const k of connectionsPatch.removeOutputs) {
+          container.connections.outputs.delete(k);
+          container.node.outputs = [];
+          container.node.outputs[0] = undefined;
+          // delete container.node.outputs[k];
+        }
+      }
+
+      const {inputs, outputs} = connectionsPatch;
+      container.connections.inputs =
+          new Map<string, Model.ConnectionConstraints>(
+              [...container.connections.inputs, ...inputs]);
+      container.connections.outputs =
+          new Map<string, Model.ConnectionConstraints>(
+              [...container.connections.outputs, ...outputs]);
+      return container;
+    };
 
 export const reducers: (state: RootState, action: ActionTypes) => RootState =
     (state: RootState, action: ActionTypes) => {
@@ -16,7 +49,7 @@ export const reducers: (state: RootState, action: ActionTypes) => RootState =
       } else if (action.type === Constants.GRAPH_UPDATE_NODE) {
         const dict = new Map<string, Model.NodeContainer>();
         for (let c of state.graph.nodes) dict.set(c.node.id, c);
-        const payload = action.payload as UpdateGraphNode;
+        const payload = action.payload as UpdateGraphNodeProperty;
         const container = dict.get(payload.nodeId);
         const {node} = container;
         if (payload.propertyName === 'init') {
@@ -40,16 +73,23 @@ export const reducers: (state: RootState, action: ActionTypes) => RootState =
         }
         if (payload.connectionsPatch !== undefined) {
           // Update connections
-          const {inputs, outputs} = payload.connectionsPatch;
-          container.connections.inputs =
-              new Map<string, Model.ConnectionConstraints>(
-                  [...container.connections.inputs, ...inputs]);
-          container.connections.outputs =
-              new Map<string, Model.ConnectionConstraints>(
-                  [...container.connections.outputs, ...outputs]);
+          patchConnections(container, payload.connectionsPatch);
         }
+        container.valid = payload.valid;
         state.graph.isValid = payload.valid;
         return {...state};
+      } else if (action.type === Constants.GRAPH_UPDATE_NODES) {
+        const payload = action.payload as UpdateGraphNodeConnections[];
+        console.log(payload);
+        const dict = new Map<string, Model.NodeContainer>();
+        const {graph} = state;
+        for (let c of state.graph.nodes) dict.set(c.node.id, c);
+        for (const graphConnection of payload) {
+          const container = dict.get(graphConnection.nodeId);
+          container.valid = graphConnection.valid;
+          patchConnections(container, graphConnection.connectionsPatch);
+        }
+        return {...state, graph: {...state.graph}};
       }
       return state;
     };

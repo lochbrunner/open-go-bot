@@ -38,6 +38,8 @@ declare namespace Model {
   interface ConnectionsInfo {
     inputs: Map<string, ConnectionConstraints>;
     outputs: Map<string, ConnectionConstraints>;
+    removeInputs?: string[];
+    removeOutputs?: string[];
   }
 
   interface Property<T> {
@@ -52,6 +54,7 @@ declare namespace Model {
     // Property
     node: T;
     position: Vector2;
+    valid: boolean;
 
     connections?: ConnectionsInfo;
   }

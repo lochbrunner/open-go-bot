@@ -31,6 +31,7 @@ $border-radius-collapsed: 0px;
 $collapse-animation-duration: 0.4s;
 
 $icon-color:#777;
+$invalid-color: #f88;
 
 $node-transitions: box-shadow 0.2s ease-in-out;
 
@@ -71,6 +72,12 @@ body {
     &.collapsed>.header {
       width: 150px;
       display: inline-block;
+    }
+
+    &.invalid {
+      border-color: $invalid-color !important;
+      border: $node-border-width-selected solid $selected-color;
+      margin: #{$node-border-width - $node-border-width-selected};
     }
 
     &.input {
@@ -183,6 +190,6 @@ div.icon::before {
 
 svg.connections {
   path.invalid {
-    stroke: #f98;
+    stroke: $invalid-color;
   }
 }

@@ -1,19 +1,32 @@
 import * as _ from 'lodash';
-import {Connection} from 'react-flow-editor';
+import {ChangeAction, Connection} from 'react-flow-editor';
 import {createAction} from 'redux-actions';
 
 import * as Actions from '../constants/actions';
 import {createDictFromContainers, createDictFromGraph} from '../utilities/toolbox';
 
+import {ChunkActionType1, ChunkActionType2} from './common';
+
 export interface SetGraphPayload { newGraph: Model.Graph; }
 
-export interface UpdateGraphNode {
+export type UpdateGraphNode =
+    UpdateGraphNodeProperty|UpdateGraphNodeConnections;
+
+export interface UpdateGraphNodeBase {
   nodeId: string;
+  connectionsPatch?: Model.ConnectionsInfo;
+  valid: boolean;
+}
+
+export interface UpdateGraphNodeConnections extends UpdateGraphNodeBase {
+  connectionsPatch: Model.ConnectionsInfo;
+  nodePatch: {removeInputs: string[], removeOutputs: number[]};
+}
+
+export interface UpdateGraphNodeProperty extends UpdateGraphNodeBase {
   nodeType: Model.Node['type'];
   propertyName: string;
   newValue: number|string|number[];
-  connectionsPatch?: Model.ConnectionsInfo;
-  valid: boolean;
 }
 
 export interface TryUpdateGraphNode {
@@ -22,12 +35,14 @@ export interface TryUpdateGraphNode {
   propertyName: string;
   newValue: string|number;
 }
-export type GraphPayload = SetGraphPayload|UpdateGraphNode;
+
+export type GraphPayload =
+    SetGraphPayload|UpdateGraphNodeProperty|UpdateGraphNodeConnections[];
 
 export const setGraph = createAction<SetGraphPayload>(Actions.GRAPH_SET);
 
 export const updateGraphNode =
-    createAction<UpdateGraphNode>(Actions.GRAPH_UPDATE_NODE);
+    createAction<UpdateGraphNodeProperty>(Actions.GRAPH_UPDATE_NODE);
 
 export const parseShape = (shapeString: string): number[] | undefined => {
   try {
@@ -57,7 +72,7 @@ const validateShape =
       return 'valid';
     };
 
-// TODO: Make this function pure (do not change the input)
+// TODO: Make this function pure(do not change the input)
 const validateMaxPooling = (dict: Map<string, Model.NodeContainer>,
                             container: Model.NodeContainer,
                             node: Model.MaxPool): 'valid' |
@@ -425,7 +440,7 @@ export const checkUpdateGraphNode =
       // output
       // TODO(#1): Change the representation of the node such that his can be
       // done automatically
-      console.log(payload);
+      // console.log(payload);
       const container = dict.get(payload.nodeId);
       const {node} = container;
       if (payload.nodeType === 'convolution') {
@@ -458,9 +473,7 @@ export const checkUpdateGraphNode =
             Model.ConnectionsInfo = {inputs: new Map(), outputs: new Map()};
         dispatch(
             updateGraphNode({...payload, newValue, valid, connectionsPatch}));
-      }
-
-      else if (payload.nodeType === 'max-pool') {
+      } else if (payload.nodeType === 'max-pool') {
         const newNode: Model.MaxPool = {...node as Model.MaxPool};
         let newValue: [number, number]|string|number;
         if (payload.propertyName === 'filterSize') {
@@ -592,7 +605,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           shape: [28, 28, inputDepth],
           type: 'input'
         },
-        position: {x: 50, y: 100}
+        position: {x: 50, y: 100},
+        valid: true
       },
       {
         node: {
@@ -605,7 +619,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           mean: 0.0,
           stdDev: 0.1
         },
-        position: {x: 50, y: 200}
+        position: {x: 50, y: 200},
+        valid: true
       },
       {
         node: {
@@ -619,7 +634,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           rank: 2,
           padding: 'same'
         },
-        position: {x: 400, y: 100}
+        position: {x: 400, y: 100},
+        valid: true
       },
       {
         node: {
@@ -629,7 +645,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           outputs: ['max-pool-1'],
           inputs: {'orig': 'conv2d-1'}
         },
-        position: {x: 700, y: 100}
+        position: {x: 700, y: 100},
+        valid: true
       },
       {
         node: {
@@ -642,7 +659,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           outputs: ['conv2d-2'],
           inputs: {'orig': 'relu-1'}
         },
-        position: {x: 1000, y: 100}
+        position: {x: 1000, y: 100},
+        valid: true
       },
       {
         node: {
@@ -655,7 +673,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           mean: 0.0,
           stdDev: 0.1
         },
-        position: {x: 50, y: 400}
+        position: {x: 50, y: 400},
+        valid: true
       },
       {
         node: {
@@ -669,7 +688,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           rank: 2,
           padding: 'same'
         },
-        position: {x: 400, y: 300}
+        position: {x: 400, y: 300},
+        valid: true
       },
       {
         node: {
@@ -679,7 +699,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           outputs: ['max-pool-2'],
           inputs: {'orig': 'conv2d-2'}
         },
-        position: {x: 700, y: 300}
+        position: {x: 700, y: 300},
+        valid: true
       },
       {
         node: {
@@ -692,7 +713,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           outputs: ['reshape-3'],
           inputs: {'orig': 'relu-2'}
         },
-        position: {x: 1000, y: 300}
+        position: {x: 1000, y: 300},
+        valid: true
       },
       {
         node: {
@@ -703,7 +725,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           outputs: ['mat-mul-3'],
           shape: [7 * 7 * conv2OutputDepth]
         },
-        position: {x: 400, y: 500}
+        position: {x: 400, y: 500},
+        valid: true
       },
       {
         node: {
@@ -716,7 +739,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           mean: 0,
           stdDev: 0.1
         },
-        position: {x: 400, y: 700}
+        position: {x: 400, y: 700},
+        valid: true
       },
       {
         node: {
@@ -727,7 +751,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           inputs:
               {'multiplicand': 'reshape-3', 'multiplier': 'mat-mul-3-weight'}
         },
-        position: {x: 700, y: 500}
+        position: {x: 700, y: 500},
+        valid: true
       },
       {
         node: {
@@ -738,7 +763,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           outputs: ['add-3'],
           init: 'zero'
         },
-        position: {x: 700, y: 700}
+        position: {x: 700, y: 700},
+        valid: true
       },
       {
         node: {
@@ -749,7 +775,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           inputs:
               {'first-addend': 'mat-mul-3', 'second-addend': 'add-3-weights'}
         },
-        position: {x: 1000, y: 500}
+        position: {x: 1000, y: 500},
+        valid: true
       },
       {
         node: {
@@ -759,7 +786,8 @@ export const loadScenario = (scenario: string) => dispatch => {
           name: 'Output',
           outputs: []
         },
-        position: {x: 1200, y: 500}
+        position: {x: 1200, y: 500},
+        valid: true
       }
     ];
 
@@ -767,3 +795,56 @@ export const loadScenario = (scenario: string) => dispatch => {
   }
   dispatch(setGraph(graph));
 };
+
+export const removeConnection: ChunkActionType2<
+    Map<string, Model.NodeContainer>,
+    ChangeAction> = (dict, action) => dispatch => {
+  if (action.type === 'ConnectionRemoved') {
+    // Which nodes to change?
+    const inputContainer = dict.get(action.input.nodeId) as
+        Model.NodeContainer<Model.OperationNode>;
+    const outputNode = dict.get(action.output.nodeId);
+    // Which ports?
+    const inputChannelName =
+        _.toPairs(inputContainer.node.inputs)
+            .find(([k, v], i) => i === action.input.port)[0];
+    // Validate the nodes
+    const inputPatch: UpdateGraphNodeConnections = {
+      nodeId: action.input.nodeId,
+      valid: false,
+      connectionsPatch: {
+        inputs: new Map(),
+        outputs: new Map(),
+        removeInputs: [inputChannelName]
+      },
+      nodePatch: {removeOutputs: [], removeInputs: [inputChannelName]}
+    };
+
+    const outputPatch: UpdateGraphNodeConnections = {
+      nodeId: action.output.nodeId,
+      valid: false,
+      connectionsPatch:
+          {inputs: new Map(), outputs: new Map(), removeOutputs: ['output']},
+      nodePatch: {removeOutputs: [0], removeInputs: []}
+    };
+
+    const patch: UpdateGraphNodeConnections[] = [inputPatch, outputPatch];
+
+    console.log(`inputChannelName: ${inputChannelName}`);
+    dispatch(updateGraphNodes(patch));
+  } else {
+    console.error(
+        `Action has type ${action.type} but should have 'ConnectionRemoved'`);
+  }
+  // console.log(action);
+  // console.log(dict);
+};
+
+export const addConnection: ChunkActionType1<ChangeAction> = action =>
+    dispatch => {
+      console.log('addConnection');
+      console.log(action);
+    };
+
+export const updateGraphNodes =
+    createAction<UpdateGraphNode[]>(Actions.GRAPH_UPDATE_NODES);
