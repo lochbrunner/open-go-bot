@@ -177,7 +177,12 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     if (action.type === 'ConnectionRemoved') {
       this.props.graphActions.removeConnection(dict, action);
     } else if (action.type === 'ConnectionCreated') {
-      this.props.graphActions.addConnection(action);
+      // Fixes connection name (means: remove shape information)
+      const inputNameExtension = action.input['name'].lastIndexOf(' [');
+      if (inputNameExtension > 0) action.input['name'] = action.input['name'].substr(0, inputNameExtension);
+      const outputNameExtension = action.output['name'].lastIndexOf(' [');
+      if (outputNameExtension > 0) action.output['name'] = action.output['name'].substr(0, outputNameExtension);
+      this.props.graphActions.addConnection(dict, action);
     } else if (action.type === 'NodeRemoved') {
       // TODO
     } else if (action.type === 'NodeCreated') {
@@ -198,7 +203,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
       const { id } = c.node;
       const createShapeLabel = (shape: number[]) => shape.length === 0 ? '?' : shape.map(d => d === undefined ? '?' : d.toString()).join('x');
       const connectionLabel = (name: string, connections: Map<string, Model.ConnectionConstraints>) =>
-        `${name} ${connections.has(name) ? `[${createShapeLabel(connections.get(name).shape)}]` : ''}`;
+        `${name}${connections.has(name) ? ` [${createShapeLabel(connections.get(name).shape)}]` : ''}`;
       const inputs = c.node['inputs'] !== undefined ?
         _.toPairs((c.node as Model.OperationNode).inputs)
           .map(([inputName, inputNode]): Port => ({

@@ -18,9 +18,16 @@ export interface UpdateGraphNodeBase {
   valid: boolean;
 }
 
+export interface NodePatch {
+  removeInputs?: string[];
+  removeOutputs?: number[];
+  addInputs?: Map<string, string>;
+  addOutputs?: Map<string, string>;
+}
+
 export interface UpdateGraphNodeConnections extends UpdateGraphNodeBase {
   connectionsPatch: Model.ConnectionsInfo;
-  nodePatch: {removeInputs: string[], removeOutputs: number[]};
+  nodePatch: NodePatch;
 }
 
 export interface UpdateGraphNodeProperty extends UpdateGraphNodeBase {
@@ -68,6 +75,21 @@ const validateShape =
           return `${
                     englishEnumerate(i + 1)
                   } index does not match (${shape[i]} ≠ ${constraint[i]})`;
+      }
+      return 'valid';
+    };
+
+const validateShapeConstraints =
+    (a: (number|undefined)[], b: (number|undefined)[]): string => {
+      if (a.length === 0 || b.length === 0) return 'valid';
+      if (a.length !== b.length) return 'Wrong rank';
+      for (let i = 0; i < a.length; ++i) {
+        if (a[i] === undefined) continue;
+        if (b[i] === undefined) continue;
+        if (a[i] !== b[i])
+          return `${
+                    englishEnumerate(i + 1)
+                  } index does not match (${a[i]} ≠ ${b[i]})`;
       }
       return 'valid';
     };
@@ -830,7 +852,6 @@ export const removeConnection: ChunkActionType2<
 
     const patch: UpdateGraphNodeConnections[] = [inputPatch, outputPatch];
 
-    console.log(`inputChannelName: ${inputChannelName}`);
     dispatch(updateGraphNodes(patch));
   } else {
     console.error(
@@ -840,11 +861,62 @@ export const removeConnection: ChunkActionType2<
   // console.log(dict);
 };
 
-export const addConnection: ChunkActionType1<ChangeAction> = action =>
-    dispatch => {
-      console.log('addConnection');
-      console.log(action);
+export const addConnection: ChunkActionType2<
+    Map<string, Model.NodeContainer>,
+    ChangeAction> = (dict, action) => dispatch => {
+
+  if (action.type === 'ConnectionCreated') {
+    // TODO: Change to action.input.name after switching to
+    // react-flow-editor@0.3.5 or higher
+    const inputName = action.input['name'] as string;
+    const outputName = action.output['name'] as string;
+    // Is connection valid?
+    const inputNode = dict.get(action.input.nodeId);
+    const outputNode = dict.get(action.output.nodeId);
+    const inputConstraint = inputNode.connections.inputs.get(inputName);
+    const outputConstraint = outputNode.connections.outputs.get(outputName);
+    const validationResponse =
+        validateShapeConstraints(inputConstraint.shape, outputConstraint.shape);
+
+    const valid = validationResponse === 'valid' ?
+        {state: 'valid'} as Model.ValidationState :
+        {state: 'invalid', reason: validationResponse} as Model.ValidationState;
+    console.log('AddConnection');
+    const inputConnectionPatch = new Map<string, Model.ConnectionConstraints>();
+    inputConnectionPatch.set(inputName, {shape: inputConstraint.shape, valid});
+    const inputNodePatch = new Map<string, string>();
+    inputNodePatch.set(inputName, action.output.nodeId);
+
+    const inputPatch: UpdateGraphNodeConnections = {
+      nodeId: action.input.nodeId,
+      nodePatch: {addInputs: inputNodePatch},
+      connectionsPatch: {inputs: inputConnectionPatch, outputs: new Map()},
+      valid: valid.state === 'valid'
     };
+
+    const outputConnectionPatch =
+        new Map<string, Model.ConnectionConstraints>();
+    outputConnectionPatch.set(
+        outputName, {shape: outputConstraint.shape, valid});
+    const outputNodePatch = new Map<string, string>();
+    outputNodePatch.set(outputName, action.input.nodeId);
+
+    const outputPatch: UpdateGraphNodeConnections = {
+      nodeId: action.output.nodeId,
+      nodePatch: {addOutputs: outputNodePatch},
+      connectionsPatch: {inputs: new Map(), outputs: outputConnectionPatch},
+      valid: valid.state === 'valid'
+    };
+
+    const patch: UpdateGraphNodeConnections[] = [inputPatch, outputPatch];
+
+    dispatch(updateGraphNodes(patch));
+
+  } else {
+    console.error(
+        `Action has type ${action.type} but should have 'ConnectionCreated'`);
+  }
+};
 
 export const updateGraphNodes =
     createAction<UpdateGraphNode[]>(Actions.GRAPH_UPDATE_NODES);

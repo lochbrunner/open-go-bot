@@ -28,10 +28,12 @@ declare namespace Model {
   type Node =
       Convolution|Input|Output|Flatten|MaxPool|Relu|MatMul|Add|Reshape|Variable;
 
+  type ValidationState = {state: 'invalid', reason: string}|{state: 'valid'};
+
   interface ConnectionConstraints {
     shape: (number|undefined)[];  // Undefined means that there is no constraint
                                   // for that rank
-    valid: {state: 'invalid', reason: string}|{state: 'valid'};
+    valid: ValidationState;
   }
 
   // TODO: Add a dict of connection information
@@ -71,6 +73,7 @@ declare namespace Model {
   }
 
   interface OperationNode extends BaseNode {
+    // TODO: Use Map<string,string> instead
     inputs: {[key: string]: string};
     activations?: ActivationInfo;
   }

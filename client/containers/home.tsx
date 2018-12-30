@@ -33,6 +33,11 @@ export const Home = (props: Props) => {
             title: 'Ant',
             description: 'A simulation of an ant colony. Model the brain of each individual ant like in serious games. Coming soon!',
             link: 'ant'
+        },
+        {
+            title: 'Symbolic deduction',
+            description: 'Finding the way to a symbolic deduction from the problem to the given target solution.',
+            link: 'symbolic-deduction'
         }
     ];
 
