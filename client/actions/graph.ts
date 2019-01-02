@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {ChangeAction, Connection} from 'react-flow-editor';
+import {ChangeAction, Endpoint} from 'react-flow-editor';
 import {createAction} from 'redux-actions';
 
 import * as Actions from '../constants/actions';
@@ -30,6 +30,11 @@ export interface UpdateGraphNodeConnections extends UpdateGraphNodeBase {
   nodePatch: NodePatch;
 }
 
+export interface UpdateGraph {
+  graphConnections: UpdateGraphNodeConnections[];
+  removeNodes?: string[];
+}
+
 export interface UpdateGraphNodeProperty extends UpdateGraphNodeBase {
   nodeType: Model.Node['type'];
   propertyName: string;
@@ -43,8 +48,7 @@ export interface TryUpdateGraphNode {
   newValue: string|number;
 }
 
-export type GraphPayload =
-    SetGraphPayload|UpdateGraphNodeProperty|UpdateGraphNodeConnections[];
+export type GraphPayload = SetGraphPayload|UpdateGraphNodeProperty|UpdateGraph;
 
 export const setGraph = createAction<SetGraphPayload>(Actions.GRAPH_SET);
 
@@ -818,58 +822,64 @@ export const loadScenario = (scenario: string) => dispatch => {
   dispatch(setGraph(graph));
 };
 
-export const removeConnection: ChunkActionType2<
-    Map<string, Model.NodeContainer>,
-    ChangeAction> = (dict, action) => dispatch => {
-  if (action.type === 'ConnectionRemoved') {
-    // Which nodes to change?
-    const inputContainer = dict.get(action.input.nodeId) as
-        Model.NodeContainer<Model.OperationNode>;
-    const outputNode = dict.get(action.output.nodeId);
-    // Which ports?
-    const inputChannelName =
-        _.toPairs(inputContainer.node.inputs)
-            .find(([k, v], i) => i === action.input.port)[0];
-    // Validate the nodes
-    const inputPatch: UpdateGraphNodeConnections = {
-      nodeId: action.input.nodeId,
-      valid: false,
-      connectionsPatch: {
-        inputs: new Map(),
-        outputs: new Map(),
-        removeInputs: [inputChannelName]
-      },
-      nodePatch: {removeOutputs: [], removeInputs: [inputChannelName]}
+const createRemoveConnectionPatch =
+    (dict: Map<string, Model.NodeContainer>,
+     action:
+         {input: Endpoint, output: Endpoint}): UpdateGraphNodeConnections[] => {
+      // Which nodes to change?
+      const inputContainer = dict.get(action.input.nodeId) as
+          Model.NodeContainer<Model.OperationNode>;
+      const outputNode = dict.get(action.output.nodeId);
+      // Which ports?
+      const inputChannelName =
+          _.toPairs(inputContainer.node.inputs)
+              .find(([k, v], i) => i === action.input.port)[0];
+      // Validate the nodes
+      const inputPatch: UpdateGraphNodeConnections = {
+        nodeId: action.input.nodeId,
+        valid: false,
+        connectionsPatch: {
+          inputs: new Map(),
+          outputs: new Map(),
+          removeInputs: [inputChannelName]
+        },
+        nodePatch: {removeOutputs: [], removeInputs: [inputChannelName]}
+      };
+
+      const outputPatch: UpdateGraphNodeConnections = {
+        nodeId: action.output.nodeId,
+        valid: false,
+        connectionsPatch:
+            {inputs: new Map(), outputs: new Map(), removeOutputs: ['output']},
+        nodePatch: {removeOutputs: [0], removeInputs: []}
+      };
+
+      return [inputPatch, outputPatch];
     };
 
-    const outputPatch: UpdateGraphNodeConnections = {
-      nodeId: action.output.nodeId,
-      valid: false,
-      connectionsPatch:
-          {inputs: new Map(), outputs: new Map(), removeOutputs: ['output']},
-      nodePatch: {removeOutputs: [0], removeInputs: []}
-    };
+export const removeConnection:
+    ChunkActionType2<Map<string, Model.NodeContainer>, ChangeAction> =
+        (dict, action) => dispatch => {
+          if (action.type === 'ConnectionRemoved') {
+            const graphConnections: UpdateGraphNodeConnections[] =
+                createRemoveConnectionPatch(dict, action);
 
-    const patch: UpdateGraphNodeConnections[] = [inputPatch, outputPatch];
-
-    dispatch(updateGraphNodes(patch));
-  } else {
-    console.error(
-        `Action has type ${action.type} but should have 'ConnectionRemoved'`);
-  }
-  // console.log(action);
-  // console.log(dict);
-};
+            dispatch(updateGraphNodes({graphConnections}));
+          } else {
+            console.error(
+                `Action has type ${
+                                   action.type
+                                 } but should have 'ConnectionRemoved'`);
+          }
+        };
 
 export const addConnection: ChunkActionType2<
     Map<string, Model.NodeContainer>,
     ChangeAction> = (dict, action) => dispatch => {
 
   if (action.type === 'ConnectionCreated') {
-    // TODO: Change to action.input.name after switching to
-    // react-flow-editor@0.3.5 or higher
-    const inputName = action.input['name'] as string;
-    const outputName = action.output['name'] as string;
+    const inputName = action.input.name;
+    const outputName = action.output.name;
     // Is connection valid?
     const inputNode = dict.get(action.input.nodeId);
     const outputNode = dict.get(action.output.nodeId);
@@ -908,9 +918,10 @@ export const addConnection: ChunkActionType2<
       valid: valid.state === 'valid'
     };
 
-    const patch: UpdateGraphNodeConnections[] = [inputPatch, outputPatch];
+    const graphConnections: UpdateGraphNodeConnections[] =
+        [inputPatch, outputPatch];
 
-    dispatch(updateGraphNodes(patch));
+    dispatch(updateGraphNodes({graphConnections}));
 
   } else {
     console.error(
@@ -918,5 +929,25 @@ export const addConnection: ChunkActionType2<
   }
 };
 
+export const removeNode:
+    ChunkActionType2<Map<string, Model.NodeContainer>, ChangeAction> =
+        (dict, action) => dispatch => {
+          if (action.type === 'NodeRemoved') {
+            const graphConnections = action.correspondingConnections.reduce(
+                (patches, conn) =>
+                    patches.concat(createRemoveConnectionPatch(dict, conn)),
+                []);
+
+            dispatch(
+                updateGraphNodes({graphConnections, removeNodes: [action.id]}));
+            console.log(action);
+          } else {
+            console.error(
+                `Action has type ${
+                                   action.type
+                                 } but should have 'ConnectionCreated'`);
+          }
+        };
+
 export const updateGraphNodes =
-    createAction<UpdateGraphNode[]>(Actions.GRAPH_UPDATE_NODES);
+    createAction<UpdateGraph>(Actions.GRAPH_UPDATE_NODES);

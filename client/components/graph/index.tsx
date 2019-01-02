@@ -178,13 +178,13 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
       this.props.graphActions.removeConnection(dict, action);
     } else if (action.type === 'ConnectionCreated') {
       // Fixes connection name (means: remove shape information)
-      const inputNameExtension = action.input['name'].lastIndexOf(' [');
-      if (inputNameExtension > 0) action.input['name'] = action.input['name'].substr(0, inputNameExtension);
-      const outputNameExtension = action.output['name'].lastIndexOf(' [');
-      if (outputNameExtension > 0) action.output['name'] = action.output['name'].substr(0, outputNameExtension);
+      const inputNameExtension = action.input.name.lastIndexOf(' [');
+      if (inputNameExtension > 0) action.input.name = action.input.name.substr(0, inputNameExtension);
+      const outputNameExtension = action.output.name.lastIndexOf(' [');
+      if (outputNameExtension > 0) action.output.name = action.output.name.substr(0, outputNameExtension);
       this.props.graphActions.addConnection(dict, action);
     } else if (action.type === 'NodeRemoved') {
-      // TODO
+      this.props.graphActions.removeNode(dict, action);
     } else if (action.type === 'NodeCreated') {
       // TODO
     }
