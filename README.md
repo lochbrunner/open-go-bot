@@ -6,11 +6,16 @@ Allows to design deep-learnings models for various problems, training them in th
 
 This project is still work in progress. That means some important features are still missing:
 
-* Editing graphs
-* Deployment to AWS
+* Deployment to Cloud (AWS or GCE)
 * OpenAuth integration
 * Sync models (inclusive weights) and share
 * Generic architecture in order to support multiple scenarios
+
+Finished features:
+
+* Mnist scenario
+* Inspecting weights and activations
+* Editing graphs
 
 ## Scenarios
 
@@ -38,9 +43,19 @@ yarn download-training-data
 
 This script downloads and extracts the latest *sgf* files from [badukmovies.com](https://badukmovies.com/pro_games/download)
 
+**Work in progress!**
+
 ### Ant
 
-A simulation of an ant colony. Model the brain of each individual ant like in serious games. Coming soon!
+A simulation of an ant colony. Model the brain of each individual ant like in serious games.
+
+**Coming soon!**
+
+### Symbolic deduction
+
+Finding the way to a symbolic deduction from the problem to the given target solution.
+
+**Coming soon!**
 
 ## Prerequisites
 

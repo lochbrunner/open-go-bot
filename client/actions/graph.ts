@@ -9,9 +9,6 @@ import {ChunkActionType1, ChunkActionType2} from './common';
 
 export interface SetGraphPayload { newGraph: Model.Graph; }
 
-export type UpdateGraphNode =
-    UpdateGraphNodeProperty|UpdateGraphNodeConnections;
-
 export interface UpdateGraphNodeBase {
   nodeId: string;
   connectionsPatch?: Model.ConnectionsInfo;
@@ -25,13 +22,13 @@ export interface NodePatch {
   addOutputs?: Map<string, string>;
 }
 
-export interface UpdateGraphNodeConnections extends UpdateGraphNodeBase {
+export interface UpdateGraphNode extends UpdateGraphNodeBase {
   connectionsPatch: Model.ConnectionsInfo;
   nodePatch: NodePatch;
 }
 
 export interface UpdateGraph {
-  graphConnections: UpdateGraphNodeConnections[];
+  graphConnections: UpdateGraphNode[];
   removeNodes?: string[];
 }
 
@@ -825,8 +822,7 @@ export const loadScenario = (scenario: string) => dispatch => {
 
 const createRemoveConnectionPatch =
     (dict: Map<string, Model.NodeContainer>,
-     action:
-         {input: Endpoint, output: Endpoint}): UpdateGraphNodeConnections[] => {
+     action: {input: Endpoint, output: Endpoint}): UpdateGraphNode[] => {
       // Which nodes to change?
       const inputContainer = dict.get(action.input.nodeId) as
           Model.NodeContainer<Model.OperationNode>;
@@ -836,7 +832,7 @@ const createRemoveConnectionPatch =
           _.toPairs(inputContainer.node.inputs)
               .find(([k, v], i) => i === action.input.port)[0];
       // Validate the nodes
-      const inputPatch: UpdateGraphNodeConnections = {
+      const inputPatch: UpdateGraphNode = {
         nodeId: action.input.nodeId,
         valid: false,
         connectionsPatch: {
@@ -847,7 +843,7 @@ const createRemoveConnectionPatch =
         nodePatch: {removeOutputs: [], removeInputs: [inputChannelName]}
       };
 
-      const outputPatch: UpdateGraphNodeConnections = {
+      const outputPatch: UpdateGraphNode = {
         nodeId: action.output.nodeId,
         valid: false,
         connectionsPatch:
@@ -862,7 +858,7 @@ export const removeConnection:
     ChunkActionType2<Map<string, Model.NodeContainer>, ChangeAction> =
         (dict, action) => dispatch => {
           if (action.type === 'ConnectionRemoved') {
-            const graphConnections: UpdateGraphNodeConnections[] =
+            const graphConnections: UpdateGraphNode[] =
                 createRemoveConnectionPatch(dict, action);
 
             dispatch(updateGraphNodes({graphConnections}));
@@ -892,13 +888,12 @@ export const addConnection: ChunkActionType2<
     const valid = validationResponse === 'valid' ?
         {state: 'valid'} as Model.ValidationState :
         {state: 'invalid', reason: validationResponse} as Model.ValidationState;
-    console.log('AddConnection');
     const inputConnectionPatch = new Map<string, Model.ConnectionConstraints>();
     inputConnectionPatch.set(inputName, {shape: inputConstraint.shape, valid});
     const inputNodePatch = new Map<string, string>();
     inputNodePatch.set(inputName, action.output.nodeId);
 
-    const inputPatch: UpdateGraphNodeConnections = {
+    const inputPatch: UpdateGraphNode = {
       nodeId: action.input.nodeId,
       nodePatch: {addInputs: inputNodePatch},
       connectionsPatch: {inputs: inputConnectionPatch, outputs: new Map()},
@@ -912,15 +907,14 @@ export const addConnection: ChunkActionType2<
     const outputNodePatch = new Map<string, string>();
     outputNodePatch.set(outputName, action.input.nodeId);
 
-    const outputPatch: UpdateGraphNodeConnections = {
+    const outputPatch: UpdateGraphNode = {
       nodeId: action.output.nodeId,
       nodePatch: {addOutputs: outputNodePatch},
       connectionsPatch: {inputs: new Map(), outputs: outputConnectionPatch},
       valid: valid.state === 'valid'
     };
 
-    const graphConnections: UpdateGraphNodeConnections[] =
-        [inputPatch, outputPatch];
+    const graphConnections: UpdateGraphNode[] = [inputPatch, outputPatch];
 
     dispatch(updateGraphNodes({graphConnections}));
 

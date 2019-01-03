@@ -1,6 +1,6 @@
 import {Action} from 'redux-actions';
 
-import {GraphPayload, NodePatch, SetGraphPayload, UpdateGraph, UpdateGraphNodeConnections, UpdateGraphNodeProperty} from '../actions/graph';
+import {GraphPayload, NodePatch, SetGraphPayload, UpdateGraph, UpdateGraphNodeProperty} from '../actions/graph';
 import * as Constants from '../constants/actions';
 
 // See
@@ -68,6 +68,14 @@ const patchNode = (container: Model.NodeContainer, nodePatch: NodePatch) => {
   return container;
 };
 
+const hasInvalidConnection =
+    (connections: Map<string, Model.ConnectionConstraints>): boolean => {
+      for (const [_, o] of connections.entries()) {
+        if (o.valid.state === 'invalid') return true;
+      }
+      return false;
+    };
+
 export const reducers: (
     state: RootState,
     action:
@@ -114,9 +122,15 @@ export const reducers: (
     for (let c of state.graph.nodes) dict.set(c.node.id, c);
     for (const graphConnection of payload.graphConnections) {
       const container = dict.get(graphConnection.nodeId);
-      container.valid = graphConnection.valid;
       patchConnections(container, graphConnection.connectionsPatch);
       patchNode(container, graphConnection.nodePatch);
+      // TODO: Check for invalid config
+      // Check if any connection is invalid
+      if (hasInvalidConnection(container.connections.inputs) ||
+          hasInvalidConnection(container.connections.outputs))
+        container.valid = false;
+      else
+        container.valid = true;
     }
     if (payload.removeNodes) {
       // Find indices of the nodes

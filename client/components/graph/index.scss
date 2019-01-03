@@ -35,7 +35,7 @@ $invalid-color: #f88;
 
 $node-transitions: box-shadow 0.2s ease-in-out;
 
-$menu-height: 100px;
+$menu-height: 36px;
 
 .react-flow-editor {
   .node {
@@ -69,7 +69,7 @@ body {
 
 .react-flow-editor .node,
 .react-flow-editor-menu-item,
-.react-flow-creating-node {
+.react-flow-creating-node>.node {
   &.collapsed>.header {
     width: 150px;
     display: inline-block;
@@ -156,6 +156,7 @@ body {
   top: $menu-height;
   bottom: 0;
   width: 100%;
+  height: calc(100% - $menu-height);
 
   .node {}
 }
