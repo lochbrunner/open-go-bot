@@ -109,7 +109,6 @@ export const reducers: (
     return {...state};
   } else if (action.type === Constants.GRAPH_UPDATE_NODES) {
     const payload = action.payload as UpdateGraph;
-    console.log(payload);
     const dict = new Map<string, Model.NodeContainer>();
     const {graph} = state;
     for (let c of state.graph.nodes) dict.set(c.node.id, c);
@@ -132,6 +131,12 @@ export const reducers: (
       }
     }
     return {...state, graph: {...state.graph}};
+  } else if (action.type === Constants.GRAPH_CREATE_NODE) {
+    const payload = action.payload as Model.NodeContainer;
+    return {
+      ...state,
+      graph: {...state.graph, nodes: [...state.graph.nodes, payload]}
+    };
   }
   return state;
 };

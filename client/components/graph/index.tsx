@@ -7,6 +7,7 @@ import { Editor, Node, Config, ChangeAction } from 'react-flow-editor';
 import { Port } from "react-flow-editor/dist/types";
 
 import { Tensor } from './tensor';
+import { menu } from './menu';
 import * as GraphActions from '../../actions/graph';
 
 import './index.scss';
@@ -186,7 +187,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
     } else if (action.type === 'NodeRemoved') {
       this.props.graphActions.removeNode(dict, action);
     } else if (action.type === 'NodeCreated') {
-      // TODO
+      this.props.graphActions.manageCreateNode(action);
     }
     else if (action.type === 'NodeCollapseChanged') {
       updateProps();
@@ -254,6 +255,7 @@ export class Graph extends React.Component<Graph.Props, Graph.State> {
 
     return (
       <div className="workspace">
+        {menu({})}
         <Editor style={{ height: '100%', width: '100%' }}
           config={graphConfig} nodes={nodes} />
       </div>

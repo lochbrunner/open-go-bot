@@ -35,6 +35,8 @@ $invalid-color: #f88;
 
 $node-transitions: box-shadow 0.2s ease-in-out;
 
+$menu-height: 100px;
+
 .react-flow-editor {
   .node {
     box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 10px 0px;
@@ -61,128 +63,110 @@ body {
   }
 }
 
+.react-flow-editor-menu-item {
+  display: inline-block;
+}
 
-.react-flow-editor {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 100%;
+.react-flow-editor .node,
+.react-flow-editor-menu-item,
+.react-flow-creating-node {
+  &.collapsed>.header {
+    width: 150px;
+    display: inline-block;
+  }
 
-  .node {
-    &.collapsed>.header {
-      width: 150px;
-      display: inline-block;
+  &.invalid {
+    border-color: $invalid-color !important;
+    border: $node-border-width-selected solid $selected-color;
+    margin: #{$node-border-width - $node-border-width-selected};
+  }
+
+  &.input {
+    @include node-type(0)
+  }
+
+  &.variable {
+    @include node-type(40)
+  }
+
+  &.convolution {
+    @include node-type(80)
+  }
+
+  &.relu {
+    @include node-type(120)
+  }
+
+  &.max-pool {
+    @include node-type(160)
+  }
+
+  &.reshape {
+    @include node-type(200)
+  }
+
+  &.mat-mul {
+    @include node-type(240)
+  }
+
+  &.add {
+    @include node-type(280)
+  }
+
+  &.output {
+    @include node-type(320)
+  }
+
+  >.body {
+    min-width: 190px;
+
+    h2 {
+      text-align: center;
+      font-size: 21px;
+      margin-top: 3px;
     }
 
-    &.invalid {
-      border-color: $invalid-color !important;
-      border: $node-border-width-selected solid $selected-color;
-      margin: #{$node-border-width - $node-border-width-selected};
-    }
+    .node-config {
+      width: 200px;
 
-    &.input {
-      @include node-type(0)
-    }
+      ul {
+        list-style-type: none;
+        padding-left: 0;
 
-    &.variable {
-      @include node-type(40)
-    }
+        label {
+          display: inline-block;
+          width: 40%;
+          text-align: right;
+        }
 
-    &.convolution {
-      @include node-type(80)
-    }
-
-    &.relu {
-      @include node-type(120)
-    }
-
-    &.max-pool {
-      @include node-type(160)
-    }
-
-    &.reshape {
-      @include node-type(200)
-    }
-
-    &.mat-mul {
-      @include node-type(240)
-    }
-
-    &.add {
-      @include node-type(280)
-    }
-
-    &.output {
-      @include node-type(320)
-    }
-
-    >.body {
-      min-width: 190px;
-
-      h2 {
-        text-align: center;
-        font-size: 21px;
-        margin-top: 3px;
-      }
-
-      .node-config {
-        width: 200px;
-
-        ul {
-          list-style-type: none;
-          padding-left: 0;
-
-          label {
-            display: inline-block;
-            width: 40%;
-            text-align: right;
-          }
-
-          input,
-          select {
-            display: inline-block;
-            width: 50%;
-            margin-left: 10px;
-          }
+        input,
+        select {
+          display: inline-block;
+          width: 50%;
+          margin-left: 10px;
         }
       }
     }
   }
 }
 
+
+.react-flow-editor {
+  position: absolute;
+  top: $menu-height;
+  bottom: 0;
+  width: 100%;
+
+  .node {}
+}
+
 .menu {
   position: absolute;
   top: 0;
   bottom: 0;
-  height: 20px;
+  height: $menu-height;
 }
 
-.flow-menu {
-  position: absolute;
-  top: 10%;
-  left: 7px;
-  padding: 20px 3px;
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 10px 0px;
-  background: #fff;
-}
-
-.react-flow-creating-node,
-.react-flow-editor-menu-item {
-  &.red {
-    border-color: #fdd;
-    background-color: #fff7f7;
-  }
-
-  &.green {
-    border-color: #dfd;
-    background-color: #f7fff7;
-  }
-
-  &.blue {
-    border-color: #ddf;
-    background-color: #f7f7ff;
-  }
-}
 
 div.icon::before {
   box-sizing: content-box;

@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {ChangeAction, Endpoint} from 'react-flow-editor';
+import {ChangeAction, Endpoint, NodeCreated} from 'react-flow-editor';
 import {createAction} from 'redux-actions';
 
 import * as Actions from '../constants/actions';
@@ -48,7 +48,8 @@ export interface TryUpdateGraphNode {
   newValue: string|number;
 }
 
-export type GraphPayload = SetGraphPayload|UpdateGraphNodeProperty|UpdateGraph;
+export type GraphPayload =
+    SetGraphPayload|UpdateGraphNodeProperty|UpdateGraph|Model.NodeContainer;
 
 export const setGraph = createAction<SetGraphPayload>(Actions.GRAPH_SET);
 
@@ -940,7 +941,6 @@ export const removeNode:
 
             dispatch(
                 updateGraphNodes({graphConnections, removeNodes: [action.id]}));
-            console.log(action);
           } else {
             console.error(
                 `Action has type ${
@@ -949,5 +949,156 @@ export const removeNode:
           }
         };
 
+export const manageCreateNode: ChunkActionType1<NodeCreated> = action =>
+    dispatch => {
+      const notConnected = (): Model.ValidationState =>
+          ({state: 'invalid', reason: 'Not connected'});
+      const createConstraints =
+          (names: string[]): Map<string, Model.ConnectionConstraints> => {
+            const cons = new Map<string, Model.ConnectionConstraints>();
+            for (const name of names)
+              cons.set(name, {valid: notConnected(), shape: []});
+            return cons;
+          };
+      const nodeType = action.node.type as Model.Node['type'];
+
+      const createSingleConstraint = (name: string, shape: number[]):
+          Map<string, Model.ConnectionConstraints> => {
+            const cons = new Map<string, Model.ConnectionConstraints>();
+            cons.set(name, {valid: notConnected(), shape});
+            return cons;
+          };
+
+      if (nodeType === 'add') {
+        dispatch(createNode({
+          position: {x: 0, y: 0},
+          node: {
+            type: 'add',
+            id: action.node.id,
+            name: 'Add',
+            outputs: [undefined],
+            inputs: {'first-addend': undefined, 'second-addend': undefined}
+          },
+          connections: {
+            inputs: createConstraints(['first-addend', 'second-addend']),
+            outputs: createConstraints(['output'])
+          },
+          valid: false
+        }));
+      } else if (nodeType === 'mat-mul') {
+        dispatch(createNode({
+          position: {x: 0, y: 0},
+          node: {
+            type: 'mat-mul',
+            id: action.node.id,
+            name: 'Multiplication',
+            outputs: [undefined],
+            inputs: {'multiplicand': undefined, 'multiplier': undefined}
+          },
+          connections: {
+            inputs: createConstraints(['multiplicand', 'multiplier']),
+            outputs: createConstraints(['output'])
+          },
+          valid: false
+        }));
+      } else if (nodeType === 'convolution') {
+        dispatch(createNode({
+          node: {
+            type: 'convolution',
+            id: action.node.id,
+            filters: 8,
+            inputs: {'orig': undefined, 'kernel': undefined},
+            name: 'Conv',
+            outputs: [undefined],
+            strides: 1,
+            rank: 2,
+            padding: 'same'
+          },
+          position: {x: 0, y: 0},
+          connections: {
+            inputs: createConstraints(['orig', 'kernel']),
+            outputs: createConstraints(['output'])
+          },
+          valid: false
+        }));
+      } else if (nodeType === 'variable') {
+        const shape = [10, 10];
+        dispatch(createNode({
+          node: {
+            type: 'variable',
+            id: action.node.id,
+            name: 'Weights',
+            outputs: [undefined],
+            shape,
+            init: 'normal',
+            mean: 0,
+            stdDev: 0.1
+          },
+          position: {x: 0, y: 0},
+          connections: {
+            inputs: createConstraints([]),
+            outputs: createSingleConstraint('output', shape)
+          },
+          valid: false
+        }));
+      } else if (nodeType === 'relu') {
+        dispatch(createNode({
+          node: {
+            type: 'relu',
+            id: action.node.id,
+            name: 'ReLu',
+            outputs: [undefined],
+            inputs: {'orig': undefined}
+          },
+          position: {x: 0, y: 0},
+          connections: {
+            inputs: createConstraints(['orig']),
+            outputs: createConstraints(['output'])
+          },
+          valid: false
+        }));
+      } else if (nodeType === 'max-pool') {
+        dispatch(createNode({
+          node: {
+            type: 'max-pool',
+            filterSize: [2, 2],
+            id: action.node.id,
+            name: 'Max Pooling',
+            pad: 0,
+            strides: 2,
+            outputs: [undefined],
+            inputs: {'orig': undefined}
+          },
+          position: {x: 0, y: 0},
+          connections: {
+            inputs: createConstraints(['orig']),
+            outputs: createConstraints(['output'])
+          },
+          valid: false
+        }));
+      } else if (nodeType === 'reshape') {
+        const shape = [10, 10];
+        dispatch(createNode({
+          node: {
+            type: 'reshape',
+            id: action.node.id,
+            name: 'Reshape',
+            inputs: {'orig': undefined},
+            outputs: [undefined],
+            shape
+          },
+          position: {x: 0, y: 0},
+          connections: {
+            inputs: createConstraints(['orig']),
+            outputs: createSingleConstraint('output', shape)
+          },
+          valid: false
+        }));
+      }
+    };
+
 export const updateGraphNodes =
     createAction<UpdateGraph>(Actions.GRAPH_UPDATE_NODES);
+
+export const createNode =
+    createAction<Model.NodeContainer>(Actions.GRAPH_CREATE_NODE);
