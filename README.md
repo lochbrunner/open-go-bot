@@ -23,7 +23,7 @@ Finished features:
 
 A large database of handwritten digits that is commonly used for training various image processing systems.
 
-![Mnist screenshot](./docs/assets/screenshot-mnist.png)
+![Mnist screenshot](./docs/assets/mnist/mnist.gif)
 
 Demo go to https://lochbrunner.github.io/demos/social-ai and navigate to the mnist example. Press the *Load* button, after you can step through the samples press *Train*. Move the nodes from the upper left corner and view the activations after pressing the *Predict* button.
 
